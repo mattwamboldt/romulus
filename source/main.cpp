@@ -1,7 +1,10 @@
 #include <windows.h>
 #include <xinput.h>
 
-#include <nescore\nes.h>
+#include "nes\nes.h"
+
+// TODO: New main objective - get parity with the console app
+// Then APU since that's easier and will enable more tests, then the PPU
 
 /* Current objective: Ability to run nestest visually
 - Add text rendering
@@ -428,6 +431,9 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
         render(globalBackBuffer, &nes);
         renderPatternTable(globalBackBuffer, &nes, 0, 300, 0);
+
+        // TODO: FPS Counter
+        // TODO: Memory/debugging view
 
         HDC deviceContext = GetDC(window);
         WindowSize size = GetWindowSize(window);

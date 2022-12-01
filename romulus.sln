@@ -3,11 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ROMulus", "romulus\ROMulus.vcxproj", "{0AF27A61-392A-41BD-8FF5-1B91DC2AC74E}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "connessa", "connessa\connessa.vcxproj", "{DF40A2B3-6912-46EA-881B-6E9607D1961C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nescore", "nescore\nescore.vcxproj", "{B6780DD0-54F3-40FA-AB03-8047825E86EC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ROMulus", "source\ROMulus.vcxproj", "{0AF27A61-392A-41BD-8FF5-1B91DC2AC74E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "data", "data\data.vcxitems", "{80DB5C44-55D5-4047-AD22-D93E02B2D7B5}"
 EndProject
@@ -27,22 +23,6 @@ Global
 		{0AF27A61-392A-41BD-8FF5-1B91DC2AC74E}.Release|x64.Build.0 = Release|x64
 		{0AF27A61-392A-41BD-8FF5-1B91DC2AC74E}.Release|x86.ActiveCfg = Release|Win32
 		{0AF27A61-392A-41BD-8FF5-1B91DC2AC74E}.Release|x86.Build.0 = Release|Win32
-		{DF40A2B3-6912-46EA-881B-6E9607D1961C}.Debug|x64.ActiveCfg = Debug|x64
-		{DF40A2B3-6912-46EA-881B-6E9607D1961C}.Debug|x64.Build.0 = Debug|x64
-		{DF40A2B3-6912-46EA-881B-6E9607D1961C}.Debug|x86.ActiveCfg = Debug|Win32
-		{DF40A2B3-6912-46EA-881B-6E9607D1961C}.Debug|x86.Build.0 = Debug|Win32
-		{DF40A2B3-6912-46EA-881B-6E9607D1961C}.Release|x64.ActiveCfg = Release|x64
-		{DF40A2B3-6912-46EA-881B-6E9607D1961C}.Release|x64.Build.0 = Release|x64
-		{DF40A2B3-6912-46EA-881B-6E9607D1961C}.Release|x86.ActiveCfg = Release|Win32
-		{DF40A2B3-6912-46EA-881B-6E9607D1961C}.Release|x86.Build.0 = Release|Win32
-		{B6780DD0-54F3-40FA-AB03-8047825E86EC}.Debug|x64.ActiveCfg = Debug|x64
-		{B6780DD0-54F3-40FA-AB03-8047825E86EC}.Debug|x64.Build.0 = Debug|x64
-		{B6780DD0-54F3-40FA-AB03-8047825E86EC}.Debug|x86.ActiveCfg = Debug|Win32
-		{B6780DD0-54F3-40FA-AB03-8047825E86EC}.Debug|x86.Build.0 = Debug|Win32
-		{B6780DD0-54F3-40FA-AB03-8047825E86EC}.Release|x64.ActiveCfg = Release|x64
-		{B6780DD0-54F3-40FA-AB03-8047825E86EC}.Release|x64.Build.0 = Release|x64
-		{B6780DD0-54F3-40FA-AB03-8047825E86EC}.Release|x86.ActiveCfg = Release|Win32
-		{B6780DD0-54F3-40FA-AB03-8047825E86EC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

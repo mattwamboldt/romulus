@@ -39,13 +39,13 @@ void NES::update(real32 secondsPerFrame)
 
         if (i % 4 == 0)
         {
-            ppu.tick();
+            // ppu.tick();
         }
     }
 
     if (ppu.getVBlankActive() && !wasVBlankActive)
     {
-        cpu.nonMaskableInterrupt();
+        // cpu.nonMaskableInterrupt();
         // flushScreenBuffer();
     }
 
