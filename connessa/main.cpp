@@ -11,7 +11,7 @@
 
 // Start on the ppu, may help with the other problems which means testing
 // rendering mode at speed which will have its own console issues.
-// May drive need to port/pull into retrocade proper, but gonna try
+// May drive need to port/pull into ROMulus proper, but gonna try
 // to console as long as I can, easier to think about/iterate on
 
 static bool isRunning;

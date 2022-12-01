@@ -304,7 +304,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     windowClass.lpfnWndProc = windowProc;
     windowClass.hInstance = instance;
     windowClass.hIcon = LoadIcon((HINSTANCE)NULL, IDI_APPLICATION);
-    windowClass.lpszClassName = "RetrocadeWndClass";
+    windowClass.lpszClassName = "ROMulusWndClass";
     windowClass.hCursor = LoadCursorA(instance, IDC_ARROW);
 
     UINT desiredSchedulerMS = 1;
@@ -318,7 +318,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     HWND window = CreateWindowExA(
         0,
         windowClass.lpszClassName,
-        "Retrocade",
+        "ROMulus",
         WS_OVERLAPPEDWINDOW|WS_VISIBLE,
         CW_USEDEFAULT, CW_USEDEFAULT,
         CW_USEDEFAULT, CW_USEDEFAULT,

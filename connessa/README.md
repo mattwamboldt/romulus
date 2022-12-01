@@ -4,7 +4,7 @@ A Console Based implementation of an nes emulator
 
 This implementation only deals with the raw execution of the component, ensuring memory is written to correctly.
 It's used for debugging the emulator a low level only.
-The full graphics and sound will be done in retrocade, though I may mess around with some basic ppu tests with conio
+The full graphics and sound will be done in ROMulus, though I may mess around with some basic ppu tests with conio
 
 == iNES file format
 http://wiki.nesdev.com/w/index.php/INES

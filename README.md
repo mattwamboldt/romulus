@@ -1,6 +1,6 @@
-# RetroCade
+# ROMulus
 
-This repo is for an emulator. It'll start out with just NES and may expand from there.
+This repo is for an emulator. It'll start out with just NES and will expand from there.
 
 This is mostly for learning/fun so use this code as you see fit to hack on.
 
