@@ -138,7 +138,11 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             *s++ = '(';
             s += formatHex(s, p1);
             s += formatString(s, "),Y = ");
-            s += formatWord(s, address);
+
+            uint16 zpReadLo = bus->read(p1);
+            uint16 zpReadHi = bus->read((uint8)(p1 + 1));
+            s += formatWord(s, (zpReadHi << 8) + zpReadLo);
+
             s += formatString(s, " @ ");
             s += formatWord(s, address);
 
@@ -242,14 +246,16 @@ int formatRegistersFCEU(char* dest, MOS6502* cpu)
     return 32;
 }
 
-int formatRegistersNesTest(char* dest, MOS6502* cpu)
+int formatRegistersNesTest(char* dest, MOS6502* cpu, PPU* ppu)
 {
+    // TODO: Add PPU and Cycles
     memcpy(dest, "A:00 X:00 Y:00 P:00 SP:00\n", 27);
 
     formatByte(dest + 2, cpu->accumulator);
     formatByte(dest + 7, cpu->x);
     formatByte(dest + 12, cpu->y);
-    formatByte(dest + 17, cpu->status);
+    // NOTE: This only displays as 1 in the log but isn't set in the register itself. see https://www.nesdev.org/wiki/Status_flags#The_B_flag
+    formatByte(dest + 17, (cpu->status | 0b00100000));
     formatByte(dest + 23, cpu->stack);
 
     return 27;
@@ -267,7 +273,7 @@ void padRight(char* start, int32 length, int32 desiredLength, char padChar = ' '
     *end = 0;
 }
 
-void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cpuBus)
+void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cpuBus, PPU* ppu)
 {
     if (!logFile)
     {
@@ -283,6 +289,7 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cp
     const int32 HEX_WIDTH = 15;
     const int32 INST_WIDTH = 33;
     const int32 REG_WIDTH = 27;
+    const int32 CYCLES_WIDTH = 27;
 
     char line[HEX_WIDTH + INST_WIDTH + REG_WIDTH] = {};
     char* columnStart = line;
@@ -294,7 +301,12 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cp
     padRight(columnStart, instLength, INST_WIDTH);
     columnStart += INST_WIDTH;
 
-    formatRegistersNesTest(columnStart, cpu);
+    formatRegistersNesTest(columnStart, cpu, ppu);
+    if (op.isUnofficial)
+    {
+        line[15] = '*';
+    }
+
     fputs(line, logFile);
 }
 

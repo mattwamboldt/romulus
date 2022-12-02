@@ -30,6 +30,7 @@ uint8 CPUBus::read(uint16 address)
         // map to the apu/io registers
         // http://wiki.nesdev.com/w/index.php/2A03
         // TODO: docs mention these as readonly, remove if that matters
+        // TODO: It's actualy write only, have to handle whetever Open Bus means for read. Also these mappings are ALL wrong
         switch (address)
         {
             case 0x4000: return apu->square1Vol;

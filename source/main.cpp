@@ -210,15 +210,32 @@ void render(GDIBackBuffer buffer, NES* nes)
 {
     uint8* nesBuffer = nes->ppu.screenBuffer;
     uint8* row = (uint8*)buffer.memory;
-    for (int y = 0; y < NES_SCREEN_HEIGHT; ++y)
-    {
-        uint32* pixel = (uint32*)row;
-        for (int x = 0; x < NES_SCREEN_WIDTH; ++x)
-        {
-            *pixel++ = palette[*nesBuffer++];
-        }
 
-        row += buffer.pitch;
+    if (!nes->cpu.hasHalted())
+    {
+        for (int y = 0; y < NES_SCREEN_HEIGHT; ++y)
+        {
+            uint32* pixel = (uint32*)row;
+            for (int x = 0; x < NES_SCREEN_WIDTH; ++x)
+            {
+                *pixel++ = palette[*nesBuffer++];
+            }
+
+            row += buffer.pitch;
+        }
+    }
+    else
+    {
+        for (int y = 0; y < NES_SCREEN_HEIGHT; ++y)
+        {
+            uint32* pixel = (uint32*)row;
+            for (int x = 0; x < NES_SCREEN_WIDTH; ++x)
+            {
+                *pixel++ = 0xFF0000FF;
+            }
+
+            row += buffer.pitch;
+        }
     }
 }
 
@@ -337,7 +354,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
     NES nes;
     nes.loadRom("data/nestest.nes");
-    //nes.ppu.renderPatternTable();
+    nes.cpu.instAddr = nes.cpu.pc = 0xC000;
 
     real32 framesPerSecond = 30.0f;
     real32 secondsPerFrame = 1.0f / framesPerSecond;

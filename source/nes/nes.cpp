@@ -7,12 +7,14 @@ NES::NES()
     ppu.connect(&ppuBus);
     cpuBus.connect(&ppu, &apu, &cartridge);
     ppuBus.connect(&ppu, &cartridge);
+    traceEnabled = true;
 }
 
 void NES::loadRom(const char * path)
 {
+    // TODO: Will likely need to change this to separate the boot up sysle from resets
     cartridge.load(path);
-    cpu.reset();
+    cpu.start();
 }
 
 void NES::update(real32 secondsPerFrame)
@@ -56,7 +58,7 @@ void NES::cpuStep()
 {
     if (traceEnabled && !cpu.hasHalted() && !cpu.isExecuting())
     {
-        logInstruction("data/6502.log", cpu.instAddr, &cpu, &cpuBus);
+        logInstruction("data/6502.log", cpu.instAddr, &cpu, &cpuBus, &ppu);
     }
 
     if (cpu.tick() && cpu.hasHalted())

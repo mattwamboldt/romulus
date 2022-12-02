@@ -19,21 +19,40 @@ MOS6502::MOS6502()
 
 }
 
-void MOS6502::handleInterrupt(uint16 vector)
+// NOTE: Reset/boot uses the same sequence as interrupt but writes are disables so only SP changes
+void MOS6502::handleInterrupt(uint16 vector, bool isReset)
 {
-    pushWord(pc);
-    push(status | 0b00100000);
+    if (isReset)
+    {
+        stack -= 3;
+    }
+    else
+    {
+        pushWord(pc);
+        // TODO: Handle "B" flag to distinguish BRK and IRQ to rom code
+        push(status | 0b00100000);
+    }
+
     instAddr = pc = readWord(vector);
     setFlags(STATUS_INT_DISABLE);
     nmiRequested = false;
     interruptRequested = false;
 }
 
-void MOS6502::reset()
+void MOS6502::start()
+{
+    reset(true);
+}
+
+void MOS6502::reset(bool isFirstBoot)
 {
     isHalted = false;
     status = 0;
-    stack = 0xFF;
+    if (!isFirstBoot)
+    {
+        stack = 0xFF;
+    }
+
     handleInterrupt(RESET_VECTOR);
 }
 
