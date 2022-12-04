@@ -21,6 +21,7 @@ public: // making public for now, will wrap this as needed later
     void singleStep();
 
     void toggleSingleStep() { singleStepMode = !singleStepMode; }
+    void outputAudio(int16* outputBuffer, int length);
 
 private:
     bool wasVBlankActive;

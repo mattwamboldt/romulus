@@ -1,5 +1,7 @@
 ﻿#include "nes.h"
 #include "cpuTrace.h"
+#include <math.h>
+#include <string.h>
 
 NES::NES()
 {
@@ -75,5 +77,39 @@ void NES::singleStep()
     while (cpu.isExecuting())
     {
         cpu.tick();
+    }
+}
+
+// For now to test audio outpout I'm just going to use a simple oscillator, taken from the synthesizer project
+#define PI     3.14159265359
+#define TWO_PI 6.28318530718
+
+double frequency = 440;
+double phase = 0;
+double samplingRadians = TWO_PI / 48000.0;
+double increment = frequency * samplingRadians;
+
+void NES::outputAudio(int16* outputBuffer, int length)
+{
+    memset(outputBuffer, 0, length);
+    int32 i = 0;
+    while (i < length)
+    {
+        int16 value = sin(phase) * 0.1 * 32767;
+
+        phase += increment;
+        if (phase >= TWO_PI)
+        {
+            phase -= TWO_PI;
+        }
+
+        if (phase < 0.0)
+        {
+            phase += TWO_PI;
+        }
+
+        outputBuffer[i] = value;
+        outputBuffer[i + 1] = value;
+        i += 2;
     }
 }
