@@ -20,7 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nes\6502.h" />
-    <ClInclude Include="nes\apu.h" />
+    <ClInclude Include="nes\apu\apu.h" />
+    <ClInclude Include="nes\apu\deltaModulationChannel.h" />
+    <ClInclude Include="nes\apu\envelope.h" />
+    <ClInclude Include="nes\apu\noiseChannel.h" />
+    <ClInclude Include="nes\apu\pulseChannel.h" />
+    <ClInclude Include="nes\apu\triangleChannel.h" />
     <ClInclude Include="nes\bus.h" />
     <ClInclude Include="nes\cartridge.h" />
     <ClInclude Include="nes\common.h" />
@@ -32,6 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nes\6502.cpp" />
+    <ClCompile Include="nes\apu\apu.cpp" />
+    <ClCompile Include="nes\apu\envelope.cpp" />
+    <ClCompile Include="nes\apu\pulseChannel.cpp" />
     <ClCompile Include="nes\cartridge.cpp" />
     <ClCompile Include="nes\cpuBus.cpp" />
     <ClCompile Include="nes\cpuTrace.cpp" />

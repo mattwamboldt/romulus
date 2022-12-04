@@ -3,6 +3,7 @@
 
 #include "nes\nes.h"
 
+// TODO: Will need some way to verify the blargg apu tests
 // TODO: New main objective - get parity with the console app
 // Then APU since that's easier and will enable more tests, then the PPU
 
@@ -21,6 +22,7 @@
 - Otherwise:
     - reevaluate this priority list
 */
+
 /* Objectives:
 - Run nestest correctly (Just the visible screen and fixing bugs)
 - Run through the basic test roms
@@ -275,10 +277,10 @@ uint32 palette[] = {
 void drawRect(GDIBackBuffer buffer, uint32 x, uint32 y, uint32 width, uint32 height, uint32 color)
 {
     uint8* row = (uint8*)buffer.memory + (buffer.pitch * y);
-    for (int yOffset = 0; yOffset < height; ++yOffset)
+    for (uint32 yOffset = 0; yOffset < height; ++yOffset)
     {
         uint32* pixel = (uint32*)row + x;
-        for (int xOffset = 0; xOffset < width; ++xOffset)
+        for (uint32 xOffset = 0; xOffset < width; ++xOffset)
         {
             *pixel++ = color;
         }

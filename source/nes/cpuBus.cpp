@@ -1,5 +1,8 @@
 #include "cpuBus.h"
 
+// Reference
+// https://www.nesdev.org/wiki/CPU_memory_map
+
 void CPUBus::connect(PPU* ppu, APU* apu, Cartridge* cart)
 {
     this->ppu = ppu;
@@ -33,26 +36,9 @@ uint8 CPUBus::read(uint16 address)
         // TODO: It's actualy write only, have to handle whetever Open Bus means for read. Also these mappings are ALL wrong
         switch (address)
         {
-            case 0x4000: return apu->square1Vol;
-            case 0x4001: return apu->square1Sweep;
-            case 0x4002: return apu->square1Lo;
-            case 0x4003: return apu->square1Hi;
-            case 0x4004: return apu->square2Vol;
-            case 0x4005: return apu->square2Sweep;
-            case 0x4006: return apu->square2Lo;
-            case 0x4007: return apu->square2Vol;
-            case 0x4008: return apu->triangleLinear;
-            case 0x400A: return apu->triangleLo;
-            case 0x400B: return apu->triangleHi;
-            case 0x400C: return apu->noiseVol;
-            case 0x400E: return apu->noiseLo;
-            case 0x400F: return apu->noiseHi;
-            case 0x4010: return apu->dmcFrequency;
-            case 0x4011: return apu->dmcRaw;
-            case 0x4012: return apu->dmcStart;
-            case 0x4013: return apu->dmcLength;
+            // TODO: Handle Open Bus
             case 0x4014: return ppu->readRegister(address);
-            case 0x4015: return apu->channelStatus;
+            case 0x4015: return apu->getStatus();
             case 0x4016: return joy1;
             case 0x4017: return joy2;
             default: return 0;
@@ -88,28 +74,29 @@ void CPUBus::write(uint16 address, uint8 value)
         // http://wiki.nesdev.com/w/index.php/2A03
         switch (address)
         {
-            case 0x4000: apu->square1Vol = value; break;
-            case 0x4001: apu->square1Sweep = value; break;
-            case 0x4002: apu->square1Lo = value; break;
-            case 0x4003: apu->square1Hi = value; break;
-            case 0x4004: apu->square2Vol = value; break;
-            case 0x4005: apu->square2Sweep = value; break;
-            case 0x4006: apu->square2Lo = value; break;
-            case 0x4007: apu->square2Vol = value; break;
-            case 0x4008: apu->triangleLinear = value; break;
-            case 0x400A: apu->triangleLo = value; break;
-            case 0x400B: apu->triangleHi = value; break;
-            case 0x400C: apu->noiseVol = value; break;
-            case 0x400E: apu->noiseLo = value; break;
-            case 0x400F: apu->noiseHi = value; break;
-            case 0x4010: apu->dmcFrequency = value; break;
-            case 0x4011: apu->dmcRaw = value; break;
-            case 0x4012: apu->dmcStart = value; break;
-            case 0x4013: apu->dmcLength = value; break;
+            case 0x4000: apu->pulse1.setDutyEnvelope(value); break;
+            case 0x4001: apu->pulse1.setSweep(value); break;
+            case 0x4002: apu->pulse1.setTimerLo(value); break;
+            case 0x4003: apu->pulse1.setTimerHi(value); break;
+            case 0x4004: apu->pulse2.setDutyEnvelope(value); break;
+            case 0x4005: apu->pulse2.setSweep(value); break;
+            case 0x4006: apu->pulse2.setTimerLo(value); break;
+            case 0x4007: apu->pulse2.setTimerHi(value); break;
+            case 0x4008: apu->writeTriangleCounter(value); break;
+            case 0x400A: apu->writeTriangleTimer(value); break;
+            case 0x400B: apu->writeTriangleLength(value); break;
+            case 0x400C: apu->writeNoiseControls(value); break;
+            case 0x400E: apu->writeNoisePeriod(value); break;
+            case 0x400F: apu->writeNoiseLength(value); break;
+            case 0x4010: apu->writeDmcControls(value); break;
+            case 0x4011: apu->writeDmcCounter(value); break;
+            case 0x4012: apu->writeDmcSampleAddress(value); break;
+            case 0x4013: apu->writeDmcSampleLength(value); break;
             case 0x4014: ppu->writeRegister(address, value); break;
-            case 0x4015: apu->channelStatus = value; break;
+            case 0x4015: apu->writeControl(value); break;
+                // TODO: joystrick strobe?
             case 0x4016: joy1 = value; break;
-            case 0x4017: joy2 = value; break;
+            case 0x4017: apu->writeFrameCounterControl(value); break;
             default: return;
         }
 

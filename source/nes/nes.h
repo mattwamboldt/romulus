@@ -1,7 +1,7 @@
 #pragma once
 #include "6502.h"
 #include "ppu.h"
-#include "apu.h"
+#include "apu/apu.h"
 #include "cpuBus.h"
 #include "ppuBus.h"
 
@@ -29,4 +29,8 @@ private:
     bool singleStepMode;
 
     void cpuStep();
+
+    int16 apuBuffer[48000];
+    uint32 writeHead;
+    uint32 playHead;
 };

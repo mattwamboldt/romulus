@@ -1,7 +1,7 @@
 #pragma once
 #include "bus.h"
 #include "ppu.h"
-#include "apu.h"
+#include "apu/apu.h"
 #include "cartridge.h"
 
 class CPUBus : public IBus

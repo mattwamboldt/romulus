@@ -34,11 +34,26 @@ void NES::update(real32 secondsPerFrame)
     // I don't understand how this works, so for now, I'll just calculate it
     int32 masterClockHz = 21477272;
     int32 masterCycles = (int32)(secondsPerFrame * masterClockHz);
+    int32 cyclesPerSample = masterCycles / (secondsPerFrame * 48000);
+    int32 audioCounter = 0;
     for (int i = 0; i < masterCycles; ++i)
     {
         if (i % 12 == 0)
         {
             cpuStep();
+            if (i % 24 == 0)
+            {
+                apu.tick();
+            }
+        }
+
+        ++audioCounter;
+        if (audioCounter >= cyclesPerSample)
+        {
+            float output = apu.getOutput();
+            apuBuffer[writeHead++] = (output * 65536) - 32768; // TODO: Do math
+            writeHead %= 48000;
+            audioCounter -= cyclesPerSample;
         }
 
         if (i % 4 == 0)
@@ -95,19 +110,8 @@ void NES::outputAudio(int16* outputBuffer, int length)
     int32 i = 0;
     while (i < length)
     {
-        int16 value = sin(phase) * 0.1 * 32767;
-
-        phase += increment;
-        if (phase >= TWO_PI)
-        {
-            phase -= TWO_PI;
-        }
-
-        if (phase < 0.0)
-        {
-            phase += TWO_PI;
-        }
-
+        int16 value = apuBuffer[playHead++];
+        playHead %= 48000;
         outputBuffer[i] = value;
         outputBuffer[i + 1] = value;
         i += 2;
