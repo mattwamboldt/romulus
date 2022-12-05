@@ -1,5 +1,5 @@
 #pragma once
-#include "../common.h"
+#include "../../common.h"
 #include "envelope.h"
 #include "pulseChannel.h"
 #include "triangleChannel.h"
@@ -49,7 +49,7 @@ public:
 
     // Does the mixdown of all the channels at the current moment in time
     // According to https://www.nesdev.org/wiki/APU_Mixer has a range of 0.0 - 1.0
-    float getOutput();
+    uint32 getOutput();
     
     PulseChannel pulse1;
     PulseChannel pulse2;

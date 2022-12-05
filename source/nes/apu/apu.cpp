@@ -148,9 +148,9 @@ void APU::writeFrameCounterControl(uint8 value)
 
 }
 
-real32 APU::getOutput()
+uint32 APU::getOutput()
 {
     // TODO: for now using the linear approximation from the wiki and only pulse, will come back to this
-    real32 pulse_out = 0.00752 * (pulse1.getOutput() + pulse2.getOutput());
+    uint32 pulse_out = pulse1.getOutput() + pulse2.getOutput();
     return pulse_out;
 }

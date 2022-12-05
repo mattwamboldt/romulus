@@ -463,6 +463,8 @@ public:
 
     void start();
     void reset(bool isFirstBoot = false);
+    void stop() { isHalted = true; };
+
     bool tick(); // true on start of instruction
     bool hasHalted() { return isHalted; }
     bool isExecuting() { return waitCycles > 0; }

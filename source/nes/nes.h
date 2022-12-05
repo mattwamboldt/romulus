@@ -14,8 +14,14 @@ public: // making public for now, will wrap this as needed later
     APU apu = {};
     CPUBus cpuBus = {};
     Cartridge cartridge = {};
+    bool isRunning;
 
     NES();
+
+    void powerOn();
+    void reset();
+    void powerOff();
+
     void loadRom(const char* path);
     void update(real32 secondsPerFrame);
     void singleStep();

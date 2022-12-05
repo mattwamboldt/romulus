@@ -481,6 +481,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     QueryPerformanceFrequency(&counterFrequency);
     cpuFreq = counterFrequency.QuadPart;
 
+    // TODO: Add a menu to take advantage of windows UI
     WNDCLASSA windowClass = {};
     windowClass.style = CS_HREDRAW|CS_VREDRAW;
     windowClass.lpfnWndProc = windowProc;
@@ -743,6 +744,11 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         ReleaseDC(window, deviceContext);
 
         displayTime = getClockTime();
+    }
+
+    if (nes.isRunning)
+    {
+        nes.powerOff();
     }
 
     return 0;

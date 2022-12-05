@@ -3,24 +3,64 @@
 #include <math.h>
 #include <string.h>
 
+#include "../wavefile.h"
+
 NES::NES()
 {
     cpu.connect(&cpuBus);
     ppu.connect(&ppuBus);
     cpuBus.connect(&ppu, &apu, &cartridge);
     ppuBus.connect(&ppu, &cartridge);
-    traceEnabled = true;
+    traceEnabled = false;
 }
 
 void NES::loadRom(const char * path)
 {
-    // TODO: Will likely need to change this to separate the boot up sysle from resets
     cartridge.load(path);
+
+    // TODO: Temp puuting this here for debugging apu output, don't worry about it
+    openStream("bin/apu_raw.wav", 1, 48000);
+
+    if (isRunning)
+    {
+        reset();
+    }
+    else
+    {
+        powerOn();
+    }
+}
+
+void NES::powerOn()
+{
     cpu.start();
+    isRunning = true;
+}
+
+void NES::reset()
+{
+    cpu.reset();
+    isRunning = true;
+}
+
+void NES::powerOff()
+{
+    cpu.stop();
+    isRunning = false;
+
+    flushLog();
+
+    write(apuBuffer, writeHead);
+    finalizeStream();
 }
 
 void NES::update(real32 secondsPerFrame)
 {
+    if (!isRunning)
+    {
+        return;
+    }
+
     if (cpu.hasHalted() || singleStepMode)
     {
         return;
@@ -50,9 +90,15 @@ void NES::update(real32 secondsPerFrame)
         ++audioCounter;
         if (audioCounter >= cyclesPerSample)
         {
-            float output = apu.getOutput();
-            apuBuffer[writeHead++] = (output * 65536) - 32768; // TODO: Do math
-            writeHead %= 48000;
+            uint32 output = apu.getOutput(); // Testing pulse only, values in range of 0-30 for now;
+            float range = output / 30.0f;
+            apuBuffer[writeHead++] = range * 30000; // TODO: Do math
+            if (writeHead >= 48000)
+            {
+                write(apuBuffer, writeHead);
+                writeHead = 0;
+            }
+            
             audioCounter -= cyclesPerSample;
         }
 
@@ -75,13 +121,12 @@ void NES::cpuStep()
 {
     if (traceEnabled && !cpu.hasHalted() && !cpu.isExecuting())
     {
-        logInstruction("data/6502.log", cpu.instAddr, &cpu, &cpuBus, &ppu);
+        logInstruction("bin/6502.log", cpu.instAddr, &cpu, &cpuBus, &ppu);
     }
 
     if (cpu.tick() && cpu.hasHalted())
     {
-        flushLog();
-        singleStepMode = true;
+        powerOff();
     }
 }
 
@@ -95,25 +140,19 @@ void NES::singleStep()
     }
 }
 
-// For now to test audio outpout I'm just going to use a simple oscillator, taken from the synthesizer project
-#define PI     3.14159265359
-#define TWO_PI 6.28318530718
-
-double frequency = 440;
-double phase = 0;
-double samplingRadians = TWO_PI / 48000.0;
-double increment = frequency * samplingRadians;
-
 void NES::outputAudio(int16* outputBuffer, int length)
 {
     memset(outputBuffer, 0, length);
-    int32 i = 0;
-    while (i < length)
+    if (isRunning)
     {
-        int16 value = apuBuffer[playHead++];
-        playHead %= 48000;
-        outputBuffer[i] = value;
-        outputBuffer[i + 1] = value;
-        i += 2;
+        int32 i = 0;
+        while (i < length)
+        {
+            int16 value = apuBuffer[playHead++];
+            playHead %= 48000;
+            outputBuffer[i] = value;
+            outputBuffer[i + 1] = value;
+            i += 2;
+        }
     }
 }

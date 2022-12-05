@@ -17,6 +17,29 @@ struct INESHeader
     uint8 reserved[5];
 };
 
+#pragma pack(push, 1)
+struct NSFHeader
+{
+    uint8 formatMarker[5]; // 0x4d53454e1A ("NESM" followed by MS-DOS end-of-file)
+    uint8 version;
+    uint8 totalSongs;
+    uint8 startingSong;
+    uint16 loadAddress;
+    uint16 initAddress;
+    uint16 playAddress;
+    uint8 songName[32];
+    uint8 artistName[32];
+    uint8 copyrightHolder[32];
+    uint16 playSpeedNtsc;
+    uint8 bankSwitchInit[8];
+    uint16 playSpeedPAL;
+    uint8 regionFlags;
+    uint8 extraChipSupportFlags;
+    uint8 nsf2Placeholder;
+    uint8 programDataLength[3];
+};
+#pragma pack(pop)
+
 void Cartridge::load(const char* file)
 {
     FILE* testFile = fopen(file, "rb");
@@ -31,27 +54,36 @@ void Cartridge::load(const char* file)
 
     uint8* readHead = (uint8*)contents;
 
-    // Initialize the PC to the value of FFFC = lo and FFFD = hi.
-    // needs to be done after the mapper is created so we grab the right code from the rom
-    INESHeader* header = (INESHeader*)readHead;
-    readHead += sizeof(INESHeader);
-
-    prgRomSize = header->prgRomSize;
-    prgRom = prgRomBank1 = (uint8*)readHead;
-    prgRomBank2 = prgRom + kilobytes(16) * (prgRomSize - 1);
-
-    readHead += header->prgRomSize * kilobytes(16);
-
-    chrRom = 0;
-    if (header->chrRomSize > 0)
+    // TODO: Load NSF as well to have something to test that requires no PPU
+    if (*((uint32*)readHead) == 0x4d53454e)
     {
-        chrRom = patternTable0 = (uint8*)readHead;
-        patternTable1 = chrRom + kilobytes(4);
+        // NSF File
+        NSFHeader* header = (NSFHeader*)readHead;
+        readHead += sizeof(NSFHeader);
     }
     else
     {
-        patternTable0 = chrRam;
-        patternTable1 = chrRam + kilobytes(4);
+        // For now assume INES, but do more eventually
+        INESHeader* header = (INESHeader*)readHead;
+        readHead += sizeof(INESHeader);
+
+        prgRomSize = header->prgRomSize;
+        prgRom = prgRomBank1 = (uint8*)readHead;
+        prgRomBank2 = prgRom + kilobytes(16) * (prgRomSize - 1);
+
+        readHead += header->prgRomSize * kilobytes(16);
+
+        chrRom = 0;
+        if (header->chrRomSize > 0)
+        {
+            chrRom = patternTable0 = (uint8*)readHead;
+            patternTable1 = chrRom + kilobytes(4);
+        }
+        else
+        {
+            patternTable0 = chrRam;
+            patternTable1 = chrRam + kilobytes(4);
+        }
     }
 }
 
