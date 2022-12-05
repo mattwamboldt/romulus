@@ -11,7 +11,7 @@ NES::NES()
     ppu.connect(&ppuBus);
     cpuBus.connect(&ppu, &apu, &cartridge);
     ppuBus.connect(&ppu, &cartridge);
-    traceEnabled = false;
+    traceEnabled = true;
 }
 
 void NES::loadRom(const char * path)
@@ -155,4 +155,9 @@ void NES::outputAudio(int16* outputBuffer, int length)
             i += 2;
         }
     }
+}
+
+void NES::setGamepadState(NESGamePad pad, int number)
+{
+    cpuBus.setInput(pad, number);
 }

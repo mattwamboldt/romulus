@@ -31,6 +31,7 @@
     <ClInclude Include="common.h" />
     <ClInclude Include="nes\cpuBus.h" />
     <ClInclude Include="nes\cpuTrace.h" />
+    <ClInclude Include="nes\gamepad.h" />
     <ClInclude Include="nes\nes.h" />
     <ClInclude Include="nes\ppu.h" />
     <ClInclude Include="nes\ppuBus.h" />

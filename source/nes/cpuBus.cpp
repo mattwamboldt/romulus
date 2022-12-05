@@ -39,8 +39,8 @@ uint8 CPUBus::read(uint16 address)
             // TODO: Handle Open Bus
             case 0x4014: return ppu->readRegister(address);
             case 0x4015: return apu->getStatus();
-            case 0x4016: return joy1;
-            case 0x4017: return joy2;
+            case 0x4016: return readGamepad(0);
+            case 0x4017: return readGamepad(1);
             default: return 0;
         }
     }
@@ -94,8 +94,7 @@ void CPUBus::write(uint16 address, uint8 value)
             case 0x4013: apu->writeDmcSampleLength(value); break;
             case 0x4014: ppu->writeRegister(address, value); break;
             case 0x4015: apu->writeControl(value); break;
-                // TODO: joystrick strobe?
-            case 0x4016: joy1 = value; break;
+            case 0x4016: inputStrobeActive = (value & 0x01); break;
             case 0x4017: apu->writeFrameCounterControl(value); break;
             default: return;
         }
@@ -107,4 +106,52 @@ void CPUBus::write(uint16 address, uint8 value)
     {
         if (writeCallback) writeCallback(address, value);
     }
+}
+
+void CPUBus::setInput(NESGamePad pad, int number)
+{
+    controllers[number].input = pad;
+}
+
+uint8 CPUBus::readGamepad(int number)
+{
+    // Notes about input on the NES
+    // You write to 4016 to tell connected devices to update state
+    // Then you turn it off so they are primed and ready
+    // After that you read the state ONE BIT AT A TIME!
+    // 
+    // For controllers thats a sequence of buttons on or off, and if
+    // you don't turn off strobe you always get the same one
+    // Thats because it loads it all into a "shift register", which
+    // shifts one bit out on each read.
+
+    ControllerState* controller = controllers + number;
+
+    if (inputStrobeActive)
+    {
+        uint8 currentState = 0;
+
+        // NOTE: DO NOT DO THIS NORMALLY, BAD
+        if (controller->input.a) currentState |= 0x01;
+        if (controller->input.b) currentState |= 0x02;
+        if (controller->input.select) currentState |= 0x04;
+        if (controller->input.start) currentState |= 0x08;
+        if (controller->input.up) currentState |= 0x10;
+        if (controller->input.down) currentState |= 0x20;
+        if (controller->input.left) currentState |= 0x40;
+        if (controller->input.right) currentState |= 0x80;
+
+        controller->shiftCount = 0;
+        controller->shiftRegister = currentState;
+    }
+
+    if (controller->shiftCount >= 8)
+    {
+        return 0x01;
+    }
+
+    uint8 result = controller->shiftRegister & 0x01;
+    controller->shiftRegister >>= 1;
+    ++controller->shiftCount;
+    return result;
 }

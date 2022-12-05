@@ -15,9 +15,6 @@
   - This will help with making sure the lookups are correct and establish some util functions
 - Do a performance pass once the general rendering is complete to make sure bit operations are good
 - If nestest renders:
-    - Add controller input for joysticks
-    - Add DirectSound
-    - Add APU
     - Tweak until nestest runs in full nametable mode
 - Otherwise:
     - reevaluate this priority list
@@ -539,8 +536,8 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     bool soundIsValid = false;
 
     NES nes;
-    nes.loadRom("data/nestest.nes");
-    nes.cpu.instAddr = nes.cpu.pc = 0xC000;
+    nes.loadRom("data/blargg_cpu_tests/rom_singles/01-basics.nes");
+    // nes.cpu.instAddr = nes.cpu.pc = 0xC000;
     
     while (isRunning)
     {
@@ -594,7 +591,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         }
         */
 
-        for (DWORD i = 0; i < XUSER_MAX_COUNT; ++i)
+        for (DWORD i = 0; i < 2; ++i)
         {
             XINPUT_STATE controllerState;
             if (XInputGetState(i, &controllerState) == ERROR_SUCCESS)
@@ -602,19 +599,16 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
                 // connected
                 // TODO: handle packet number
                 XINPUT_GAMEPAD pad = controllerState.Gamepad;
-
-                bool up = pad.wButtons & XINPUT_GAMEPAD_DPAD_UP;
-                bool down = pad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
-                bool left = pad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
-                bool right = pad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
-                bool start = pad.wButtons & XINPUT_GAMEPAD_START;
-                bool back = pad.wButtons & XINPUT_GAMEPAD_BACK;
-                bool leftShoulder = pad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER;
-                bool rightShoulder = pad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER;
-                bool aButton = pad.wButtons & XINPUT_GAMEPAD_A;
-                bool bButton = pad.wButtons & XINPUT_GAMEPAD_B;
-                bool xButton = pad.wButtons & XINPUT_GAMEPAD_X;
-                bool yButton = pad.wButtons & XINPUT_GAMEPAD_Y;
+                NESGamePad nesPad = {};
+                nesPad.up = (pad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0;
+                nesPad.down = (pad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0;
+                nesPad.left = (pad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != 0;
+                nesPad.right = (pad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != 0;
+                nesPad.start = (pad.wButtons & XINPUT_GAMEPAD_START) != 0;
+                nesPad.select = (pad.wButtons & XINPUT_GAMEPAD_BACK) != 0;
+                nesPad.b = (pad.wButtons & XINPUT_GAMEPAD_A) != 0;
+                nesPad.a = (pad.wButtons & XINPUT_GAMEPAD_B) != 0;
+                nes.setGamepadState(nesPad, i);
             }
             else
             {

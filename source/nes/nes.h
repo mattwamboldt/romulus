@@ -28,6 +28,7 @@ public: // making public for now, will wrap this as needed later
 
     void toggleSingleStep() { singleStepMode = !singleStepMode; }
     void outputAudio(int16* outputBuffer, int length);
+    void setGamepadState(NESGamePad pad, int number);
 
 private:
     bool wasVBlankActive;
