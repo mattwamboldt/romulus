@@ -176,7 +176,13 @@ void NES::singleStep()
 void NES::outputAudio(int16* outputBuffer, int length)
 {
     memset(outputBuffer, 0, length * 2 * sizeof(int16));
-    if (isRunning)
+    uint32 bytesAvailable = writeHead - playHead;
+    if (playHead > writeHead)
+    {
+        bytesAvailable = writeHead + (48000 - playHead);
+    }
+
+    if (isRunning && bytesAvailable > length * sizeof(int16))
     {
         int32 i = 0;
         while (i < length)
