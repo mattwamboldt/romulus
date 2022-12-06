@@ -77,11 +77,6 @@ void NoiseChannel::tickLengthCounter()
     {
         --lengthCounter;
     }
-
-    if (lengthCounter == 0)
-    {
-        isEnabled = 0;
-    }
 }
 
 uint8 NoiseChannel::getOutput()

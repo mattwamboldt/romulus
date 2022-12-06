@@ -536,7 +536,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     bool soundIsValid = false;
 
     NES nes;
-    nes.loadRom("data/blargg_cpu_tests/rom_singles/01-basics.nes");
+    nes.loadRom("data/blargg_apu_tests/rom_singles/1-len_ctr.nes");
     // nes.cpu.instAddr = nes.cpu.pc = 0xC000;
     
     while (isRunning)
@@ -659,6 +659,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
             }
 
             // Mix down application audio into a buffer
+            // FIXME: This is off somehow causing write exceptions, we're asking for sample count, but code is writing sample * channel
             nes.outputAudio(samples, bytesToWrite / audio.bytesPerSample);
 
             FillDirectSoundBuffer(&audio, byteToLock, bytesToWrite, samples);

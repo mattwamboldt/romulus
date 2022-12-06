@@ -70,11 +70,6 @@ void TriangleChannel::tickLengthCounter()
     {
         --lengthCounter;
     }
-
-    if (lengthCounter == 0)
-    {
-        isEnabled = 0;
-    }
 }
 
 void TriangleChannel::tickLinearCounter()

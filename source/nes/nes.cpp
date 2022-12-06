@@ -12,7 +12,7 @@ NES::NES()
     ppu.connect(&ppuBus);
     cpuBus.connect(&ppu, &apu, &cartridge);
     ppuBus.connect(&ppu, &cartridge);
-    traceEnabled = true;
+    traceEnabled = false;
 }
 
 void NES::loadRom(const char * path)

@@ -111,10 +111,6 @@ void PulseChannel::tickSweep()
     if (lengthCounter != 0 && !isLengthCounterHalted)
     {
         --lengthCounter;
-        if (lengthCounter == 0)
-        {
-            isEnabled = 0;
-        }
     }
 }
 

@@ -22,6 +22,12 @@ typedef double real64;
     ((uint32)((uint8)(A) << 0) | (uint32)((uint8)(B) << 8) | \
      (uint32)((uint8)(C) << 16) | (uint32)((uint8)(D) << 24))
 
+#ifndef FINAL
+#define assert(expression) if(!(expression)) { __debugbreak(); }
+#else
+#define assert(expression)
+#endif
+
 // Simplifies memory and size calculations
 #define kilobytes(value) ((value) * 1024)
 #define megabytes(value) (kilobytes(value) * 1024)
