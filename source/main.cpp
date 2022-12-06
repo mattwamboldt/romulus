@@ -621,7 +621,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         nes.update(secondsPerFrame);
 
         render(globalBackBuffer, &nes);
-        renderPatternTable(globalBackBuffer, &nes, 0, 300, 0);
+        //renderPatternTable(globalBackBuffer, &nes, 0, 300, 0);
 
         // TODO: FPS Counter
         // TODO: Memory/debugging view

@@ -40,4 +40,9 @@ private:
     int16 apuBuffer[48000];
     uint32 writeHead;
     uint32 playHead;
+
+    // Checked on subroutine return to see if nsf control is in the player side
+    uint16 nsfSentinal;
+    int32 totalPlayCycles;
+    int32 cyclesToNextPlay;
 };

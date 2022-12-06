@@ -1,9 +1,10 @@
 ﻿#include "nes.h"
 #include "cpuTrace.h"
-#include <math.h>
 #include <string.h>
 
 #include "../wavefile.h"
+
+const int32 masterClockHz = 21477272;
 
 NES::NES()
 {
@@ -28,6 +29,16 @@ void NES::loadRom(const char * path)
     else
     {
         powerOn();
+    }
+
+    // NOTE: If checking for NSF on every rts becomes a perf issue, then pull this out, but should be fine.
+    if (cartridge.isNSF)
+    {
+        real32 playPeriod = cartridge.playSpeed / 1000000.0f;
+        totalPlayCycles = (int32)(playPeriod * masterClockHz);
+
+        nsfSentinal = cpu.stack;
+        cpu.jumpSubroutine(cartridge.initAddress);
     }
 }
 
@@ -66,13 +77,18 @@ void NES::update(real32 secondsPerFrame)
         return;
     }
 
+    // Our framerate is 30fps so we just need to call this every other frame
+    if (cartridge.isNSF && cpu.stack == nsfSentinal)
+    {
+        cpuStep();
+    }
+
     // TODO: calculate this rate properly and preserve extra cycles in a variable to run later
     // cpu and ppu per needed timings, cpu and apu every 12, ppu every 4
 
     // TODO: There s a note on the wiki that mentions having a hard coded clock rate
     // "Emulator authors may wish to emulate the NTSC NES/Famicom CPU at 21441960 Hz ((341�262-0.5)�4�60) to ensure a synchronised/stable 60 frames per second."
     // I don't understand how this works, so for now, I'll just calculate it
-    int32 masterClockHz = 21477272;
     int32 masterCycles = (int32)(secondsPerFrame * masterClockHz);
     int32 cyclesPerSample = masterCycles / (secondsPerFrame * 48000);
     int32 audioCounter = 0;
@@ -80,7 +96,11 @@ void NES::update(real32 secondsPerFrame)
     {
         if (i % 12 == 0)
         {
-            cpuStep();
+            if (!cartridge.isNSF || cpu.stack != nsfSentinal)
+            {
+                cpuStep();
+            }
+
             if (i % 24 == 0)
             {
                 apu.tick();
@@ -105,6 +125,19 @@ void NES::update(real32 secondsPerFrame)
         if (i % 4 == 0)
         {
             // ppu.tick();
+        }
+
+        if (cartridge.isNSF)
+        {
+            if (cpu.stack == nsfSentinal && cyclesToNextPlay <= 0)
+            {
+                cyclesToNextPlay = totalPlayCycles;
+                cpu.jumpSubroutine(cartridge.playAddress);
+            }
+            else
+            {
+                --cyclesToNextPlay;
+            }
         }
     }
 
@@ -142,7 +175,7 @@ void NES::singleStep()
 
 void NES::outputAudio(int16* outputBuffer, int length)
 {
-    memset(outputBuffer, 0, length);
+    memset(outputBuffer, 0, length * 2 * sizeof(int16));
     if (isRunning)
     {
         int32 i = 0;

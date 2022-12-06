@@ -1,5 +1,6 @@
 #include "cartridge.h"
 #include <stdio.h>
+#include <string.h>
 
 // PRG = cartridge side connected to the cpu
 // CHR = cartridge side connected to the ppu
@@ -45,6 +46,9 @@ void Cartridge::load(const char* file)
     FILE* testFile = fopen(file, "rb");
     fseek(testFile, 0, SEEK_END);
     size_t fileSize = ftell(testFile);
+
+    // TODO: for now newing up and ignoring so we can reuse by just pointing into it
+    // a couple kbs while testing wont hurt much, but this can't ship. its an obvious leak
     char* contents = new char[fileSize];
 
     rewind(testFile);
@@ -57,9 +61,19 @@ void Cartridge::load(const char* file)
     // TODO: Load NSF as well to have something to test that requires no PPU
     if (*((uint32*)readHead) == 0x4d53454e)
     {
+        isNSF = true;
+
         // NSF File
         NSFHeader* header = (NSFHeader*)readHead;
         readHead += sizeof(NSFHeader);
+
+        initAddress = header->initAddress;
+        playAddress = header->playAddress;
+        playSpeed = header ->playSpeedNtsc;
+
+        // Non zero means theres extra stuff to parse for NSF 2.0 and that doesn't matter yet
+        // TODO: assert(header->programDataLength == 0);
+        memcpy(backingRom + (header->loadAddress - 0x8000), readHead, fileSize - sizeof(NSFHeader));
     }
     else
     {
@@ -97,6 +111,11 @@ uint8 Cartridge::prgRead(uint16 address)
     if (address < 0x8000)
     {
         return cartRam[address - 0x6000];
+    }
+
+    if (isNSF)
+    {
+        return backingRom[address - 0x8000];
     }
 
     if (address < 0xC000)
