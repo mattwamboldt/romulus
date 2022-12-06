@@ -644,45 +644,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
                 soundIsValid = true;
             }
 
-            real32 secondsUntilDisplay = secondsPerFrame - preAudioElapsedSeconds;
-            DWORD bytesUntilDisplay = (DWORD)((secondsUntilDisplay / secondsPerFrame) * (real32)audio.bytesPerFrame);
-
-            // Where we think the play cursor will be by the end of this frame
-            DWORD displayCursor = playCursor + bytesUntilDisplay;
-
-            DWORD safeWriteCursor = writeCursor;
-            if (writeCursor < playCursor)
-            {
-                // We treat the cursor as if the buffer isn't circular, purely for comparison
-                safeWriteCursor += audio.bufferSize;
-            }
-
-            safeWriteCursor += audio.padding;
-
-            DWORD writeEndByte;
-            if (safeWriteCursor < displayCursor)
-            {
-                // Gives us perfect audio sync if possible
-                writeEndByte = displayCursor + audio.bytesPerFrame;
-            }
-            else
-            {
-                // safe end location on latent audio cards
-                // TODO: This will result in us asking for more audio than we have generated from the emulator
-                // It would be fine in a game engine where we can just grab more of sound effect or piece of music,
-                // even in a normal synth where you can generate ahead and let a note change happen a frame later on input.
-                // In this case the apu wouldn't have run yet to that point on the first frame for example.
-                // NOTE: I think this is probably unique to an emulator, where the apu can change state mid frame.
-                // Thinking on it even the sdl approach of grabbing chunks at a time would potentially overtake
-                // the generated code. Might have to institute a delay/preamble of silence of some kind.
-                // For now I'm just going to roll with this and see how bad the side effects are.
-                writeEndByte = writeCursor + audio.bytesPerFrame + audio.padding;
-            }
-
+            DWORD writeEndByte = writeCursor + audio.bytesPerFrame + audio.padding;
             writeEndByte %= audio.bufferSize;
 
             DWORD bytesToWrite = 0;
-
             DWORD byteToLock = (audio.sampleIndex * audio.bytesPerSample * audio.numChannels) % audio.bufferSize;
             if (byteToLock > writeEndByte)
             {

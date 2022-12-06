@@ -16,13 +16,11 @@ struct SweepUnit
 };
 
 // https://www.nesdev.org/wiki/APU_Pulse
-//  - Sweep
-//  - Timer
-//  - Sequencer
-//  - length counter
 class PulseChannel
 {
 public:
+    void setEnabled(uint8 enable);
+
     void setDutyEnvelope(uint8 value);
     void setSweep(uint8 value);
     void setTimerLo(uint8 value);

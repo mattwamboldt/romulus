@@ -42,6 +42,7 @@
     <ClCompile Include="nes\apu\apu.cpp" />
     <ClCompile Include="nes\apu\envelope.cpp" />
     <ClCompile Include="nes\apu\pulseChannel.cpp" />
+    <ClCompile Include="nes\apu\triangleChannel.cpp" />
     <ClCompile Include="nes\cartridge.cpp" />
     <ClCompile Include="nes\cpuBus.cpp" />
     <ClCompile Include="nes\cpuTrace.cpp" />

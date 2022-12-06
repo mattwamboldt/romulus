@@ -14,13 +14,6 @@ class APU
 public:
 
     void tick();
-    
-    // Write 0x4008
-    void writeTriangleCounter(uint8 value);
-    // Write 0x400A
-    void writeTriangleTimer(uint8 value);
-    // Write 0x400B
-    void writeTriangleLength(uint8 value);
 
     // Write 0x400C
     void writeNoiseControls(uint8 value);

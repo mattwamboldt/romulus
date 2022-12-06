@@ -82,9 +82,9 @@ void CPUBus::write(uint16 address, uint8 value)
             case 0x4005: apu->pulse2.setSweep(value); break;
             case 0x4006: apu->pulse2.setTimerLo(value); break;
             case 0x4007: apu->pulse2.setTimerHi(value); break;
-            case 0x4008: apu->writeTriangleCounter(value); break;
-            case 0x400A: apu->writeTriangleTimer(value); break;
-            case 0x400B: apu->writeTriangleLength(value); break;
+            case 0x4008: apu->triangle.setLinearCounter(value); break;
+            case 0x400A: apu->triangle.setTimerLo(value); break;
+            case 0x400B: apu->triangle.setTimerHi(value); break;
             case 0x400C: apu->writeNoiseControls(value); break;
             case 0x400E: apu->writeNoisePeriod(value); break;
             case 0x400F: apu->writeNoiseLength(value); break;

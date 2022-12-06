@@ -101,6 +101,9 @@ void NES::update(real32 secondsPerFrame)
                 cpuStep();
             }
 
+            //TODO: Refactor the apu tick to happen on cpu and half step the parts that aren't clocked to cpu rate
+            apu.triangle.tick();
+
             if (i % 24 == 0)
             {
                 apu.tick();
@@ -111,7 +114,7 @@ void NES::update(real32 secondsPerFrame)
         if (audioCounter >= cyclesPerSample)
         {
             uint32 output = apu.getOutput(); // Testing pulse only, values in range of 0-30 for now;
-            float range = output / 30.0f;
+            float range = output / 45.0f;
             apuBuffer[writeHead++] = range * 30000; // TODO: Do math
             if (writeHead >= 48000)
             {

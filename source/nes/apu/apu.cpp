@@ -6,6 +6,7 @@ void APU::quarterClock()
     pulse1.envelope.tick();
     pulse2.envelope.tick();
     noise.envelope.tick();
+    triangle.tickLinearCounter();
 }
 
 void APU::halfClock()
@@ -13,6 +14,7 @@ void APU::halfClock()
     // Tick the length counters and sweep units
     pulse1.tickSweep();
     pulse2.tickSweep();
+    triangle.tickLengthCounter();
 }
 
 void APU::tick()
@@ -57,21 +59,6 @@ void APU::tick()
 
     pulse1.tick();
     pulse2.tick();
-}
-
-void APU::writeTriangleCounter(uint8 value)
-{
-    
-}
-
-void APU::writeTriangleTimer(uint8 value)
-{
-
-}
-
-void APU::writeTriangleLength(uint8 value)
-{
-
 }
 
 void APU::writeNoiseControls(uint8 value)
@@ -128,19 +115,13 @@ uint8 APU::getStatus()
 
 void APU::writeControl(uint8 value)
 {
-    uint8 enablePulse1 = value & 0b00000001;
-    uint8 enablePulse2 = value & 0b00000010;
-    uint8 enableTriangle = value & 0b00000100;
-    uint8 enableNoise = value & 0b00001000;
-    uint8 enableDmc = value & 0b00010000;
+    pulse1.setEnabled(value & 0b00000001);
+    pulse2.setEnabled(value & 0b00000010);
+    triangle.setEnabled(value & 0b00000100);
 
     // TODO: Handle write side effects on units that changed
-
-    pulse1.isEnabled = enablePulse1;
-    pulse2.isEnabled = enablePulse2;
-    triangle.isEnabled = enableTriangle;
-    noise.isEnabled = enableNoise;
-    dmc.isEnabled = enableDmc;
+    noise.isEnabled = value & 0b00001000;
+    dmc.isEnabled = value & 0b00010000;
 }
 
 void APU::writeFrameCounterControl(uint8 value)
@@ -151,6 +132,6 @@ void APU::writeFrameCounterControl(uint8 value)
 uint32 APU::getOutput()
 {
     // TODO: for now using the linear approximation from the wiki and only pulse, will come back to this
-    uint32 pulse_out = pulse1.getOutput() + pulse2.getOutput();
+    uint32 pulse_out = pulse1.getOutput() + pulse2.getOutput() + triangle.getOutput();
     return pulse_out;
 }

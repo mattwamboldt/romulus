@@ -17,6 +17,15 @@ uint8 lengthCounterLookup[32] =
     12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 };
 
+void PulseChannel::setEnabled(uint8 enable)
+{
+    isEnabled = enable;
+    if (!isEnabled)
+    {
+        lengthCounter = 0;
+    }
+}
+
 void PulseChannel::setDutyEnvelope(uint8 value)
 {
     dutyCycle = value >> 6;
@@ -102,6 +111,10 @@ void PulseChannel::tickSweep()
     if (lengthCounter != 0 && !isLengthCounterHalted)
     {
         --lengthCounter;
+        if (lengthCounter == 0)
+        {
+            isEnabled = 0;
+        }
     }
 }
 
