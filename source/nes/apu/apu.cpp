@@ -58,8 +58,13 @@ void APU::tick()
     {
         quarterClock();
         halfClock();
+
+        if (!isInterruptInhibited)
+        {
+            isFrameInteruptFlagSet = true;
+        }
+
         sequenceComplete = true;
-        // TODO: Trigger interupt if inhibit flag is clear
     }
     else if (frameCounter == 18640 && isFiveStepMode)
     {
@@ -102,18 +107,21 @@ void APU::writeDmcCounter(uint8 value)
 
 }
 
-// TODO: These map to 4015 https://www.nesdev.org/wiki/APU#Status_($4015)
+// https://www.nesdev.org/wiki/APU#Status_($4015)
 uint8 APU::getStatus()
 {
     uint8 result = 0;
-    if (pulse1.lengthCounter > 0) result |= 0x01;
-    if (pulse2.lengthCounter > 0) result |= 0x02;
+    if (pulse1.lengthCounter > 0)   result |= 0x01;
+    if (pulse2.lengthCounter > 0)   result |= 0x02;
     if (triangle.lengthCounter > 0) result |= 0x04;
-    if (noise.lengthCounter > 0) result |= 0x08;
-    result |= dmc.isEnabled;
+    if (noise.lengthCounter > 0)    result |= 0x08;
+    if (dmc.bytesRemaining > 0)     result |= 0x10;
+    if (isFrameInteruptFlagSet)     result |= 0x40;
+    if (isDmcInterruptFlagSet)      result |= 0x80;
 
-    // TODO: Handle FrameInterupt Flag
-    // TODO: Handle DMC Interupt, true if remaining bytes > 0
+    // TODO: Figure out how to handle this or if I have to, will be easier when tick is mapped to cpu tick
+    // "If an interrupt flag was set at the same moment of the read, it will read back as 1 but it will not be cleared."
+    isFrameInteruptFlagSet = false;
 
     return result;
 }
@@ -127,12 +135,19 @@ void APU::writeControl(uint8 value)
 
     // TODO: Handle write side effects on units that changed
     dmc.isEnabled = value & 0b00010000;
+    isDmcInterruptFlagSet = 0;
 }
 
 void APU::writeFrameCounterControl(uint8 value)
 {
     isFiveStepMode = (value & 0x80) > 0;
+    
     isInterruptInhibited = (value & 0x40) > 0;
+    if (isInterruptInhibited)
+    {
+        isFrameInteruptFlagSet = false;
+    }
+
     frameCounterResetRequested = true;
 }
 

@@ -43,6 +43,9 @@ public:
     NoiseChannel noise;
     DeltaModulationChannel dmc;
 
+    bool isFrameInteruptFlagSet;
+    bool isDmcInterruptFlagSet;
+
 private:
     void quarterClock();
     void halfClock();
