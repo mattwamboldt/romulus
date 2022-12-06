@@ -536,8 +536,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     bool soundIsValid = false;
 
     NES nes;
-    nes.loadRom("data/blargg_apu_tests/rom_singles/3-irq_flag.nes");
-    // nes.cpu.instAddr = nes.cpu.pc = 0xC000;
+    nes.loadRom("data/blargg_apu_tests/rom_singles/4-jitter.nes");
     
     while (isRunning)
     {

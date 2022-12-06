@@ -13,7 +13,7 @@ class APU
 {
 public:
 
-    void tick();
+    void tick(uint32 cpuCycleCount);
 
     // Write 0x4010
     void writeDmcControls(uint8 value);
@@ -37,6 +37,9 @@ public:
     // According to https://www.nesdev.org/wiki/APU_Mixer has a range of 0.0 - 1.0
     real32 getOutput();
     
+    void quarterClock();
+    void halfClock();
+
     PulseChannel pulse1;
     PulseChannel pulse2;
     TriangleChannel triangle;
@@ -46,14 +49,11 @@ public:
     bool isFrameInteruptFlagSet;
     bool isDmcInterruptFlagSet;
 
-private:
-    void quarterClock();
-    void halfClock();
-
     // https://www.nesdev.org/wiki/APU_Frame_Counter
     // TODO: They mention half frames which makes me think its actually clocked by the cpu
     // And just doesn't run the sequencer on every one. Will need to find out
     uint16 frameCounter;
+
     bool isFiveStepMode;
     bool isInterruptInhibited;
     bool frameCounterResetRequested;

@@ -17,6 +17,8 @@ void APU::quarterClock()
 
 void APU::halfClock()
 {
+    quarterClock();
+
     // Tick the length counters and sweep units
     pulse1.tickSweep();
     pulse2.tickSweep();
@@ -24,15 +26,21 @@ void APU::halfClock()
     noise.tickLengthCounter();
 }
 
-void APU::tick()
+void APU::tick(uint32 cpuCycleCount)
 {
+    triangle.tick();
+
+    if (cpuCycleCount % 2 == 0)
+    {
+        return;
+    }
+
     if (frameCounterResetRequested)
     {
         frameCounter = 0;
         frameCounterResetRequested = false;
         if (isFiveStepMode)
         {
-            quarterClock();
             halfClock();
         }
     }
@@ -41,13 +49,12 @@ void APU::tick()
 
     // Sorry for the magic numbers here but the sequence/frame timing is uneven
     // This'll get worse when PAl comes in
-    if (frameCounter == 37280)
+    if (frameCounter == 3728)
     {
         quarterClock();
     }
     else if (frameCounter == 7456)
     {
-        quarterClock();
         halfClock();
     }
     else if (frameCounter == 11185)
@@ -56,19 +63,12 @@ void APU::tick()
     }
     else if (frameCounter == 14914 && !isFiveStepMode)
     {
-        quarterClock();
         halfClock();
-
-        if (!isInterruptInhibited)
-        {
-            isFrameInteruptFlagSet = true;
-        }
-
+        isFrameInteruptFlagSet = !isInterruptInhibited;
         sequenceComplete = true;
     }
     else if (frameCounter == 18640 && isFiveStepMode)
     {
-        quarterClock();
         halfClock();
         sequenceComplete = true;
     }

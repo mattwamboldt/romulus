@@ -37,9 +37,12 @@ private:
 
     void cpuStep();
 
+    uint32 currentCpuCycle;
+
     int16 apuBuffer[48000];
     uint32 writeHead;
     uint32 playHead;
+    uint32 audioOutputCounter;
 
     // Checked on subroutine return to see if nsf control is in the player side
     uint16 nsfSentinal;

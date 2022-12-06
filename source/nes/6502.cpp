@@ -4,6 +4,9 @@ const uint16 NMI_VECTOR = 0xFFFA;
 const uint16 RESET_VECTOR = 0xFFFC;
 const uint16 IRQ_VECTOR = 0xFFFE;
 
+// TODO: The cpu doesn't wait long enough in certain scenarios which prevents any
+// of the blargg tests that use the delay macro. At least I'm assuming it's my code and not an old rom
+
 // TODO: Interrupt handling isn't exact, there are several situations where
 // another vector will be used, and the interrupt polling isn't right
 // TODO: make interupt take some amount of clock cycles, on the 6502 it

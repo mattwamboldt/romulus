@@ -92,7 +92,6 @@ void NES::update(real32 secondsPerFrame)
     // I don't understand how this works, so for now, I'll just calculate it
     int32 masterCycles = (int32)(secondsPerFrame * masterClockHz);
     int32 cyclesPerSample = masterCycles / (secondsPerFrame * 48000);
-    int32 audioCounter = 0;
     for (int i = 0; i < masterCycles; ++i)
     {
         if (i % 12 == 0)
@@ -101,18 +100,13 @@ void NES::update(real32 secondsPerFrame)
             {
                 cpuStep();
             }
-
-            //TODO: Refactor the apu tick to happen on cpu and half step the parts that aren't clocked to cpu rate
-            apu.triangle.tick();
-
-            if (i % 24 == 0)
-            {
-                apu.tick();
-            }
+            
+            apu.tick(currentCpuCycle);
+            ++currentCpuCycle;
         }
 
-        ++audioCounter;
-        if (audioCounter >= cyclesPerSample)
+        ++audioOutputCounter;
+        if (audioOutputCounter >= cyclesPerSample)
         {
             float output = apu.getOutput(); // Testing pulse only, values in range of 0.0-1.0 for now;
             apuBuffer[writeHead++] = output * 30000; // TODO: Do math
@@ -122,7 +116,7 @@ void NES::update(real32 secondsPerFrame)
                 writeHead = 0;
             }
             
-            audioCounter -= cyclesPerSample;
+            audioOutputCounter -= cyclesPerSample;
         }
 
         if (i % 4 == 0)
