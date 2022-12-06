@@ -85,9 +85,9 @@ void CPUBus::write(uint16 address, uint8 value)
             case 0x4008: apu->triangle.setLinearCounter(value); break;
             case 0x400A: apu->triangle.setTimerLo(value); break;
             case 0x400B: apu->triangle.setTimerHi(value); break;
-            case 0x400C: apu->writeNoiseControls(value); break;
-            case 0x400E: apu->writeNoisePeriod(value); break;
-            case 0x400F: apu->writeNoiseLength(value); break;
+            case 0x400C: apu->noise.setEnvelope(value); break;
+            case 0x400E: apu->noise.setPeriod(value); break;
+            case 0x400F: apu->noise.setLengthCounter(value); break;
             case 0x4010: apu->writeDmcControls(value); break;
             case 0x4011: apu->writeDmcCounter(value); break;
             case 0x4012: apu->writeDmcSampleAddress(value); break;

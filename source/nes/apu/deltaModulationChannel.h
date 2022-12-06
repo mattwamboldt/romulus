@@ -4,4 +4,6 @@
 struct DeltaModulationChannel
 {
     uint8 isEnabled;
+    
+    uint8 getOutput() { return 0; }
 };

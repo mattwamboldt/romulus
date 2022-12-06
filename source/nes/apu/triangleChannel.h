@@ -2,9 +2,8 @@
 #include "../../common.h"
 
 // https://www.nesdev.org/wiki/APU_Triangle
-class TriangleChannel
+struct TriangleChannel
 {
-public:
     void setEnabled(uint8 enable);
     void setLinearCounter(uint8 value);
     void setTimerLo(uint8 value);
@@ -18,12 +17,12 @@ public:
     
     uint8 isEnabled;
 
-private:
+    uint8 lengthCounter;
+
     // Also the lengthCounter halt per the wiki
     bool isControlFlagSet;
     bool isLinearReloadFlagSet;
 
-    uint8 lengthCounter;
     uint8 linearCounter;
     uint8 linearReloadValue;
 

@@ -45,6 +45,7 @@ void NES::loadRom(const char * path)
 void NES::powerOn()
 {
     cpu.start();
+    apu.noise.shiftRegister = 1;
     isRunning = true;
 }
 
@@ -113,9 +114,8 @@ void NES::update(real32 secondsPerFrame)
         ++audioCounter;
         if (audioCounter >= cyclesPerSample)
         {
-            uint32 output = apu.getOutput(); // Testing pulse only, values in range of 0-30 for now;
-            float range = output / 45.0f;
-            apuBuffer[writeHead++] = range * 30000; // TODO: Do math
+            float output = apu.getOutput(); // Testing pulse only, values in range of 0.0-1.0 for now;
+            apuBuffer[writeHead++] = output * 30000; // TODO: Do math
             if (writeHead >= 48000)
             {
                 write(apuBuffer, writeHead);
@@ -178,7 +178,7 @@ void NES::singleStep()
 
 void NES::outputAudio(int16* outputBuffer, int length)
 {
-    memset(outputBuffer, 0, length * 2 * sizeof(int16));
+    memset(outputBuffer, 0, length * sizeof(int16));
     uint32 bytesAvailable = writeHead - playHead;
     if (playHead > writeHead)
     {

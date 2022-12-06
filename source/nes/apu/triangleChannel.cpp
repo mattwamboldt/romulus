@@ -69,10 +69,11 @@ void TriangleChannel::tickLengthCounter()
     if (lengthCounter != 0 && !isControlFlagSet)
     {
         --lengthCounter;
-        if (lengthCounter == 0)
-        {
-            isEnabled = 0;
-        }
+    }
+
+    if (lengthCounter == 0)
+    {
+        isEnabled = 0;
     }
 }
 

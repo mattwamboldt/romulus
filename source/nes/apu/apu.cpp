@@ -1,5 +1,11 @@
 #include "apu.h"
 
+const bool DEBUG_PULSE1_MUTE = 0;
+const bool DEBUG_PULSE2_MUTE = 0;
+const bool DEBUG_TRIANGLE_MUTE = 0;
+const bool DEBUG_NOISE_MUTE = 0;
+const bool DEBUG_DMC_MUTE = 1;
+
 void APU::quarterClock()
 {
     // Tick the envelopes and triangle linear counter
@@ -15,6 +21,7 @@ void APU::halfClock()
     pulse1.tickSweep();
     pulse2.tickSweep();
     triangle.tickLengthCounter();
+    noise.tickLengthCounter();
 }
 
 void APU::tick()
@@ -22,11 +29,15 @@ void APU::tick()
     if (frameCounterResetRequested)
     {
         frameCounter = 0;
+        frameCounterResetRequested = false;
+        if (isFiveStepMode)
+        {
+            quarterClock();
+            halfClock();
+        }
     }
-    else
-    {
-        ++frameCounter;
-    }
+
+    bool sequenceComplete = false;
 
     // Sorry for the magic numbers here but the sequence/frame timing is uneven
     // This'll get worse when PAl comes in
@@ -47,33 +58,28 @@ void APU::tick()
     {
         quarterClock();
         halfClock();
+        sequenceComplete = true;
         // TODO: Trigger interupt if inhibit flag is clear
-        frameCounterResetRequested = true;
     }
     else if (frameCounter == 18640 && isFiveStepMode)
     {
         quarterClock();
         halfClock();
-        frameCounterResetRequested = true;
+        sequenceComplete = true;
     }
 
     pulse1.tick();
     pulse2.tick();
-}
+    noise.tick();
 
-void APU::writeNoiseControls(uint8 value)
-{
-
-}
-
-void APU::writeNoisePeriod(uint8 value)
-{
-
-}
-
-void APU::writeNoiseLength(uint8 value)
-{
-
+    if (sequenceComplete)
+    {
+        frameCounter = 0;
+    }
+    else
+    {
+        ++frameCounter;
+    }
 }
 
 void APU::writeDmcControls(uint8 value)
@@ -100,11 +106,10 @@ void APU::writeDmcCounter(uint8 value)
 uint8 APU::getStatus()
 {
     uint8 result = 0;
-    // Can only do this because the writes are the same bits
-    result |= pulse1.isEnabled;
-    result |= pulse2.isEnabled;
-    result |= triangle.isEnabled;
-    result |= noise.isEnabled;
+    if (pulse1.lengthCounter > 0) result |= 0x01;
+    if (pulse2.lengthCounter > 0) result |= 0x02;
+    if (triangle.lengthCounter > 0) result |= 0x04;
+    if (noise.lengthCounter > 0) result |= 0x08;
     result |= dmc.isEnabled;
 
     // TODO: Handle FrameInterupt Flag
@@ -118,20 +123,27 @@ void APU::writeControl(uint8 value)
     pulse1.setEnabled(value & 0b00000001);
     pulse2.setEnabled(value & 0b00000010);
     triangle.setEnabled(value & 0b00000100);
+    noise.setEnabled(value & 0b00001000);
 
     // TODO: Handle write side effects on units that changed
-    noise.isEnabled = value & 0b00001000;
     dmc.isEnabled = value & 0b00010000;
 }
 
 void APU::writeFrameCounterControl(uint8 value)
 {
-
+    isFiveStepMode = (value & 0x80) > 0;
+    isInterruptInhibited = (value & 0x40) > 0;
+    frameCounterResetRequested = true;
 }
 
-uint32 APU::getOutput()
+real32 APU::getOutput()
 {
-    // TODO: for now using the linear approximation from the wiki and only pulse, will come back to this
-    uint32 pulse_out = pulse1.getOutput() + pulse2.getOutput() + triangle.getOutput();
-    return pulse_out;
+    // TODO: for now just getting something out
+    uint32 output = 0;
+    if (!DEBUG_PULSE1_MUTE) output += pulse1.getOutput();
+    if (!DEBUG_PULSE2_MUTE) output += pulse2.getOutput();
+    if (!DEBUG_TRIANGLE_MUTE) output += triangle.getOutput();
+    if (!DEBUG_NOISE_MUTE) output += noise.getOutput();
+    if (!DEBUG_DMC_MUTE) output += dmc.getOutput();
+    return output / 60.0f;
 }

@@ -15,13 +15,6 @@ public:
 
     void tick();
 
-    // Write 0x400C
-    void writeNoiseControls(uint8 value);
-    // Write 0x400E
-    void writeNoisePeriod(uint8 value);
-    // Write 0x400F
-    void writeNoiseLength(uint8 value);
-
     // Write 0x4010
     void writeDmcControls(uint8 value);
     // Write 0x4011
@@ -42,7 +35,7 @@ public:
 
     // Does the mixdown of all the channels at the current moment in time
     // According to https://www.nesdev.org/wiki/APU_Mixer has a range of 0.0 - 1.0
-    uint32 getOutput();
+    real32 getOutput();
     
     PulseChannel pulse1;
     PulseChannel pulse2;
