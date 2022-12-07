@@ -136,6 +136,13 @@ void NES::update(real32 secondsPerFrame)
                 --cyclesToNextPlay;
             }
         }
+        // NSF is supposed to be designed to not use interrupts
+        else
+        {
+            // Gather up all the potenial interrupt sources to assert the right status in the cpu
+            // TODO: Only have the apu for now, other sources will come later
+            cpu.setIRQ(apu.isFrameInteruptFlagSet || apu.isDmcInterruptFlagSet);
+        }
     }
 }
 

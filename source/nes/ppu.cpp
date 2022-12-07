@@ -4,7 +4,7 @@
 
 void PPU::tick()
 {
-   // Step 1: Repor
+   // Step 1: Report status correctly with frame timing for intterupts
 }
 
 // Side effects http://wiki.nesdev.com/w/index.php/PPU_scrolling#Register_controls

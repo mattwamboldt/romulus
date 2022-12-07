@@ -554,8 +554,14 @@ public:
 
     // Interupt functions
     void forceBreak();
-    void nonMaskableInterrupt();
-    void requestInterrupt();
+
+    // Called externally to set the state of /NMI
+    // See: https://www.nesdev.org/wiki/NMI
+    void setNMI(bool active);
+
+    // Called externally to set the state of /IRQ
+    // See: https://www.nesdev.org/wiki/IRQ
+    void setIRQ(bool active);
 
 private:
     bool isHalted;

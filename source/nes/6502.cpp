@@ -834,17 +834,14 @@ void MOS6502::pushWord(uint16 v)
     push(lo);
 }
 
-void MOS6502::nonMaskableInterrupt()
+void MOS6502::setNMI(bool active)
 {
-    nmiRequested = true;
+    nmiRequested = active;
 }
 
-void MOS6502::requestInterrupt()
+void MOS6502::setIRQ(bool active)
 {
-    if (!isFlagSet(STATUS_INT_DISABLE))
-    {
-        interruptRequested = true;
-    }
+    interruptRequested = !isFlagSet(STATUS_INT_DISABLE) && active;
 }
 
 uint16 MOS6502::readWord(uint16 base)
