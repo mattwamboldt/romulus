@@ -18,6 +18,4 @@ private:
 
     uint8 vram[2 * 1024] = {};
     uint8 paletteRam[32];
-
-    WriteCallback writeCallback;
 };

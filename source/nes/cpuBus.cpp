@@ -2,6 +2,7 @@
 
 // Reference
 // https://www.nesdev.org/wiki/CPU_memory_map
+// https://www.nesdev.org/wiki/2A03
 
 void CPUBus::connect(PPU* ppu, APU* apu, Cartridge* cart)
 {
@@ -18,21 +19,40 @@ uint8 CPUBus::read(uint16 address)
         return ram[address & 0x07FF];
     }
 
+    // PPU Registers (Only bottom 3 bits matter)
+    // 0x2000 - 0x3FF
+    // See: https://www.nesdev.org/wiki/PPU_registers
     if (address < 0x4000)
     {
-        return ppu->readRegister(address);
+        uint16 decodedAddress = address & 0x0007;
+        if (decodedAddress == 0x02)
+        {
+            ppuOpenBusValue &= 0x1F;
+            ppuOpenBusValue |= ppu->getStatus();
+        }
+        else if (decodedAddress == 0x04)
+        {
+            ppuOpenBusValue = ppu->getOamData();
+        }
+        else if (decodedAddress == 0x07)
+        {
+            ppuOpenBusValue = ppu->getData();
+        }
+
+        return ppuOpenBusValue;
     }
 
+    // APU and IO Ports
+    // 0x4000 - 0x401F
+    // See http://wiki.nesdev.com/w/index.php/2A03
     if (address < 0x4020)
     {
-        // map to the apu/io registers
-        // http://wiki.nesdev.com/w/index.php/2A03
         // TODO: docs mention these as readonly, remove if that matters
         // TODO: It's actualy write only, have to handle whetever Open Bus means for read. Also these mappings are ALL wrong
         switch (address)
         {
             // TODO: Handle Open Bus
-            case 0x4014: return ppu->readRegister(address);
+            case 0x4014: return ppuOpenBusValue;
             case 0x4015: return apu->getStatus();
             case 0x4016: return readGamepad(0);
             case 0x4017: return readGamepad(1);
@@ -56,12 +76,24 @@ void CPUBus::write(uint16 address, uint8 value)
     {
         // map to the internal 2kb ram
         ram[address & 0x07FF] = value;
-        if (writeCallback) writeCallback(address, value);
     }
     else if (address < 0x4000)
     {
-        ppu->writeRegister(address, value);
-        if (writeCallback) writeCallback(address, value);
+        // map to the ppu registers (only uses the bottom 3 bits)
+        // http://wiki.nesdev.com/w/index.php/2A03
+        uint16 decodedAddress = address & 0x0007;
+        switch (decodedAddress)
+        {
+            case 0x00: ppu->setControl(value); break;
+            case 0x01: ppu->setMask(value); break;
+            case 0x03: ppu->setOamAddress(value); break;
+            case 0x04: ppu->setOamData(value); break;
+            case 0x05: ppu->setScroll(value); break;
+            case 0x06: ppu->setAddress(value); break;
+            case 0x07: ppu->setData(value); break;
+        }
+
+        ppuOpenBusValue = value;
     }
     else if (address < 0x4020)
     {
@@ -87,19 +119,17 @@ void CPUBus::write(uint16 address, uint8 value)
             case 0x4011: apu->writeDmcCounter(value); break;
             case 0x4012: apu->writeDmcSampleAddress(value); break;
             case 0x4013: apu->writeDmcSampleLength(value); break;
-            case 0x4014: ppu->writeRegister(address, value); break;
+            case 0x4014: ppu->setOamDma(value); break;
             case 0x4015: apu->writeControl(value); break;
             case 0x4016: inputStrobeActive = (value & 0x01); break;
             case 0x4017: apu->writeFrameCounterControl(value); break;
             default: return;
         }
-
-        if (writeCallback) writeCallback(address, value);
     }
-    // Cartridge space (logic depends on the mapper)
-    else if (cart->prgWrite(address, value))
+    else
     {
-        if (writeCallback) writeCallback(address, value);
+        // Cartridge space (logic depends on the mapper)
+        cart->prgWrite(address, value);
     }
 }
 

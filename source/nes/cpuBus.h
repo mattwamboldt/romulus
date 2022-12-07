@@ -36,5 +36,5 @@ private:
     bool inputStrobeActive;
     ControllerState controllers[2];
 
-    WriteCallback writeCallback;
+    uint8 ppuOpenBusValue;
 };
