@@ -4,7 +4,7 @@
 
 #include "../wavefile.h"
 
-const int32 masterClockHz = 21477272;
+const uint32 masterClockHz = 21477272;
 
 NES::NES()
 {
@@ -90,9 +90,9 @@ void NES::update(real32 secondsPerFrame)
     // TODO: There s a note on the wiki that mentions having a hard coded clock rate
     // "Emulator authors may wish to emulate the NTSC NES/Famicom CPU at 21441960 Hz ((341�262-0.5)�4�60) to ensure a synchronised/stable 60 frames per second."
     // I don't understand how this works, so for now, I'll just calculate it
-    int32 masterCycles = (int32)(secondsPerFrame * masterClockHz);
-    int32 cyclesPerSample = masterCycles / (secondsPerFrame * 48000);
-    for (int i = 0; i < masterCycles; ++i)
+    uint32 masterCycles = (uint32)(secondsPerFrame * masterClockHz);
+    uint32 cyclesPerSample = (uint32)(masterCycles / (secondsPerFrame * 48000));
+    for (uint32 i = 0; i < masterCycles; ++i)
     {
         if (i % 12 == 0)
         {
@@ -108,8 +108,8 @@ void NES::update(real32 secondsPerFrame)
         ++audioOutputCounter;
         if (audioOutputCounter >= cyclesPerSample)
         {
-            float output = apu.getOutput(); // Testing pulse only, values in range of 0.0-1.0 for now;
-            apuBuffer[writeHead++] = output * 30000; // TODO: Do math
+            real32 output = apu.getOutput(); // Testing pulse only, values in range of 0.0-1.0 for now;
+            apuBuffer[writeHead++] = (int16)(output * 30000); // TODO: Do math
             if (writeHead >= 48000)
             {
                 write(apuBuffer, writeHead);
@@ -121,7 +121,7 @@ void NES::update(real32 secondsPerFrame)
 
         if (i % 4 == 0)
         {
-            // ppu.tick();
+            ppu.tick();
         }
 
         if (cartridge.isNSF)
@@ -137,21 +137,17 @@ void NES::update(real32 secondsPerFrame)
             }
         }
     }
-
-    if (ppu.getVBlankActive() && !wasVBlankActive)
-    {
-        // cpu.nonMaskableInterrupt();
-        // flushScreenBuffer();
-    }
-
-    wasVBlankActive = ppu.getVBlankActive();
 }
 
 void NES::cpuStep()
 {
     if (traceEnabled && !cpu.hasHalted() && !cpu.isExecuting())
     {
-        logInstruction("bin/6502.log", cpu.instAddr, &cpu, &cpuBus, &ppu);
+        // TODO: TEMP, we only need enough to compare the first few seconds
+        if (currentCpuCycle < 452264)
+        {
+            logInstruction("bin/6502.log", cpu.instAddr, &cpu, &cpuBus, &ppu);
+        }
     }
 
     if (cpu.tick() && cpu.hasHalted())

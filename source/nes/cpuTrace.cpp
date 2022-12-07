@@ -194,9 +194,9 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
 int32 formatHexInstruction(char* dest, uint16 address, uint8 opcode, AddressingMode addressMode, uint8 p1, uint8 p2)
 {
     char* start = dest;
+    *dest++ = '$';
     dest += formatWord(dest, address);
-    *dest++ = ' ';
-    *dest++ = ' ';
+    *dest++ = ':';
     dest += formatByte(dest, opcode);
 
     switch (addressMode)
@@ -288,7 +288,7 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cp
 
     const int32 HEX_WIDTH = 15;
     const int32 INST_WIDTH = 33;
-    const int32 REG_WIDTH = 27;
+    const int32 REG_WIDTH = 32;
     const int32 CYCLES_WIDTH = 27;
 
     char line[HEX_WIDTH + INST_WIDTH + REG_WIDTH] = {};
@@ -301,7 +301,7 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cp
     padRight(columnStart, instLength, INST_WIDTH);
     columnStart += INST_WIDTH;
 
-    formatRegistersNesTest(columnStart, cpu, ppu);
+    formatRegistersFCEU(columnStart, cpu);
     if (op.isUnofficial)
     {
         line[15] = '*';

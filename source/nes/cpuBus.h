@@ -17,7 +17,6 @@ class CPUBus : public IBus
 {
 public:
     void connect(PPU* ppu, APU* apu, Cartridge* cart);
-    void addWriteCallback(WriteCallback cb);
 
     uint8 read(uint16 address);
     uint16 readWord(uint16 address);

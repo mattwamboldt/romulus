@@ -5,7 +5,6 @@
 
 // TODO: Will need some way to verify the blargg apu tests
 // TODO: New main objective - get parity with the console app
-// Then APU since that's easier and will enable more tests, then the PPU
 
 /* Current objective: Ability to run nestest visually
 - Add text rendering
@@ -367,35 +366,7 @@ void renderPatternTable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left,
 
 void render(GDIBackBuffer buffer, NES* nes)
 {
-    uint8* nesBuffer = nes->ppu.screenBuffer;
-    uint8* row = (uint8*)buffer.memory;
-
-    if (!nes->cpu.hasHalted())
-    {
-        for (int y = 0; y < NES_SCREEN_HEIGHT; ++y)
-        {
-            uint32* pixel = (uint32*)row;
-            for (int x = 0; x < NES_SCREEN_WIDTH; ++x)
-            {
-                *pixel++ = palette[*nesBuffer++];
-            }
-
-            row += buffer.pitch;
-        }
-    }
-    else
-    {
-        for (int y = 0; y < NES_SCREEN_HEIGHT; ++y)
-        {
-            uint32* pixel = (uint32*)row;
-            for (int x = 0; x < NES_SCREEN_WIDTH; ++x)
-            {
-                *pixel++ = 0xFF0000FF;
-            }
-
-            row += buffer.pitch;
-        }
-    }
+    // TODO: A bunch of this should be in platform agnostic place and copied out
 }
 
 void resizeDIBSection(GDIBackBuffer* buffer, int width, int height)
@@ -620,7 +591,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         nes.update(secondsPerFrame);
 
         render(globalBackBuffer, &nes);
-        //renderPatternTable(globalBackBuffer, &nes, 0, 300, 0);
+        if (!nes.cartridge.isNSF)
+        {
+            renderPatternTable(globalBackBuffer, &nes, 0, 300, 0);
+        }
 
         // TODO: FPS Counter
         // TODO: Memory/debugging view

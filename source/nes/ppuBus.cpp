@@ -5,11 +5,6 @@ void PPUBus::connect(PPU* ppu, Cartridge* cart)
     this->cart = cart;
 }
 
-void PPUBus::addWriteCallback(WriteCallback cb)
-{
-    writeCallback = cb;
-}
-
 // This read and write is based on mapper000, will expand later
 uint8 PPUBus::read(uint16 address)
 {

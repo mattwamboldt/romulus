@@ -10,11 +10,6 @@ void CPUBus::connect(PPU* ppu, APU* apu, Cartridge* cart)
     this->cart = cart;
 }
 
-void CPUBus::addWriteCallback(WriteCallback cb)
-{
-    writeCallback = cb;
-}
-
 uint8 CPUBus::read(uint16 address)
 {
     if (address < 0x2000)
