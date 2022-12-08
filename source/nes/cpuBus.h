@@ -18,10 +18,12 @@ class CPUBus : public IBus
 public:
     void connect(PPU* ppu, APU* apu, Cartridge* cart);
 
-    uint8 read(uint16 address, bool readOnly = false);
+    uint8 read(uint16 address);
     uint16 readWord(uint16 address);
     void write(uint16 address, uint8 value);
     void setInput(NESGamePad pad, int number);
+
+    void setReadOnly(bool enable) { readOnly = enable; };
 
 private:
     uint8 readGamepad(int number);
@@ -37,4 +39,7 @@ private:
     ControllerState controllers[2];
 
     uint8 ppuOpenBusValue;
+
+    // Debug implementation detail, for logging
+    bool readOnly;
 };

@@ -25,7 +25,7 @@ public:
     void writeDmcSampleLength(uint8 value);
 
     // Read 0x4015
-    uint8 getStatus();
+    uint8 getStatus(bool readOnly);
 
     // Write 0x4015
     void writeControl(uint8 value);

@@ -6,7 +6,7 @@ void PPUBus::connect(PPU* ppu, Cartridge* cart)
 }
 
 // This read and write is based on mapper000, will expand later
-uint8 PPUBus::read(uint16 address, bool readOnly)
+uint8 PPUBus::read(uint16 address)
 {
     if (address < 0x2000)
     {

@@ -11,7 +11,7 @@ void CPUBus::connect(PPU* ppu, APU* apu, Cartridge* cart)
     this->cart = cart;
 }
 
-uint8 CPUBus::read(uint16 address, bool readOnly)
+uint8 CPUBus::read(uint16 address)
 {
     if (address < 0x2000)
     {
@@ -24,22 +24,28 @@ uint8 CPUBus::read(uint16 address, bool readOnly)
     // See: https://www.nesdev.org/wiki/PPU_registers
     if (address < 0x4000)
     {
+        uint8 result = ppuOpenBusValue;
         uint16 decodedAddress = address & 0x0007;
         if (decodedAddress == 0x02)
         {
-            ppuOpenBusValue &= 0x1F;
-            ppuOpenBusValue |= ppu->getStatus(readOnly);
+            result &= 0x1F;
+            result |= ppu->getStatus(readOnly);
         }
         else if (decodedAddress == 0x04)
         {
-            ppuOpenBusValue = ppu->getOamData();
+            result = ppu->getOamData();
         }
         else if (decodedAddress == 0x07)
         {
-            ppuOpenBusValue = ppu->getData(readOnly);
+            result = ppu->getData(readOnly);
         }
 
-        return ppuOpenBusValue;
+        if (!readOnly)
+        {
+            ppuOpenBusValue = result;
+        }
+
+        return result;
     }
 
     // APU and IO Ports
@@ -53,9 +59,9 @@ uint8 CPUBus::read(uint16 address, bool readOnly)
         {
             // TODO: Handle Open Bus
             case 0x4014: return ppuOpenBusValue;
-            case 0x4015: return apu->getStatus();
-            case 0x4016: return readGamepad(0);
-            case 0x4017: return readGamepad(1);
+            case 0x4015: return apu->getStatus(readOnly);
+            case 0x4016: return readOnly ? 0 : readGamepad(0);
+            case 0x4017: return readOnly ? 0 : readGamepad(1);
             default: return 0;
         }
     }

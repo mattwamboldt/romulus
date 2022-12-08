@@ -108,7 +108,7 @@ void APU::writeDmcCounter(uint8 value)
 }
 
 // https://www.nesdev.org/wiki/APU#Status_($4015)
-uint8 APU::getStatus()
+uint8 APU::getStatus(bool readOnly)
 {
     uint8 result = 0;
     if (pulse1.lengthCounter > 0)   result |= 0x01;
@@ -119,9 +119,12 @@ uint8 APU::getStatus()
     if (isFrameInteruptFlagSet)     result |= 0x40;
     if (isDmcInterruptFlagSet)      result |= 0x80;
 
-    // TODO: Figure out how to handle this or if I have to, will be easier when tick is mapped to cpu tick
-    // "If an interrupt flag was set at the same moment of the read, it will read back as 1 but it will not be cleared."
-    isFrameInteruptFlagSet = false;
+    if (!readOnly)
+    {
+        // TODO: Figure out how to handle this or if I have to, will be easier when tick is mapped to cpu tick
+        // "If an interrupt flag was set at the same moment of the read, it will read back as 1 but it will not be cleared."
+        isFrameInteruptFlagSet = false;
+    }
 
     return result;
 }

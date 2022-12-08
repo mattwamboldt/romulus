@@ -64,9 +64,9 @@ int formatString(char* dest, const char* s)
 
 int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
 {
-    uint8 opcode = bus->read(address, true);
-    uint8 p1 = bus->read(address + 1, true);
-    uint8 p2 = bus->read(address + 2, true);
+    uint8 opcode = bus->read(address);
+    uint8 p1 = bus->read(address + 1);
+    uint8 p2 = bus->read(address + 2);
 
     Operation op = operations[opcode];
     const char* opCodeName = opCodeNames[op.opCode];
@@ -86,7 +86,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             s += formatAddress(s, address);
             if (op.opCode != JMP && op.opCode != JSR)
             {
-                uint8 result = bus->read(address, true);
+                uint8 result = bus->read(address);
                 s += formatString(s, " = ");
                 s += formatImmediate(s, result);
             }
@@ -98,7 +98,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             s += formatString(s, ",X @ ");
             s += formatAddress(s, address);
 
-            uint8 result = bus->read(address, true);
+            uint8 result = bus->read(address);
             s += formatString(s, " = ");
             s += formatImmediate(s, result);
         }
@@ -109,7 +109,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             s += formatString(s, ",Y @ ");
             s += formatAddress(s, address);
 
-            uint8 result = bus->read(address, true);
+            uint8 result = bus->read(address);
             s += formatString(s, " = ");
             s += formatImmediate(s, result);
         }
@@ -135,7 +135,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             s += formatString(s, " = ");
             s += formatWord(s, address);
 
-            uint8 result = bus->read(address, true);
+            uint8 result = bus->read(address);
             s += formatString(s, " = ");
             s += formatByte(s, result);
         }
@@ -147,7 +147,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             s += formatString(s, "),Y @ ");
             s += formatAddress(s, address);
 
-            uint8 result = bus->read(address, true);
+            uint8 result = bus->read(address);
             s += formatString(s, " = ");
             s += formatImmediate(s, result);
         }
@@ -156,7 +156,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
         {
             s += formatAddress(s, p1, 0);
 
-            uint8 result = bus->read(address, true);
+            uint8 result = bus->read(address);
             s += formatString(s, " = ");
             s += formatImmediate(s, result);
         }
@@ -167,7 +167,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             s += formatString(s, ",X @ ");
             s += formatByte(s, (uint8)address);
 
-            uint8 result = bus->read(address, true);
+            uint8 result = bus->read(address);
             s += formatString(s, " = ");
             s += formatByte(s, result);
         }
@@ -178,7 +178,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             s += formatString(s, ",Y @ ");
             s += formatByte(s, (uint8)address);
 
-            uint8 result = bus->read(address, true);
+            uint8 result = bus->read(address);
             s += formatString(s, " = ");
             s += formatByte(s, result);
         }
@@ -274,16 +274,18 @@ void padRight(char* start, int32 length, int32 desiredLength, char padChar = ' '
     *end = 0;
 }
 
-void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cpuBus, PPU* ppu)
+void logInstruction(const char* filename, uint16 address, MOS6502* cpu, CPUBus* cpuBus, PPU* ppu)
 {
     if (!logFile)
     {
         logFile = fopen(filename, "w");
     }
 
-    uint8 opcode = cpuBus->read(address, true);
-    uint8 p1 = cpuBus->read(address + 1, true);
-    uint8 p2 = cpuBus->read(address + 2, true);
+    cpuBus->setReadOnly(true);
+
+    uint8 opcode = cpuBus->read(address);
+    uint8 p1 = cpuBus->read(address + 1);
+    uint8 p2 = cpuBus->read(address + 2);
 
     Operation op = operations[opcode];
 
@@ -309,6 +311,8 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cp
     }
 
     fputs(line, logFile);
+
+    cpuBus->setReadOnly(false);
 }
 
 void flushLog()
