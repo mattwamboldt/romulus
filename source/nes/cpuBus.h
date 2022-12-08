@@ -27,6 +27,7 @@ public:
 
 private:
     uint8 readGamepad(int number);
+    void strobeInput(int number);
 
     PPU* ppu;
     APU* apu;

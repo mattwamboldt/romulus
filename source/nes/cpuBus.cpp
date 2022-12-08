@@ -127,7 +127,13 @@ void CPUBus::write(uint16 address, uint8 value)
             case 0x4013: apu->writeDmcSampleLength(value); break;
             case 0x4014: ppu->setOamDma(value); break;
             case 0x4015: apu->writeControl(value); break;
-            case 0x4016: inputStrobeActive = (value & 0x01); break;
+            case 0x4016:
+            {
+                inputStrobeActive = (value & 0x01);
+                strobeInput(0);
+                strobeInput(1);
+            }
+            break;
             case 0x4017: apu->writeFrameCounterControl(value); break;
             default: return;
         }
@@ -142,6 +148,25 @@ void CPUBus::write(uint16 address, uint8 value)
 void CPUBus::setInput(NESGamePad pad, int number)
 {
     controllers[number].input = pad;
+}
+
+void CPUBus::strobeInput(int number)
+{
+    uint8 currentState = 0;
+    ControllerState* controller = controllers + number;
+
+    // NOTE: DO NOT DO THIS NORMALLY, BAD
+    if (controller->input.a) currentState |= 0x01;
+    if (controller->input.b) currentState |= 0x02;
+    if (controller->input.select) currentState |= 0x04;
+    if (controller->input.start) currentState |= 0x08;
+    if (controller->input.up) currentState |= 0x10;
+    if (controller->input.down) currentState |= 0x20;
+    if (controller->input.left) currentState |= 0x40;
+    if (controller->input.right) currentState |= 0x80;
+
+    controller->shiftCount = 0;
+    controller->shiftRegister = currentState;
 }
 
 uint8 CPUBus::readGamepad(int number)
@@ -160,25 +185,12 @@ uint8 CPUBus::readGamepad(int number)
 
     if (inputStrobeActive)
     {
-        uint8 currentState = 0;
-
-        // NOTE: DO NOT DO THIS NORMALLY, BAD
-        if (controller->input.a) currentState |= 0x01;
-        if (controller->input.b) currentState |= 0x02;
-        if (controller->input.select) currentState |= 0x04;
-        if (controller->input.start) currentState |= 0x08;
-        if (controller->input.up) currentState |= 0x10;
-        if (controller->input.down) currentState |= 0x20;
-        if (controller->input.left) currentState |= 0x40;
-        if (controller->input.right) currentState |= 0x80;
-
-        controller->shiftCount = 0;
-        controller->shiftRegister = currentState;
+        strobeInput(number);
     }
 
     if (controller->shiftCount >= 8)
     {
-        return 0x01;
+        return 0;
     }
 
     uint8 result = controller->shiftRegister & 0x01;
