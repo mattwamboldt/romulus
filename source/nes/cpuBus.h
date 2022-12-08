@@ -18,7 +18,7 @@ class CPUBus : public IBus
 public:
     void connect(PPU* ppu, APU* apu, Cartridge* cart);
 
-    uint8 read(uint16 address);
+    uint8 read(uint16 address, bool readOnly = false);
     uint16 readWord(uint16 address);
     void write(uint16 address, uint8 value);
     void setInput(NESGamePad pad, int number);

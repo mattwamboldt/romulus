@@ -11,7 +11,7 @@ void CPUBus::connect(PPU* ppu, APU* apu, Cartridge* cart)
     this->cart = cart;
 }
 
-uint8 CPUBus::read(uint16 address)
+uint8 CPUBus::read(uint16 address, bool readOnly)
 {
     if (address < 0x2000)
     {
@@ -28,7 +28,7 @@ uint8 CPUBus::read(uint16 address)
         if (decodedAddress == 0x02)
         {
             ppuOpenBusValue &= 0x1F;
-            ppuOpenBusValue |= ppu->getStatus();
+            ppuOpenBusValue |= ppu->getStatus(readOnly);
         }
         else if (decodedAddress == 0x04)
         {
@@ -36,7 +36,7 @@ uint8 CPUBus::read(uint16 address)
         }
         else if (decodedAddress == 0x07)
         {
-            ppuOpenBusValue = ppu->getData();
+            ppuOpenBusValue = ppu->getData(readOnly);
         }
 
         return ppuOpenBusValue;
