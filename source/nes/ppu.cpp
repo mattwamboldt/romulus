@@ -1,15 +1,11 @@
 #include "ppu.h"
 #include <windows.h>
 
-// Starting from scratch
-
 const uint32 PRERENDER_LINE = 261;
 const uint32 CYCLES_PER_SCANLINE = 340;
 
 void PPU::tick()
 {
-    // Step 1: Report status correctly with frame timing for interupts
-
     // Cycle 0 is an idle cycle
     if (cycle == 0)
     {
@@ -104,18 +100,18 @@ uint8 PPU::getStatus(bool readOnly)
 
 void PPU::setOamAddress(uint8 value)
 {
-    OutputDebugStringA("[PPU] setOamAddress\n");
+    oamAddress = value;
 }
 
 void PPU::setOamData(uint8 value)
 {
-    OutputDebugStringA("[PPU] setOamData\n");
+    oam[oamAddress++] = value;
 }
 
 uint8 PPU::getOamData()
 {
-    OutputDebugStringA("[PPU] getOamData\n");
-    return 0;
+    // TODO: This is supposed to increment in certain circumstances I believe
+    return oam[oamAddress];
 }
 
 void PPU::setScroll(uint8 value)
