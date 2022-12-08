@@ -836,7 +836,14 @@ void MOS6502::pushWord(uint16 v)
 
 void MOS6502::setNMI(bool active)
 {
-    nmiRequested = active;
+    if (!nmiWasActive && active)
+    {
+        // NMI is "edge" detected, meaning it flip flops, rather than being a state
+        // Should only trigger when going inactive to active
+        nmiRequested = active;
+    }
+
+    nmiWasActive = active;
 }
 
 void MOS6502::setIRQ(bool active)

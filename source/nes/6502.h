@@ -567,6 +567,7 @@ private:
     bool isHalted;
 
     bool nmiRequested;
+    bool nmiWasActive;
     bool interruptRequested;
     uint8 waitCycles;
 
