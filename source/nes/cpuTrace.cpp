@@ -88,7 +88,7 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
             {
                 uint8 result = bus->read(address, true);
                 s += formatString(s, " = ");
-                s += formatByte(s, result);
+                s += formatImmediate(s, result);
             }
         }
         break;
@@ -96,22 +96,22 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
         {
             s += formatAddress(s, p1, p2);
             s += formatString(s, ",X @ ");
-            s += formatWord(s, address);
+            s += formatAddress(s, address);
 
             uint8 result = bus->read(address, true);
             s += formatString(s, " = ");
-            s += formatByte(s, result);
+            s += formatImmediate(s, result);
         }
         break;
         case AbsoluteY:
         {
             s += formatAddress(s, p1, p2);
             s += formatString(s, ",Y @ ");
-            s += formatWord(s, address);
+            s += formatAddress(s, address);
 
             uint8 result = bus->read(address, true);
             s += formatString(s, " = ");
-            s += formatByte(s, result);
+            s += formatImmediate(s, result);
         }
         break;
         case Immediate:
@@ -144,27 +144,21 @@ int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus)
         {
             *s++ = '(';
             s += formatHex(s, p1);
-            s += formatString(s, "),Y = ");
-
-            uint16 zpReadLo = bus->read(p1, true);
-            uint16 zpReadHi = bus->read((uint8)(p1 + 1), true);
-            s += formatWord(s, (zpReadHi << 8) + zpReadLo);
-
-            s += formatString(s, " @ ");
-            s += formatWord(s, address);
+            s += formatString(s, "),Y @ ");
+            s += formatAddress(s, address);
 
             uint8 result = bus->read(address, true);
             s += formatString(s, " = ");
-            s += formatByte(s, result);
+            s += formatImmediate(s, result);
         }
         break;
         case ZeroPage:
         {
-            s += formatHex(s, p1);
+            s += formatAddress(s, p1, 0);
 
             uint8 result = bus->read(address, true);
             s += formatString(s, " = ");
-            s += formatByte(s, result);
+            s += formatImmediate(s, result);
         }
         break;
         case ZeroPageX:
@@ -294,7 +288,7 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, IBus* cp
     Operation op = operations[opcode];
 
     const int32 HEX_WIDTH = 15;
-    const int32 INST_WIDTH = 33;
+    const int32 INST_WIDTH = 28;
     const int32 REG_WIDTH = 32;
     const int32 CYCLES_WIDTH = 27;
 
