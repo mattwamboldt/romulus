@@ -33,10 +33,6 @@ public:
     void setData(uint8 value);
     uint8 getData(bool readOnly);
 
-    // TODO: This probably doens't make sense to happen in the PPU actually
-    // Should probably happen a layer above
-    void setOamDma(uint8 value) {}
-
     // Used for timing and debugging
 
     uint32 cycle;

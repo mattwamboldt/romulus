@@ -29,6 +29,7 @@
     <ClInclude Include="nes\bus.h" />
     <ClInclude Include="nes\cartridge.h" />
     <ClInclude Include="common.h" />
+    <ClInclude Include="nes\constants.h" />
     <ClInclude Include="nes\cpuBus.h" />
     <ClInclude Include="nes\cpuTrace.h" />
     <ClInclude Include="nes\gamepad.h" />

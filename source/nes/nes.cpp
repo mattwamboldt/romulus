@@ -96,7 +96,25 @@ void NES::update(real32 secondsPerFrame)
     {
         if (i % 12 == 0)
         {
-            if (!cartridge.isNSF || cpu.stack != nsfSentinal)
+            // TODO: There may be some conditions to emulate with this and the dmc cross talking? Need to look that up
+            if (cpuBus.isDmaActive)
+            {
+                // First cycle is odd to wait for cpu writes to complete
+                if (cpuBus.dmaCycleCount == 0)
+                {
+                    ++cpuBus.dmaCycleCount;
+                }
+                // Wait an extra frame if on an odd cycle
+                // dma cycle 1 == cpu cycle 0 (even)
+                else if (cpuBus.dmaCycleCount % 2 != currentCpuCycle % 2)
+                {
+                    // TODO: Ticking something in a memory access/mapping layer feels wrong
+                    // The MOSS and apu together are the nes cpu, so maybe better to combine those
+                    // to better map to the device
+                    cpuBus.tickDMA();
+                }
+            }
+            else if (!cartridge.isNSF || cpu.stack != nsfSentinal)
             {
                 cpuStep();
             }

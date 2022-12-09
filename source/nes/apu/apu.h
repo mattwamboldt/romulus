@@ -7,7 +7,7 @@
 #include "deltaModulationChannel.h"
 
 // References:
-// http://wiki.nesdev.com/wiki/2A03
+// http://www.nesdev.com/wiki/2A03
 // https://www.nesdev.org/wiki/APU
 class APU
 {

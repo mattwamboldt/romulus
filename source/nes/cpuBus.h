@@ -25,6 +25,14 @@ public:
 
     void setReadOnly(bool enable) { readOnly = enable; };
 
+    void tickDMA();
+
+    // DMA Data
+    bool isDmaActive;
+    uint16 dmaAddress;
+    uint16 dmaCycleCount;
+    uint8 dmaReadValue;
+
 private:
     uint8 readGamepad(int number);
     void strobeInput(int number);

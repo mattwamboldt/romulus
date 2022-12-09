@@ -1,4 +1,5 @@
 #include "cpuBus.h"
+#include "constants.h"
 
 // Reference
 // https://www.nesdev.org/wiki/CPU_memory_map
@@ -58,10 +59,10 @@ uint8 CPUBus::read(uint16 address)
         switch (address)
         {
             // TODO: Handle Open Bus
-            case 0x4014: return ppuOpenBusValue;
-            case 0x4015: return apu->getStatus(readOnly);
-            case 0x4016: return readOnly ? 0 : readGamepad(0);
-            case 0x4017: return readOnly ? 0 : readGamepad(1);
+            case OAMDMA:  return ppuOpenBusValue;
+            case SND_CHN: return apu->getStatus(readOnly);
+            case JOY1:    return readOnly ? 0 : readGamepad(0);
+            case JOY2:    return readOnly ? 0 : readGamepad(1);
             default: return 0;
         }
     }
@@ -87,16 +88,16 @@ void CPUBus::write(uint16 address, uint8 value)
     {
         // map to the ppu registers (only uses the bottom 3 bits)
         // http://wiki.nesdev.com/w/index.php/2A03
-        uint16 decodedAddress = address & 0x0007;
+        uint16 decodedAddress = address & 0x2007;
         switch (decodedAddress)
         {
-            case 0x00: ppu->setControl(value); break;
-            case 0x01: ppu->setMask(value); break;
-            case 0x03: ppu->setOamAddress(value); break;
-            case 0x04: ppu->setOamData(value); break;
-            case 0x05: ppu->setScroll(value); break;
-            case 0x06: ppu->setAddress(value); break;
-            case 0x07: ppu->setData(value); break;
+            case PPUCTRL:   ppu->setControl(value); break;
+            case PPUMASK:   ppu->setMask(value); break;
+            case OAMADDR:   ppu->setOamAddress(value); break;
+            case OAMDATA:   ppu->setOamData(value); break;
+            case PPUSCROLL: ppu->setScroll(value); break;
+            case PPUADDR:   ppu->setAddress(value); break;
+            case PPUDATA:   ppu->setData(value); break;
         }
 
         ppuOpenBusValue = value;
@@ -107,34 +108,40 @@ void CPUBus::write(uint16 address, uint8 value)
         // http://wiki.nesdev.com/w/index.php/2A03
         switch (address)
         {
-            case 0x4000: apu->pulse1.setDutyEnvelope(value); break;
-            case 0x4001: apu->pulse1.setSweep(value); break;
-            case 0x4002: apu->pulse1.setTimerLo(value); break;
-            case 0x4003: apu->pulse1.setTimerHi(value); break;
-            case 0x4004: apu->pulse2.setDutyEnvelope(value); break;
-            case 0x4005: apu->pulse2.setSweep(value); break;
-            case 0x4006: apu->pulse2.setTimerLo(value); break;
-            case 0x4007: apu->pulse2.setTimerHi(value); break;
-            case 0x4008: apu->triangle.setLinearCounter(value); break;
-            case 0x400A: apu->triangle.setTimerLo(value); break;
-            case 0x400B: apu->triangle.setTimerHi(value); break;
-            case 0x400C: apu->noise.setEnvelope(value); break;
-            case 0x400E: apu->noise.setPeriod(value); break;
-            case 0x400F: apu->noise.setLengthCounter(value); break;
-            case 0x4010: apu->writeDmcControls(value); break;
-            case 0x4011: apu->writeDmcCounter(value); break;
-            case 0x4012: apu->writeDmcSampleAddress(value); break;
-            case 0x4013: apu->writeDmcSampleLength(value); break;
-            case 0x4014: ppu->setOamDma(value); break;
-            case 0x4015: apu->writeControl(value); break;
-            case 0x4016:
+            case SQ1_VOL:    apu->pulse1.setDutyEnvelope(value);    break;
+            case SQ1_SWEEP:  apu->pulse1.setSweep(value);           break;
+            case SQ1_LO:     apu->pulse1.setTimerLo(value);         break;
+            case SQ1_HI:     apu->pulse1.setTimerHi(value);         break;
+            case SQ2_VOL:    apu->pulse2.setDutyEnvelope(value);    break;
+            case SQ2_SWEEP:  apu->pulse2.setSweep(value);           break;
+            case SQ2_LO:     apu->pulse2.setTimerLo(value);         break;
+            case SQ2_HI:     apu->pulse2.setTimerHi(value);         break;
+            case TRI_LINEAR: apu->triangle.setLinearCounter(value); break;
+            case TRI_LO:     apu->triangle.setTimerLo(value);       break;
+            case TRI_HI:     apu->triangle.setTimerHi(value);       break;
+            case NOISE_VOL:  apu->noise.setEnvelope(value);         break;
+            case NOISE_LO:   apu->noise.setPeriod(value);           break;
+            case NOISE_HI:   apu->noise.setLengthCounter(value);    break;
+            case DMC_FREQ:   apu->writeDmcControls(value);          break;
+            case DMC_RAW:    apu->writeDmcCounter(value);           break;
+            case DMC_START:  apu->writeDmcSampleAddress(value);     break;
+            case DMC_LEN:    apu->writeDmcSampleLength(value);      break;
+            case OAMDMA:
+            {
+                isDmaActive = true;
+                dmaAddress = ((uint16)value) << 8;
+                dmaCycleCount = 0;
+            }
+            break;
+            case SND_CHN: apu->writeControl(value); break;
+            case JOY1:
             {
                 inputStrobeActive = (value & 0x01);
                 strobeInput(0);
                 strobeInput(1);
             }
             break;
-            case 0x4017: apu->writeFrameCounterControl(value); break;
+            case JOY2: apu->writeFrameCounterControl(value); break;
             default: return;
         }
     }
@@ -197,4 +204,22 @@ uint8 CPUBus::readGamepad(int number)
     controller->shiftRegister >>= 1;
     ++controller->shiftCount;
     return result;
+}
+
+void CPUBus::tickDMA()
+{
+    if (dmaCycleCount % 2 == 1)
+    {
+        // read cycle
+        dmaReadValue = read(dmaAddress);
+        ++dmaAddress;
+    }
+    else
+    {
+        // write cycle
+        write(OAMDATA, dmaReadValue);
+        isDmaActive = (dmaAddress & 0x00FF) != 0;
+    }
+
+    ++dmaCycleCount;
 }
