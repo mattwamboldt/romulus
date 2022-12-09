@@ -1,5 +1,4 @@
 #include "ppu.h"
-#include <windows.h>
 
 const uint32 PRERENDER_LINE = 261;
 const uint32 CYCLES_PER_SCANLINE = 340;
@@ -138,7 +137,10 @@ void PPU::tick()
                 {
                     // We always write this for some reason, seems to be somewhat of a sentinal value
                     oamSecondary[secondaryOamAddress] = oamValue;
-                    if (scanline >= oamValue && scanline < oamValue + spriteHeight)
+
+                    uint32 spriteTop = oamValue;
+                    uint32 spriteBottom = spriteTop + spriteHeight;
+                    if (scanline >= spriteTop && scanline < spriteBottom)
                     {
                         ++secondaryOamAddress;
                         ++oamAddress;
@@ -162,7 +164,9 @@ void PPU::tick()
                     // "n" in this case gets incremented every time due to the bug
                     oamAddress += 4;
 
-                    if (scanline >= oamValue && scanline < oamValue + spriteHeight)
+                    uint32 spriteTop = oamValue;
+                    uint32 spriteBottom = spriteTop + spriteHeight;
+                    if (scanline >= spriteTop && scanline < spriteBottom)
                     {
                         isSpriteOverflowFlagSet = true;
                     }
