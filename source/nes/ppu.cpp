@@ -62,8 +62,9 @@ void PPU::tick()
         uint8 xOffset = 15 - fineX; // Need to flip this around and do shifts since we don't have mux
         uint8 bit0 = (patternLoShift >> xOffset) & 0x01;
         uint8 bit1 = (patternHiShift >> xOffset) & 0x01;
-        uint8 bit2 = (attributeLoShift >> xOffset) & 0x01;
-        uint8 bit3 = (attributeHiShift >> xOffset) & 0x01;
+        uint8 attributeXOffset = 7 - fineX;
+        uint8 bit2 = (attributeLoShift >> attributeXOffset) & 0x01;
+        uint8 bit3 = (attributeHiShift >> attributeXOffset) & 0x01;
         uint8 palleteIndex = bit0 | (bit1 << 1) | (bit2 << 2) | (bit3 << 3);
         patternLoShift <<= 1;
         patternHiShift <<= 1;
