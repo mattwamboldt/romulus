@@ -53,26 +53,53 @@ void PPU::tick()
         outputOffset = 0;
     }
 
-    bool isSpritePhase = cycle > 256 && cycle <= 320;
+    bool isSpritePhase = cycle > NES_SCREEN_WIDTH && cycle <= 320;
 
     // Render the background
-    if (scanline != PRERENDER_LINE && cycle <= 256)
+    if (scanline != PRERENDER_LINE && cycle <= NES_SCREEN_WIDTH)
     {
-        // Get the background pixel
-        uint8 xOffset = 15 - fineX; // Need to flip this around and do shifts since we don't have mux
-        uint8 bit0 = (patternLoShift >> xOffset) & 0x01;
-        uint8 bit1 = (patternHiShift >> xOffset) & 0x01;
-        uint8 attributeXOffset = 7 - fineX;
-        uint8 bit2 = (attributeLoShift >> attributeXOffset) & 0x01;
-        uint8 bit3 = (attributeHiShift >> attributeXOffset) & 0x01;
-        uint8 palleteIndex = bit0 | (bit1 << 1) | (bit2 << 2) | (bit3 << 3);
+        uint8 backgroundPixel = calculateBackgroundPixel();
+
+        // Clock the background shift registers
+        // PERF: See if this is needed on bg disable
         patternLoShift <<= 1;
         patternHiShift <<= 1;
         attributeLoShift <<= 1;
         attributeHiShift <<= 1;
         attributeLoShift |= attributeBit0;
         attributeHiShift |= attributeBit1;
-        screenBuffer[outputOffset++] = bus->read(0x3F00 + palleteIndex);
+
+        uint8 spritePixel = calculateSpritePixel();
+
+        // Clock sprite counters and shift registers
+        for (int i = 0; i < 8; ++i)
+        {
+            if (spriteXCounters[i] > 0)
+            {
+                --spriteXCounters[i];
+            }
+            else
+            {
+                spritePatternLoShift[i] <<= 1;
+                spritePatternHiShift[i] <<= 1;
+            }
+        }
+
+        uint8 pixel = 0;
+        if (backgroundPixel == 0)
+        {
+            pixel = spritePixel;
+        }
+        else if (spritePixel == 0)
+        {
+            pixel = backgroundPixel;
+        }
+        else // TODO: Priority (0: Sprite, 1: BG)
+        {
+
+        }
+
+        screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);
     }
 
     // Fetch data into a set of "latches" based on the current cycle
@@ -97,7 +124,7 @@ void PPU::tick()
             }
             else
             {
-                // From the Wiki this the address we want
+                // From the Wiki this is the address we want
                 // NN 1111 YYY XXX
                 // || |||| ||| +++--- high 3 bits of coarse X(x / 4)
                 // || |||| +++------- high 3 bits of coarse Y(y / 4)
@@ -207,7 +234,7 @@ void PPU::tick()
     if (isBackgroundEnabled)
     {
         // Increment X Scroll
-        if ((cycle < 256 || cycle > 320) && cycle % 8 == 0)
+        if ((cycle < NES_SCREEN_WIDTH || cycle > 320) && cycle % 8 == 0)
         {
             // Handle overflow into the next horizontal nametable
             if ((vramAddress & COARSE_X_MASK) == 31)
@@ -221,7 +248,7 @@ void PPU::tick()
             }
         }
         // Increment Y Scroll
-        if (cycle == 256)
+        if (cycle == NES_SCREEN_WIDTH)
         {
             // Check if we can safely increment fine y
             if ((vramAddress & FINE_Y_MASK) != FINE_Y_MASK)
@@ -429,4 +456,67 @@ uint8 PPU::getData(bool readOnly)
 
     vramAddress += vramAddressIncrement;
     return result;
+}
+
+
+// Util functions
+
+uint8 PPU::calculateBackgroundPixel()
+{
+    if (!isBackgroundEnabled)
+    {
+        return 0;
+    }
+
+    if (!showBackgroundInLeftEdge && cycle <= 8)
+    {
+        return 0;
+    }
+
+    // Need to flip this around and do shifts since we don't have mux
+    uint8 xOffset = 15 - fineX; 
+    uint8 bit0 = (patternLoShift >> xOffset) & 0x01;
+    uint8 bit1 = (patternHiShift >> xOffset) & 0x01;
+
+    uint8 attributeXOffset = 7 - fineX;
+    uint8 bit2 = (attributeLoShift >> attributeXOffset) & 0x01;
+    uint8 bit3 = (attributeHiShift >> attributeXOffset) & 0x01;
+
+    return (bit3 << 3) | (bit2 << 2) | (bit1 << 1) | bit0;
+}
+
+uint8 PPU::calculateSpritePixel()
+{
+    if (!areSpritesEnabled)
+    {
+        return 0;
+    }
+
+    if (!showSpritesInLeftEdge && cycle <= 8)
+    {
+        return 0;
+    }
+
+    for (int i = 0; i < 8; ++i)
+    {
+        if (spriteXCounters[i] == 0)
+        {
+            // TODO: Need to handle sprite filpping
+            // Probably in sprite eval when filling these units
+            uint8 bit0 = (spritePatternLoShift[i] & BIT_7) >> 7;
+            uint8 bit1 = (spritePatternHiShift[i] & BIT_7) >> 6;
+            uint8 spritePixel = spriteAttributeLatches[0] | bit1 | bit0;
+
+            // Priority is given to first non transparent pixel
+            if (spritePixel)
+            {
+                renderedSpriteIndex = i;
+                return spritePixel;
+            }
+        }
+    }
+
+    // May not need this but its an extra way to know we rendered nothing
+    renderedSpriteIndex = 8;
+    return 0;
 }

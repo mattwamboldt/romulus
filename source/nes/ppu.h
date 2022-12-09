@@ -79,15 +79,6 @@ private:
     bool shouldEmphasizeGreen; // TODO: Implement
     bool shouldEmphasizeBlue; // TODO: Implement
 
-    uint8 oamAddress;
-    // TODO: Implement
-    // OAM (Object Attribute Memory) holds sprite data
-    // See https://www.nesdev.org/wiki/PPU_sprite_evaluation
-    uint8 oam[256];
-
-    // Data for the 8 (or fewer) sprites to render on this scanline
-    uint8 oamSecondary[32];
-
     // ======================
     // Registers
     // https://www.nesdev.org/wiki/PPU_scrolling#PPU_internal_registers
@@ -108,9 +99,10 @@ private:
 
     // =======================
     // Internal storage for background render
-    // NOTE: Latch might not be teh right term here, its a temp variable
+    // NOTE: Latch might not be the right term here, its a temp variable
     // But seems like thats whats in the wiki as the physical euqivalent
     // ======================
+
     uint8 nameTableLatch;
     uint8 attributeLatch;
     uint8 patternLoLatch;
@@ -134,4 +126,33 @@ private:
 
     uint8 attributeBit0;
     uint8 attributeBit1;
+
+    // ======================
+    // Internal Storage for the Sprites
+    // See https://www.nesdev.org/wiki/PPU_sprite_evaluation
+    // TODO: Implement
+    // ======================
+
+    uint8 oamAddress;
+
+    // OAM (Object Attribute Memory) holds sprite data
+    uint8 oam[256];
+
+    // Data for the 8 (or fewer) sprites to render on this scanline
+    uint8 oamSecondary[32];
+
+    uint8 spritePatternLoShift[8];
+    uint8 spritePatternHiShift[8];
+    uint8 spriteAttributeLatches[8];
+    uint8 spriteXCounters[8];
+
+    // This is a temp variable to keep track of which sprite had priority
+    uint8 renderedSpriteIndex;
+
+    // =====================
+    // Internal Utility Functions
+    // =====================
+
+    uint8 calculateBackgroundPixel();
+    uint8 calculateSpritePixel();
 };
