@@ -1,5 +1,6 @@
 // TODO: Add code for wave file out, to view/debug apu results
-#include "wavefile.h";
+#include "wavefile.h"
+
 #include <stdio.h>
 
 enum WaveFormats
