@@ -3,7 +3,6 @@
 
 #include "nes\nes.h"
 
-// TODO: Will need some way to verify the blargg apu tests
 // TODO: New main objective - get parity with the console app
 
 /* Current objective: Ability to run nestest visually
@@ -35,6 +34,8 @@
 // I've used higher level libs in the past, but would rather have a better control and understanding
 // of how these systems work. Using DSound before on another project was fairly straightforward so
 // this will be an evolution of that code.
+
+// TODO: Handle window events to pause the dsound buffer and emulator execution when dragging the window
 
 #include <dsound.h>
 
@@ -367,6 +368,35 @@ void renderPatternTable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left,
 void render(GDIBackBuffer buffer, NES* nes)
 {
     // TODO: A bunch of this should be in platform agnostic place and copied out
+    uint8* nesBuffer = nes->ppu.screenBuffer;
+    uint8* row = (uint8*)buffer.memory;
+
+    if (!nes->cpu.hasHalted())
+    {
+        for (int y = 0; y < NES_SCREEN_HEIGHT; ++y)
+        {
+            uint32* pixel = (uint32*)row;
+            for (int x = 0; x < NES_SCREEN_WIDTH; ++x)
+            {
+                *pixel++ = palette[*nesBuffer++];
+            }
+
+            row += buffer.pitch;
+        }
+    }
+    else
+    {
+        for (int y = 0; y < NES_SCREEN_HEIGHT; ++y)
+        {
+            uint32* pixel = (uint32*)row;
+            for (int x = 0; x < NES_SCREEN_WIDTH; ++x)
+            {
+                *pixel++ = 0xFF0000FF;
+            }
+
+            row += buffer.pitch;
+        }
+    }
 }
 
 void resizeDIBSection(GDIBackBuffer* buffer, int width, int height)

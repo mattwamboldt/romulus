@@ -4,6 +4,9 @@
 
 // TODO: Replace raw masks values with constants to better document the code
 
+#define NES_SCREEN_HEIGHT 240
+#define NES_SCREEN_WIDTH  256
+
 class PPU
 {
 public:
@@ -40,6 +43,11 @@ public:
     uint32 scanline;
     uint32 pixel;
 
+    // Temp for now, will have a screen abstraction later
+    // Stores the pallette data while it's being written
+    uint8 screenBuffer[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
+    uint16 outputOffset;
+
 private:
     IBus* bus;
 
@@ -53,7 +61,6 @@ private:
     uint16 vramAddressIncrement;
     // TODO: Implement
     uint16 spritePatternBaseAddress;
-    // TODO: Implement
     uint16 backgroundPatternBaseAddress;
 
     // TODO: Implement
@@ -81,10 +88,11 @@ private:
     // Data for the 8 (or fewer) sprites to render on this scanline
     uint8 oamSecondary[32];
 
-    // The following are the actual device registers
+    // ======================
+    // Registers
     // https://www.nesdev.org/wiki/PPU_scrolling#PPU_internal_registers
+    // ======================
 
-    // TODO: Implement
     // v: The current pointer of the ppu into vram
     uint16 vramAddress;
 
@@ -97,4 +105,33 @@ private:
 
     // w: Single bit used to get two 8 bit values into t
     bool isWriteLatchActive;
+
+    // =======================
+    // Internal storage for background render
+    // NOTE: Latch might not be teh right term here, its a temp variable
+    // But seems like thats whats in the wiki as the physical euqivalent
+    // ======================
+    uint8 nameTableLatch;
+    uint8 attributeLatch;
+    uint8 patternLoLatch;
+    uint8 patternHiLatch;
+
+    // TODO: This could be optimized and potentially simplified by precomputing arrays
+    // and using an index instead of shift registers, but I want to get this
+    // "Correct" before I get it fast and more readable
+    uint16 patternLoShift; // Bit plane 0 entry
+    uint16 patternHiShift; // Bit Plane 1 entry
+
+    // Finally understand how these work and will definitely be computing some arrays
+    // Essentially There are two 1 bit values, determined by the attribute read.
+    // The attribute holds 4 tiles worth of data for the top two bits of pallette
+    // depending on which quadrant the tile is in. Those are loaded into these latches
+    // which are shifted in to these registers multiple times to line up with the pattern data
+    // It's done this way so you can have the data for the nest tile shifted in which
+    // may have a different attribute, and you only have to combine the outputs 
+    uint8 attributeLoShift; // Attribute Bit 0
+    uint8 attributeHiShift; // Attribute Bit 1
+
+    uint8 attributeBit0;
+    uint8 attributeBit1;
 };
