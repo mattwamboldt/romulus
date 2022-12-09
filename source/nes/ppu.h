@@ -54,6 +54,8 @@ private:
 
     // TODO: Implement
     bool useTallSprites;
+    uint8 spriteHeight;
+
     uint16 vramAddressIncrement;
     // TODO: Implement
     uint16 spritePatternBaseAddress;
@@ -144,6 +146,14 @@ private:
 
     // This is a temp variable to keep track of which sprite had priority
     uint8 renderedSpriteIndex;
+
+    // Temp variables for sprite evaluation
+    bool isSecondaryOAMWriteDisabled;
+    bool isCopyingSprite;
+    uint8 secondaryOamAddress;
+    uint8 numSpritesChecked;
+    uint8 n;
+    uint8 m;
 
     // =====================
     // Internal Utility Functions

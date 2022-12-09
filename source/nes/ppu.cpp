@@ -53,6 +53,7 @@ void PPU::tick()
         outputOffset = 0;
     }
 
+    // Cycles 257 - 320
     bool isSpritePhase = cycle > NES_SCREEN_WIDTH && cycle <= 320;
 
     // Render the background
@@ -100,6 +101,82 @@ void PPU::tick()
         }
 
         screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);
+    }
+
+    // Sprite Evaluation https://www.nesdev.org/wiki/PPU_sprite_evaluation
+    // TODO: For now skipping the read write toggling unless it turns out to matter
+    if (cycle <= NES_SCREEN_WIDTH && cycle % 2 == 0)
+    {
+        // Clearing Phase;
+        if (cycle <= 64)
+        {
+            oamSecondary[secondaryOamAddress++] = 0xFF;
+            if (secondaryOamAddress >= 32)
+            {
+                secondaryOamAddress = 0;
+            }
+        }
+        else
+        {
+            uint8 oamValue = oam[oamAddress];
+            if (isCopyingSprite)
+            {
+                oamSecondary[secondaryOamAddress++] = oamValue;
+                ++oamAddress;
+                isCopyingSprite = secondaryOamAddress % 4 > 0;
+
+                if (secondaryOamAddress >= 32)
+                {
+                    isSecondaryOAMWriteDisabled = true;
+                    secondaryOamAddress = 0;
+                }
+            }
+            else if (numSpritesChecked < 64)
+            {
+                // We haven't hit 8 sprites yet so check if there's one on this scanline
+                if (!isSecondaryOAMWriteDisabled)
+                {
+                    // We always write this for some reason, seems to be somewhat of a sentinal value
+                    oamSecondary[secondaryOamAddress] = oamValue;
+                    if (scanline >= oamValue && scanline < oamValue + spriteHeight)
+                    {
+                        ++secondaryOamAddress;
+                        ++oamAddress;
+                        isCopyingSprite = true;
+                    }
+                    else
+                    {
+                        oamAddress += 4;
+                    }
+                }
+                // Continue checking for sprite overflow
+                // There's a known bug where the address increments incorrectly once the write inhibit flag has been set
+                // https://www.nesdev.org/wiki/PPU_sprite_evaluation#Sprite_overflow_bug
+                // This was poorly worded and hard to follow, so I'll try to clarify
+                // The stuff about n and m imply there are separate values that index directly into oam but
+                // they're actually just portions of the oam address. m is not incremented with n if the y isn't in range
+                // thats only true once you've hit the write inhibit flag after 8 sprites copied over
+                // Treating it as separate values would mean that writing to OAMADDR after its been cleared wouldn't have negative consequences
+                else
+                {
+                    // "n" in this case gets incremented every time due to the bug
+                    oamAddress += 4;
+
+                    if (scanline >= oamValue && scanline < oamValue + spriteHeight)
+                    {
+                        isSpriteOverflowFlagSet = true;
+                    }
+                    else
+                    {
+                        // m gets incremented without the carry bit resulting in the "diagonal" fetch pattern for the y
+                        uint8 m = (oamAddress & 0x03) + 1;
+                        oamAddress = (oamAddress & 0xFC) | (m & 0x03);
+                    }
+                }
+
+                ++numSpritesChecked;
+            }
+        }
     }
 
     // Fetch data into a set of "latches" based on the current cycle
@@ -320,6 +397,15 @@ void PPU::setControl(uint8 value)
     nmiEnabled = value & BIT_7;
     // NOTE: Bit 6 is tied to ground on the NES. So its safe to ignore
     useTallSprites = value & BIT_5;
+    if (useTallSprites)
+    {
+        spriteHeight = 16;
+    }
+    else
+    {
+        spriteHeight = 8;
+    }
+
     backgroundPatternBaseAddress = (value & BIT_4) ? 0x1000 : 0; // PERF: Could do shifts here to not branch
     spritePatternBaseAddress = (value & BIT_3) ? 0x1000 : 0;
     vramAddressIncrement = (value & BIT_2) ? 32 : 1;
@@ -387,6 +473,12 @@ void PPU::setOamData(uint8 value)
 
 uint8 PPU::getOamData()
 {
+    // Part of the Secondary OAM initialization
+    if (cycle > 0 && cycle <= 64)
+    {
+        return 0xFF;
+    }
+
     // TODO: This is supposed to increment in certain circumstances I believe
     return oam[oamAddress];
 }
