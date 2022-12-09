@@ -4,27 +4,126 @@
 const uint32 PRERENDER_LINE = 261;
 const uint32 CYCLES_PER_SCANLINE = 340;
 
+// Masks to help simplify understanding the vram address
+// yyy NN YYYYY XXXXX
+// ||| || ||||| ++++ + --coarse X scroll
+// ||| || ++++ + --------coarse Y scroll
+// ||| ++--------------nametable select
+// ++ + ---------------- - fine Y scroll
+
+const uint16 COARSE_X_MASK =  0x001F; // ........ ...XXXXX
+const uint16 COARSE_Y_MASK =  0x03E0; // ......YY YYY.....
+const uint16 NAMETABLE_MASK = 0x0C00; // ....NN.. ........
+const uint16 FINE_Y_MASK =    0x7000; // .yyy.... ........
+
+// The key to understanding what hapens on a ppu update was a combo of these pages
+// https://www.nesdev.org/wiki/PPU_scrolling#At_dot_256_of_each_scanline
+// https://www.nesdev.org/wiki/PPU_rendering#Line-by-line_timing
+// https://www.nesdev.org/wiki/File:Ppu.svg
 void PPU::tick()
 {
-    // Cycle 0 is an idle cycle
+    // Cycle 0 is an idle cycle always
     if (cycle == 0)
     {
         ++cycle;
         return;
     }
 
-    if (cycle == 1)
+    // This handles our vblank dead zone
+    if (scanline >= 240 && scanline < PRERENDER_LINE)
     {
-        if (scanline == 241)
+        if (cycle == 1 && scanline == 241)
         {
             nmiRequested = true;
         }
-        else if (scanline == PRERENDER_LINE)
+
+        ++cycle;
+
+        if (cycle > CYCLES_PER_SCANLINE)
         {
-            nmiRequested = false;
+            ++scanline;
+            cycle = 0;
+        }
+
+        return;
+    }
+
+    if (cycle == 1 && scanline == PRERENDER_LINE)
+    {
+        nmiRequested = false;
+    }
+
+    // Render the background
+
+
+    // Render the sprites
+
+    // Handle Updating of the vram address, but only if rendering is enabled
+    if (isBackgroundEnabled)
+    {
+        // Increment X Scroll
+        if ((cycle < 256 || cycle > 320) && cycle % 8 == 0)
+        {
+            // Handle overflow into the next horizontal nametable
+            if ((vramAddress & COARSE_X_MASK) == 31)
+            {
+                vramAddress &= ~COARSE_X_MASK;
+                vramAddress ^= 0x0400; // XOR will cause a toggle
+            }
+            else
+            {
+                ++vramAddress;
+            }
+        }
+        // Increment Y Scroll
+        if (cycle == 256)
+        {
+            // Check if we can safely increment fine y
+            if ((vramAddress & FINE_Y_MASK) != FINE_Y_MASK)
+            {
+                vramAddress += 0x1000;
+            }
+            else
+            {
+                // Clear fine y and increment coarse y to go to the next tile
+                // Since coarse y can be set out of bounds through v it has some special handling
+                vramAddress &= ~FINE_Y_MASK;
+
+                uint16 coarseY = (vramAddress & COARSE_Y_MASK) >> 5;
+                if (coarseY == 29)
+                {
+                    coarseY = 0;
+                    vramAddress ^= 0x0800;
+                }
+                else if (coarseY == 31)
+                {
+                    coarseY = 0;
+                }
+                else
+                {
+                    ++coarseY;
+                }
+
+                vramAddress = (vramAddress & ~COARSE_Y_MASK) | (coarseY << 5);
+            }
+        }
+        // Copy horizontal components of t to v: horiz (v) = horiz (t)
+        // v: ....A.. ...BCDEF <- t: ....A.. ...BCDEF
+        else if (cycle == 257)
+        {
+            vramAddress &= ~0x041F;
+            vramAddress |= tempVramAddress & 0x041F;
+        }
+        // Copy vertical components of t to v: vert (v) = vert (t)
+        // v: GHIA.BC DEF..... <- t: GHIA.BC DEF.....
+        else if (scanline == PRERENDER_LINE && cycle >= 280 && cycle <= 304)
+        {
+            vramAddress &= 0x041F;
+            vramAddress |= tempVramAddress & ~0x041F;
         }
     }
 
+    // Finish the cycle and advance
     ++cycle;
 
     if (cycle > CYCLES_PER_SCANLINE)
@@ -59,10 +158,16 @@ void PPU::setControl(uint8 value)
     tempVramAddress |= (uint16)(value & 0x03) << 10;
 }
 
-void PPU::setMask(uint8 value)
+void PPU::setMask(uint8 mask)
 {
-    // TOOD: Adding in case this needs to be split up
-    mask = value;
+    shouldRenderGreyscale =     (mask & BIT_0) > 0;
+    showBackgroundInLeftEdge =  (mask & BIT_1) > 0;
+    showSpritesInLeftEdge =     (mask & BIT_2) > 0;
+    isBackgroundEnabled =       (mask & BIT_3) > 0;
+    areSpritesEnabled =         (mask & BIT_4) > 0;
+    shouldEmphasizeRed =        (mask & BIT_5) > 0;
+    shouldEmphasizeGreen =      (mask & BIT_6) > 0;
+    shouldEmphasizeBlue =       (mask & BIT_7) > 0;
 }
 
 uint8 PPU::getStatus(bool readOnly)

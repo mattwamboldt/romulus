@@ -2,6 +2,8 @@
 #include "../common.h"
 #include "bus.h"
 
+// TODO: Replace raw masks values with constants to better document the code
+
 class PPU
 {
 public:
@@ -25,9 +27,7 @@ public:
 
     void setScroll(uint8 value);
     void setAddress(uint8 value);
-    // TODO: Implement
     void setData(uint8 value);
-    // TODO: Implement
     uint8 getData(bool readOnly);
 
     // TODO: This probably doens't make sense to happen in the PPU actually
@@ -50,7 +50,6 @@ private:
 
     // TODO: Implement
     bool useTallSprites;
-    // TODO: Implement
     uint16 vramAddressIncrement;
     // TODO: Implement
     uint16 spritePatternBaseAddress;
@@ -63,14 +62,24 @@ private:
     // TODO: Implement
     bool isSpriteZeroHit;
 
-
-    // TODO: Implement
-    // The bits of this control whether certain things render or not, I'm assuming bitmasking
-    // is involved so I'm leaving it as a single value until we get there
-    uint8 mask;
+    // Settings extracted from PPUMASK
+    bool shouldRenderGreyscale; // TODO: Implement
+    bool showBackgroundInLeftEdge; // TODO: Implement
+    bool showSpritesInLeftEdge; // TODO: Implement
+    bool isBackgroundEnabled; // TODO: Implement
+    bool areSpritesEnabled; // TODO: Implement
+    bool shouldEmphasizeRed; // TODO: Implement
+    bool shouldEmphasizeGreen; // TODO: Implement
+    bool shouldEmphasizeBlue; // TODO: Implement
 
     uint8 oamAddress;
+    // TODO: Implement
+    // OAM (Object Attribute Memory) holds sprite data
+    // See https://www.nesdev.org/wiki/PPU_sprite_evaluation
     uint8 oam[256];
+
+    // Data for the 8 (or fewer) sprites to render on this scanline
+    uint8 oamSecondary[32];
 
     // The following are the actual device registers
     // https://www.nesdev.org/wiki/PPU_scrolling#PPU_internal_registers
@@ -79,7 +88,7 @@ private:
     // v: The current pointer of the ppu into vram
     uint16 vramAddress;
 
-    // t: Used to buffer the address writes from the cpu bus:
+    // t: Address of the top left of the screen
     uint16 tempVramAddress;
 
     // TODO: Implement
