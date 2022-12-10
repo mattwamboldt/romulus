@@ -436,12 +436,20 @@ void MOS6502::anc(uint8 data)
 
 void MOS6502::arr(uint8 data)
 {
+    // TODO: Implement
     // Similar to AND #i then ROR A, except sets the flags differently. N and Z are normal, but C is bit 6 and V is bit 6 xor bit 5
 }
 
 void MOS6502::axs(uint8 data)
 {
-// "Sets X to {(A AND X) - #value without borrow}, and updates NZC." how?
+    // TODO: Implement
+    // "Sets X to {(A AND X) - #value without borrow}, and updates NZC." how?
+}
+
+void MOS6502::atx(uint8 data)
+{
+    // TODO: Implement
+    // AND byte with accumulator, then transfer accumulator to X register.
 }
 
 void MOS6502::lax(uint8 data)
@@ -449,6 +457,13 @@ void MOS6502::lax(uint8 data)
     loadA(data);
     transferAtoX();
 }
+
+void MOS6502::sxa(uint8 data)
+{
+    // TODO: Implement
+    // AND X register with the high byte of the target address of the argument +1. Store the result in memory.
+}
+
 
 uint8 MOS6502::dcp(uint8 data)
 {
@@ -634,6 +649,7 @@ void MOS6502::executeInstruction()
         }
         break;
         case AXS: axs(tempData); break;
+        case ATX: atx(tempData); break;
         case BCC: branchCarryClear(p1); break;
         case BCS: branchCarrySet(p1); break;
         case BEQ: branchEqual(p1); break;
@@ -740,6 +756,7 @@ void MOS6502::executeInstruction()
         }
         break;
         case SAX: writeData(op.addressMode, accumulator & x); break;
+        case SXA: sxa(tempData); break;
         case STA: writeData(op.addressMode, accumulator); break;
         case STX: writeData(op.addressMode, x); break;
         case STY: writeData(op.addressMode, y); break;

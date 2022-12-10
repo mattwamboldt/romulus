@@ -10,6 +10,7 @@ enum OpCode
     ARR,
     ASL,
     AXS,
+    ATX,
     BCC,
     BCS,
     BEQ,
@@ -65,6 +66,7 @@ enum OpCode
     STA,
     STX,
     STY,
+    SXA,
     TAX,
     TAY,
     TSX,
@@ -99,6 +101,7 @@ static const char* opCodeNames[] = {
     "ARR",
     "ASL",
     "AXS",
+    "ATX",
     "BCC",
     "BCS",
     "BEQ",
@@ -154,13 +157,14 @@ static const char* opCodeNames[] = {
     "STA",
     "STX",
     "STY",
+    "SXA"
     "TAX",
     "TAY",
     "TSX",
     "TXA",
     "TXS",
     "TYA",
-    "KILL" // Illegal opcodes that'll kill the machine
+    "KILL" // Illegal opcodes that'll kill the machine,
 };
 
 struct Operation
@@ -310,7 +314,7 @@ static Operation operations[] = {
     { 0x86, 3, STX, ZeroPage, false },
     { 0x87, 4, SAX, ZeroPage, true },
     { 0x88, 2, DEY, Implied, false },
-    { 0x89, 0, KILL, Implied, true },
+    { 0x89, 2, NOP, Implied, true },
     { 0x8A, 2, TXA, Implied, false },
     { 0x8B, 0, KILL, Implied, true },
     { 0x8C, 4, STY, Absolute, false },
@@ -331,7 +335,7 @@ static Operation operations[] = {
     { 0x9B, 0, KILL, Implied, true },
     { 0x9C, 4, NOP, AbsoluteX, true },
     { 0x9D, 5, STA, AbsoluteX, false },
-    { 0x9E, 0, KILL, Implied, true },
+    { 0x9E, 5, SXA, AbsoluteY, true },
     { 0x9F, 0, KILL, Implied, true },
     { 0xA0, 2, LDY, Immediate, false },
     { 0xA1, 6, LDA, IndirectX, false },
@@ -344,7 +348,7 @@ static Operation operations[] = {
     { 0xA8, 2, TAY, Implied, false },
     { 0xA9, 2, LDA, Immediate, false },
     { 0xAA, 2, TAX, Implied, false },
-    { 0xAB, 0, KILL, Implied, true },
+    { 0xAB, 2, ATX, Implied, true },
     { 0xAC, 4, LDY, Absolute, false },
     { 0xAD, 4, LDA, Absolute, false },
     { 0xAE, 4, LDX, Absolute, false },
@@ -367,7 +371,7 @@ static Operation operations[] = {
     { 0xBF, 4, LAX, AbsoluteY, true },
     { 0xC0, 2, CPY, Immediate, false },
     { 0xC1, 6, CMP, IndirectX, false },
-    { 0xC2, 0, KILL, Implied, true },
+    { 0xC2, 2, NOP, Implied, true },
     { 0xC3, 8, DCP, IndirectX, true },
     { 0xC4, 3, CPY, ZeroPage, false },
     { 0xC5, 3, CMP, ZeroPage, false },
@@ -399,7 +403,7 @@ static Operation operations[] = {
     { 0xDF, 7, DCP, AbsoluteX, true },
     { 0xE0, 2, CPX, Immediate, false },
     { 0xE1, 6, SBC, IndirectX, false },
-    { 0xE2, 0, KILL, Implied, true },
+    { 0xE2, 2, NOP, Implied, true },
     { 0xE3, 8, ISC, IndirectX, true },
     { 0xE4, 3, CPX, ZeroPage, false },
     { 0xE5, 3, SBC, ZeroPage, false },
@@ -544,6 +548,8 @@ public:
     void arr(uint8 data);
     void axs(uint8 data);
     void lax(uint8 data);
+    void atx(uint8 data);
+    void sxa(uint8 data);
 
     uint8 dcp(uint8 data);
     uint8 isc(uint8 data);

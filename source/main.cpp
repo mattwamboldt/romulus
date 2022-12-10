@@ -537,8 +537,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     bool soundIsValid = false;
 
     NES nes;
-    nes.loadRom("data/blargg_apu_tests/rom_singles/2-len_table.nes");
-    // nes.cpu.instAddr = nes.cpu.pc = 0xC000;
+    nes.loadRom("test/blargg_ppu_tests/vram_access.nes");
     
     while (isRunning)
     {

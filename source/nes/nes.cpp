@@ -169,11 +169,7 @@ void NES::cpuStep()
 {
     if (traceEnabled && !cpu.hasHalted() && !cpu.isExecuting())
     {
-        // TODO: TEMP, we only need enough to compare the first few seconds
-        if (currentCpuCycle < 452264)
-        {
-            logInstruction("bin/6502.log", cpu.instAddr, &cpu, &cpuBus, &ppu);
-        }
+        logInstruction("bin/6502.log", cpu.instAddr, &cpu, &cpuBus, &ppu);
     }
 
     if (cpu.tick() && cpu.hasHalted())
