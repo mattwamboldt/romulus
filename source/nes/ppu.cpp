@@ -59,16 +59,6 @@ void PPU::tick()
     if (scanline != PRERENDER_LINE && cycle <= NES_SCREEN_WIDTH)
     {
         uint8 backgroundPixel = calculateBackgroundPixel();
-
-        // Clock the background shift registers
-        // PERF: See if this is needed on bg disable
-        patternLoShift <<= 1;
-        patternHiShift <<= 1;
-        attributeLoShift <<= 1;
-        attributeHiShift <<= 1;
-        attributeLoShift |= attributeBit0;
-        attributeHiShift |= attributeBit1;
-
         uint8 spritePixel = calculateSpritePixel();
 
         uint8 pixel = backgroundPixel;
@@ -89,13 +79,22 @@ void PPU::tick()
             pixel = spritePixel;
         }
 
+        screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);
+
+        // Clock the background shift registers
+        // PERF: See if this is needed on bg disable
+        patternLoShift <<= 1;
+        patternHiShift <<= 1;
+        attributeLoShift <<= 1;
+        attributeHiShift <<= 1;
+        attributeLoShift |= attributeBit0;
+        attributeHiShift |= attributeBit1;
+
         // Clock sprite counters and shift registers
         for (int i = 0; i < 8; ++i)
         {
             spriteRenderers[i].tick();
         }
-
-        screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);
     }
 
     // Sprite Evaluation https://www.nesdev.org/wiki/PPU_sprite_evaluation
@@ -520,7 +519,7 @@ void PPU::setOamData(uint8 value)
 uint8 PPU::getOamData()
 {
     // Part of the Secondary OAM initialization
-    if (cycle > 0 && cycle <= 64)
+    if (scanline > 0 && scanline < NES_SCREEN_HEIGHT && cycle > 0 && cycle <= 64)
     {
         return 0xFF;
     }
