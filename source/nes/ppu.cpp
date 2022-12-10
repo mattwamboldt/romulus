@@ -638,7 +638,7 @@ uint8 PPU::calculateSpritePixel()
     {
         uint8 spritePixel = spriteRenderers[i].calculatePixel();
         // Priority is given to first non transparent pixel
-        if (spritePixel)
+        if (spritePixel & 0x03)
         {
             renderedSpriteIndex = i;
             return spritePixel;
