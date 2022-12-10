@@ -1,6 +1,6 @@
 #pragma once
 #include "6502.h"
-#include "ppu.h"
+#include "ppu/ppu.h"
 #include "apu/apu.h"
 #include "cpuBus.h"
 #include "ppuBus.h"

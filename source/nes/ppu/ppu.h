@@ -1,6 +1,6 @@
 #pragma once
-#include "../common.h"
-#include "bus.h"
+#include "../../common.h"
+#include "../bus.h"
 #include "spriteRenderUnit.h"
 
 // TODO: Replace raw masks values with constants to better document the code

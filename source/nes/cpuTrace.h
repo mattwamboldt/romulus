@@ -1,6 +1,6 @@
 #pragma once
 #include "6502.h"
-#include "ppu.h"
+#include "ppu/ppu.h"
 #include "cpuBus.h"
 
 int formatInstruction(char* dest, uint16 address, MOS6502* cpu, IBus* bus);

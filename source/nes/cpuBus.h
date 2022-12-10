@@ -1,6 +1,6 @@
 #pragma once
 #include "bus.h"
-#include "ppu.h"
+#include "ppu/ppu.h"
 #include "apu/apu.h"
 #include "cartridge.h"
 #include "gamepad.h"

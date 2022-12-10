@@ -34,9 +34,9 @@
     <ClInclude Include="nes\cpuTrace.h" />
     <ClInclude Include="nes\gamepad.h" />
     <ClInclude Include="nes\nes.h" />
-    <ClInclude Include="nes\ppu.h" />
+    <ClInclude Include="nes\ppu\ppu.h" />
     <ClInclude Include="nes\ppuBus.h" />
-    <ClInclude Include="nes\spriteRenderUnit.h" />
+    <ClInclude Include="nes\ppu\spriteRenderUnit.h" />
     <ClInclude Include="wavefile.h" />
   </ItemGroup>
   <ItemGroup>
@@ -50,10 +50,10 @@
     <ClCompile Include="nes\cpuBus.cpp" />
     <ClCompile Include="nes\cpuTrace.cpp" />
     <ClCompile Include="nes\nes.cpp" />
-    <ClCompile Include="nes\ppu.cpp" />
+    <ClCompile Include="nes\ppu\ppu.cpp" />
     <ClCompile Include="nes\ppuBus.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="nes\spriteRenderUnit.cpp" />
+    <ClCompile Include="nes\ppu\spriteRenderUnit.cpp" />
     <ClCompile Include="wavefile.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
