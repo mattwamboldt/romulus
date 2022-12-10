@@ -19,9 +19,6 @@ void NES::loadRom(const char * path)
 {
     cartridge.load(path);
 
-    // TODO: Temp puuting this here for debugging apu output, don't worry about it
-    openStream("bin/apu_raw.wav", 1, 48000);
-
     if (isRunning)
     {
         reset();
@@ -61,9 +58,6 @@ void NES::powerOff()
     isRunning = false;
 
     flushLog();
-
-    write(apuBuffer, writeHead);
-    finalizeStream();
 }
 
 void NES::update(real32 secondsPerFrame)
@@ -130,7 +124,6 @@ void NES::update(real32 secondsPerFrame)
             apuBuffer[writeHead++] = (int16)(output * 30000); // TODO: Do math
             if (writeHead >= 48000)
             {
-                write(apuBuffer, writeHead);
                 writeHead = 0;
             }
             
