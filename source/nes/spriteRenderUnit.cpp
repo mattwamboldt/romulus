@@ -71,5 +71,5 @@ uint8 SpriteRenderUnit::calculatePixel()
         bit1 = (patternHiShift & BIT_7) >> 6;
     }
 
-    return pallete | bit1 | bit0;
+    return BIT_4 | pallete | bit1 | bit0;
 }
