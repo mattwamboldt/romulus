@@ -1,6 +1,7 @@
 #pragma once
 #include "../common.h"
 #include "bus.h"
+#include "spriteRenderUnit.h"
 
 // TODO: Replace raw masks values with constants to better document the code
 
@@ -139,10 +140,7 @@ private:
     // Data for the 8 (or fewer) sprites to render on this scanline
     uint8 oamSecondary[32];
 
-    uint8 spritePatternLoShift[8];
-    uint8 spritePatternHiShift[8];
-    uint8 spriteAttributeLatches[8];
-    uint8 spriteXCounters[8];
+    SpriteRenderUnit spriteRenderers[8];
 
     // This is a temp variable to keep track of which sprite had priority
     uint8 renderedSpriteIndex;
@@ -152,8 +150,10 @@ private:
     bool isCopyingSprite;
     uint8 secondaryOamAddress;
     uint8 numSpritesChecked;
-    uint8 n;
-    uint8 m;
+
+    uint8 numSpritesFound;
+    uint8 numSpritesLoaded;
+    uint8 numSpritesToRender;
 
     // =====================
     // Internal Utility Functions

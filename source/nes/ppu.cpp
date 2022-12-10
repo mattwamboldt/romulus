@@ -71,21 +71,7 @@ void PPU::tick()
 
         uint8 spritePixel = calculateSpritePixel();
 
-        // Clock sprite counters and shift registers
-        for (int i = 0; i < 8; ++i)
-        {
-            if (spriteXCounters[i] > 0)
-            {
-                --spriteXCounters[i];
-            }
-            else
-            {
-                spritePatternLoShift[i] <<= 1;
-                spritePatternHiShift[i] <<= 1;
-            }
-        }
-
-        uint8 pixel = 0;
+        uint8 pixel = backgroundPixel;
         if (backgroundPixel == 0)
         {
             pixel = spritePixel;
@@ -94,9 +80,19 @@ void PPU::tick()
         {
             pixel = backgroundPixel;
         }
-        else // TODO: Priority (0: Sprite, 1: BG)
+        else if (spriteRenderers[renderedSpriteIndex].getPriority())
         {
+            pixel = backgroundPixel;
+        }
+        else
+        {
+            pixel = spritePixel;
+        }
 
+        // Clock sprite counters and shift registers
+        for (int i = 0; i < 8; ++i)
+        {
+            spriteRenderers[i].tick();
         }
 
         screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);
@@ -107,16 +103,22 @@ void PPU::tick()
     if (cycle <= NES_SCREEN_WIDTH && cycle % 2 == 0)
     {
         // Clearing Phase;
-        if (cycle <= 64)
+        if (cycle == 64)
         {
-            oamSecondary[secondaryOamAddress++] = 0xFF;
-            if (secondaryOamAddress >= 32)
+            for (int i = 0; i < 32; ++i)
             {
-                secondaryOamAddress = 0;
+                oamSecondary[i] = 0xFF;
             }
+
+            secondaryOamAddress = 0;
+            isSecondaryOAMWriteDisabled = false;
+            numSpritesChecked = 0;
+            numSpritesFound = 0;
         }
-        else
+        else if (cycle > 64)
         {
+            // We're always evaluating for the next line
+            uint32 nextScanline = scanline + 1;
             uint8 oamValue = oam[oamAddress];
             if (isCopyingSprite)
             {
@@ -140,11 +142,13 @@ void PPU::tick()
 
                     uint32 spriteTop = oamValue;
                     uint32 spriteBottom = spriteTop + spriteHeight;
-                    if (scanline >= spriteTop && scanline < spriteBottom)
+
+                    if (spriteTop < (NES_SCREEN_HEIGHT - 1) && nextScanline >= spriteTop && nextScanline < spriteBottom)
                     {
                         ++secondaryOamAddress;
                         ++oamAddress;
                         isCopyingSprite = true;
+                        ++numSpritesFound;
                     }
                     else
                     {
@@ -166,7 +170,7 @@ void PPU::tick()
 
                     uint32 spriteTop = oamValue;
                     uint32 spriteBottom = spriteTop + spriteHeight;
-                    if (scanline >= spriteTop && scanline < spriteBottom)
+                    if (spriteTop < (NES_SCREEN_HEIGHT - 1) && nextScanline >= spriteTop && nextScanline < spriteBottom)
                     {
                         isSpriteOverflowFlagSet = true;
                     }
@@ -179,6 +183,51 @@ void PPU::tick()
                 }
 
                 ++numSpritesChecked;
+            }
+        }
+    }
+    else if (cycle == 257)
+    {
+        // NOTE: Avoid the temptation to do this in the middle of the visible frame
+        numSpritesToRender = numSpritesFound;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            spriteRenderers[i].reset();
+            if (i < numSpritesToRender)
+            {
+                spriteRenderers[i].isEnabled = true;
+
+                uint8 yPosition = oamSecondary[i * 4];
+                uint8 tileIndex = oamSecondary[(i * 4) + 1];
+                spriteRenderers[i].setAttribute(oamSecondary[(i * 4) + 2]);
+                spriteRenderers[i].xCounter = oamSecondary[(i * 4) + 3];
+
+                // Calculate the shift values
+                uint16 patternTableAddress = 0;
+                if (useTallSprites)
+                {
+                    // TODO: Figure out tall sprites
+                    spriteRenderers[i].isEnabled = false;
+                    // Pattern table address Scheme
+                    // 0H RRRR CCCC PTTT
+                    // || |||| |||| |+++--- T : Fine Y offset, the row number within a tile
+                    // || |||| |||| +------ P : Bit plane (0: "lower"; 1: "upper")
+                    // || |||| ++++-------- C : Tile column
+                    // || ++++------------- R : Tile row
+                    // |+------------------ H : Half of pattern table (0: "left"; 1: "right")
+                    // +------------------- 0 : Pattern table is at $0000 - $1FFF
+                }
+                else
+                {
+                    uint16 tileOffset = ((uint16)tileIndex) << 4;
+                    // TODO: Figure out vertical flip
+                    uint16 fineY = scanline - yPosition;
+                    patternTableAddress = fineY | tileOffset | spritePatternBaseAddress;
+                    spriteRenderers[i].patternLoShift = bus->read(patternTableAddress);
+                    patternTableAddress |= BIT_3;
+                    spriteRenderers[i].patternHiShift = bus->read(patternTableAddress);
+                }
             }
         }
     }
@@ -199,11 +248,7 @@ void PPU::tick()
         }
         case 4: // Attribute table https://www.nesdev.org/wiki/PPU_attribute_tables
         {
-            if (isSpritePhase)
-            {
-                
-            }
-            else
+            if (!isSpritePhase)
             {
                 // From the Wiki this is the address we want
                 // NN 1111 YYY XXX
@@ -223,7 +268,7 @@ void PPU::tick()
         {
             if (isSpritePhase)
             {
-
+                
             }
             else
             {
@@ -247,7 +292,6 @@ void PPU::tick()
         {
             if (isSpritePhase)
             {
-
             }
             else
             {
@@ -308,8 +352,6 @@ void PPU::tick()
         }
         break;
     }
-
-    // Render the sprites
 
     // Handle Updating of the vram address, but only if rendering is enabled
     if (isBackgroundEnabled)
@@ -554,7 +596,6 @@ uint8 PPU::getData(bool readOnly)
     return result;
 }
 
-
 // Util functions
 
 uint8 PPU::calculateBackgroundPixel()
@@ -593,22 +634,14 @@ uint8 PPU::calculateSpritePixel()
         return 0;
     }
 
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < numSpritesToRender; ++i)
     {
-        if (spriteXCounters[i] == 0)
+        uint8 spritePixel = spriteRenderers[i].calculatePixel();
+        // Priority is given to first non transparent pixel
+        if (spritePixel)
         {
-            // TODO: Need to handle sprite filpping
-            // Probably in sprite eval when filling these units
-            uint8 bit0 = (spritePatternLoShift[i] & BIT_7) >> 7;
-            uint8 bit1 = (spritePatternHiShift[i] & BIT_7) >> 6;
-            uint8 spritePixel = spriteAttributeLatches[0] | bit1 | bit0;
-
-            // Priority is given to first non transparent pixel
-            if (spritePixel)
-            {
-                renderedSpriteIndex = i;
-                return spritePixel;
-            }
+            renderedSpriteIndex = i;
+            return spritePixel;
         }
     }
 
