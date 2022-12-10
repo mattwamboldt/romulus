@@ -98,7 +98,6 @@ void PPU::tick()
     }
 
     // Sprite Evaluation https://www.nesdev.org/wiki/PPU_sprite_evaluation
-    // TODO: For now skipping the read write toggling unless it turns out to matter
     if (cycle <= NES_SCREEN_WIDTH && cycle % 2 == 0)
     {
         // Clearing Phase;
@@ -116,8 +115,6 @@ void PPU::tick()
         }
         else if (cycle > 64)
         {
-            // We're always evaluating for the next line
-            uint32 nextScanline = scanline + 1;
             uint8 oamValue = oam[oamAddress];
             if (isCopyingSprite)
             {
@@ -142,7 +139,7 @@ void PPU::tick()
                     uint32 spriteTop = oamValue;
                     uint32 spriteBottom = spriteTop + spriteHeight;
 
-                    if (spriteTop < (NES_SCREEN_HEIGHT - 1) && nextScanline >= spriteTop && nextScanline < spriteBottom)
+                    if (spriteTop < (NES_SCREEN_HEIGHT - 1) && scanline >= spriteTop && scanline < spriteBottom)
                     {
                         ++secondaryOamAddress;
                         ++oamAddress;
@@ -162,6 +159,7 @@ void PPU::tick()
                 // they're actually just portions of the oam address. m is not incremented with n if the y isn't in range
                 // thats only true once you've hit the write inhibit flag after 8 sprites copied over
                 // Treating it as separate values would mean that writing to OAMADDR after its been cleared wouldn't have negative consequences
+                // I could be wrong about this, it's hard to tell when it should come up..
                 else
                 {
                     // "n" in this case gets incremented every time due to the bug
@@ -169,7 +167,7 @@ void PPU::tick()
 
                     uint32 spriteTop = oamValue;
                     uint32 spriteBottom = spriteTop + spriteHeight;
-                    if (spriteTop < (NES_SCREEN_HEIGHT - 1) && nextScanline >= spriteTop && nextScanline < spriteBottom)
+                    if (spriteTop < (NES_SCREEN_HEIGHT - 1) && scanline >= spriteTop && scanline < spriteBottom)
                     {
                         isSpriteOverflowFlagSet = true;
                     }
@@ -189,6 +187,7 @@ void PPU::tick()
     {
         // NOTE: Avoid the temptation to do this in the middle of the visible frame
         numSpritesToRender = numSpritesFound;
+        oamAddress = 0;
 
         for (int i = 0; i < 8; ++i)
         {
@@ -220,8 +219,13 @@ void PPU::tick()
                 else
                 {
                     uint16 tileOffset = ((uint16)tileIndex) << 4;
-                    // TODO: Figure out vertical flip
+                    // TODO: Test vertical flip (Hasn't been hit in debugger yet)
                     uint16 fineY = scanline - yPosition;
+                    if (spriteRenderers[i].isVerticallyFlipped())
+                    {
+                        fineY = (spriteHeight - 1) - fineY;
+                    }
+
                     patternTableAddress = fineY | tileOffset | spritePatternBaseAddress;
                     spriteRenderers[i].patternLoShift = bus->read(patternTableAddress);
                     patternTableAddress |= BIT_3;
