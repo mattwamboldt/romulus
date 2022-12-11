@@ -120,9 +120,11 @@ private:
     // depending on which quadrant the tile is in. Those are loaded into these latches
     // which are shifted in to these registers multiple times to line up with the pattern data
     // It's done this way so you can have the data for the nest tile shifted in which
-    // may have a different attribute, and you only have to combine the outputs 
-    uint8 attributeLoShift; // Attribute Bit 0
-    uint8 attributeHiShift; // Attribute Bit 1
+    // may have a different attribute, and you only have to combine the outputs
+    // NOTE: These need to be 16 bits so we can hold the two prefectches worth
+    // On device the render pipelining would handle it probably
+    uint16 attributeLoShift; // Attribute Bit 0
+    uint16 attributeHiShift; // Attribute Bit 1
 
     uint8 attributeBit0;
     uint8 attributeBit1;

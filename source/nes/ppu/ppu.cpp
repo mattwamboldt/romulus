@@ -55,7 +55,7 @@ void PPU::tick()
     // Cycles 257 - 320
     bool isSpritePhase = cycle > NES_SCREEN_WIDTH && cycle <= 320;
 
-    // Render the background
+    // Render
     if (scanline != PRERENDER_LINE && cycle <= NES_SCREEN_WIDTH)
     {
         uint8 backgroundPixel = calculateBackgroundPixel();
@@ -81,20 +81,25 @@ void PPU::tick()
 
         screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);
 
-        // Clock the background shift registers
-        // PERF: See if this is needed on bg disable
+        // Clock sprite counters and shift registers
+        for (int i = 0; i < 8; ++i)
+        {
+            spriteRenderers[i].tick();
+        }
+    }
+
+    // Clock the background shift registers
+    // PERF: See if this is needed on bg disable
+    // NOTE: have a feeling these would always be going and that the last 4 cycles
+    // would have been priming the pipeline in some way, who knows.
+    if (cycle <= 336)
+    {
         patternLoShift <<= 1;
         patternHiShift <<= 1;
         attributeLoShift <<= 1;
         attributeHiShift <<= 1;
         attributeLoShift |= attributeBit0;
         attributeHiShift |= attributeBit1;
-
-        // Clock sprite counters and shift registers
-        for (int i = 0; i < 8; ++i)
-        {
-            spriteRenderers[i].tick();
-        }
     }
 
     // Sprite Evaluation https://www.nesdev.org/wiki/PPU_sprite_evaluation
