@@ -3,6 +3,7 @@
 #include <string.h>
 
 FILE* logFile = 0;
+bool isNestestLog = true;
 
 // TODO: This is basically a low rent custom purpose string builder. maybe make a class to use in other places
 static const char hexValues[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -247,10 +248,10 @@ int formatRegistersFCEU(char* dest, MOS6502* cpu)
     return 32;
 }
 
-int formatRegistersNesTest(char* dest, MOS6502* cpu, PPU* ppu)
+void formatRegistersNesTest(char* dest, MOS6502* cpu, PPU* ppu, uint32 cpuCycle)
 {
     // TODO: Add PPU and Cycles
-    memcpy(dest, "A:00 X:00 Y:00 P:00 SP:00\n", 27);
+    memcpy(dest, "A:00 X:00 Y:00 P:00 SP:00 PPU:   ,    CYC:", 42);
 
     formatByte(dest + 2, cpu->accumulator);
     formatByte(dest + 7, cpu->x);
@@ -259,7 +260,58 @@ int formatRegistersNesTest(char* dest, MOS6502* cpu, PPU* ppu)
     formatByte(dest + 17, (cpu->status | 0b00100000));
     formatByte(dest + 23, cpu->stack);
 
-    return 27;
+    // Write scanline
+    {
+        char* numDest = dest + 32;
+        uint32 scanline = ppu->scanline;
+
+        do
+        {
+            *numDest-- = (char)((scanline % 10) + 48);
+            scanline /= 10;
+        }
+        while (scanline > 0);
+    }
+
+    // Write dot
+    {
+        char* numDest = dest + 36;
+        uint32 dot = ppu->cycle;
+
+        do
+        {
+            *numDest-- = (char)((dot % 10) + 48);
+            dot /= 10;
+        }
+        while (dot > 0);
+    }
+
+    dest += 42;
+
+    // Write cpu cycles
+    {
+        char* numDest = dest;
+
+        // Figures out where to write the first digit/how wide the number is
+        // NOTE: There is probably a fancy mathy way to do this, but I'm too dumb
+        uint32 target = cpuCycle;
+        while (target >= 10)
+        {
+            target /= 10;
+            ++numDest;
+        }
+
+        do
+        {
+            *numDest-- = (char)((cpuCycle % 10) + 48);
+            cpuCycle /= 10;
+            ++dest;
+        }
+        while (cpuCycle > 0);
+    }
+
+    *dest++ = '\n';
+    *dest = 0;
 }
 
 // makes no assumptions buffer must be long enough
@@ -274,15 +326,8 @@ void padRight(char* start, int32 length, int32 desiredLength, char padChar = ' '
     *end = 0;
 }
 
-void logInstruction(const char* filename, uint16 address, MOS6502* cpu, CPUBus* cpuBus, PPU* ppu)
+void logInstructionFCEU(char* line, uint16 address, MOS6502* cpu, CPUBus* cpuBus)
 {
-    if (!logFile)
-    {
-        logFile = fopen(filename, "w");
-    }
-
-    cpuBus->setReadOnly(true);
-
     uint8 opcode = cpuBus->read(address);
     uint8 p1 = cpuBus->read(address + 1);
     uint8 p2 = cpuBus->read(address + 2);
@@ -294,7 +339,6 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, CPUBus* 
     const int32 REG_WIDTH = 32;
     const int32 CYCLES_WIDTH = 27;
 
-    char line[HEX_WIDTH + INST_WIDTH + REG_WIDTH] = {};
     char* columnStart = line;
     int32 hexLength = formatHexInstruction(line, address, opcode, op.addressMode, p1, p2);
     padRight(columnStart, hexLength, HEX_WIDTH);
@@ -308,6 +352,207 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, CPUBus* 
     if (op.isUnofficial)
     {
         line[15] = '*';
+    }
+}
+
+void logInstructionNesTest(char* dest, uint16 address, MOS6502* cpu, CPUBus* cpuBus, PPU* ppu, uint32 cpuCycle)
+{
+    uint8 opcode = cpuBus->read(address);
+    uint8 p1 = cpuBus->read(address + 1);
+    uint8 p2 = cpuBus->read(address + 2);
+
+    Operation op = operations[opcode];
+
+    char* columnStart = dest;
+
+    // Wite Hex Instruction
+    {
+        dest += formatWord(dest, address);
+        *dest++ = ' ';
+        *dest++ = ' ';
+        dest += formatByte(dest, opcode);
+        *dest++ = ' ';
+
+        switch (op.addressMode)
+        {
+        case Absolute:
+        case AbsoluteX:
+        case AbsoluteY:
+        case Indirect:
+            dest += formatByte(dest, p1);
+            *dest++ = ' ';
+            dest += formatByte(dest, p2);
+            break;
+        case Immediate:
+        case IndirectX:
+        case IndirectY:
+        case Relative:
+        case ZeroPage:
+        case ZeroPageX:
+        case ZeroPageY:
+            dest += formatByte(dest, p1);
+            break;
+        }
+
+        const int32 HEX_WIDTH = 16;
+        padRight(columnStart, dest - columnStart, HEX_WIDTH);
+        columnStart += HEX_WIDTH;
+        dest = columnStart;
+    }
+
+    // Write Human readable instruction and values
+    {
+        const char* opCodeName = opCodeNames[op.opCode];
+        int32 opCodeLength = (int32)strlen(opCodeName);
+
+        memcpy(dest, opCodeName, opCodeLength);
+        dest += opCodeLength;
+        *dest++ = ' ';
+
+        address = cpu->calcAddress(op.addressMode, address, p1, p2);
+
+        switch (op.addressMode)
+        {
+            case Absolute:
+            {
+                dest += formatAddress(dest, address);
+                if (op.opCode != JMP && op.opCode != JSR)
+                {
+                    uint8 result = cpuBus->read(address);
+                    dest += formatString(dest, " = ");
+                    dest += formatByte(dest, result);
+                }
+            }
+            break;
+            case AbsoluteX:
+            {
+                dest += formatAddress(dest, p1, p2);
+                dest += formatString(dest, ",X @ ");
+                dest += formatWord(dest, address);
+
+                uint8 result = cpuBus->read(address);
+                dest += formatString(dest, " = ");
+                dest += formatByte(dest, result);
+            }
+            break;
+            case AbsoluteY:
+            {
+                dest += formatAddress(dest, p1, p2);
+                dest += formatString(dest, ",Y @ ");
+                dest += formatWord(dest, address);
+
+                uint8 result = cpuBus->read(address);
+                dest += formatString(dest, " = ");
+                dest += formatByte(dest, result);
+            }
+            break;
+            case Immediate:
+                dest += formatImmediate(dest, p1);
+                break;
+            case Indirect:
+                *dest++ = '(';
+                dest += formatAddress(dest, p1, p2);
+                dest += formatString(dest, ") = ");
+                dest += formatWord(dest, address);
+                break;
+            case Relative:
+                dest += formatAddress(dest, address);
+                break;
+            case IndirectX:
+            {
+                *dest++ = '(';
+                dest += formatHex(dest, p1);
+                dest += formatString(dest, ",X) @ ");
+                dest += formatByte(dest, (uint8)(p1 + cpu->x));
+                dest += formatString(dest, " = ");
+                dest += formatWord(dest,address);
+
+                uint8 result = cpuBus->read(address);
+                dest += formatString(dest, " = ");
+                dest += formatByte(dest, result);
+            }
+            break;
+            case IndirectY:
+            {
+                *dest++ = '(';
+                dest += formatHex(dest, p1);
+                dest += formatString(dest, "),Y = ");
+
+                uint16 zpReadLo = cpuBus->read(p1);
+                uint16 zpReadHi = cpuBus->read((uint8)(p1 + 1));
+                dest += formatWord(dest, (zpReadHi << 8) + zpReadLo);
+
+                dest += formatString(dest, " @ ");
+                dest += formatWord(dest, address);
+
+                uint8 result = cpuBus->read(address);
+                dest += formatString(dest, " = ");
+                dest += formatByte(dest, result);
+            }
+            break;
+            case ZeroPage:
+            {
+                dest += formatHex(dest, p1);
+
+                uint8 result = cpuBus->read(address);
+                dest += formatString(dest, " = ");
+                dest += formatByte(dest, result);
+            }
+            break;
+            case ZeroPageX:
+            {
+                dest += formatHex(dest, p1);
+                dest += formatString(dest, ",X @ ");
+                dest += formatByte(dest, (uint8)address);
+
+                uint8 result = cpuBus->read(address);
+                dest += formatString(dest, " = ");
+                dest += formatByte(dest, result);
+            }
+            break;
+            case ZeroPageY:
+            {
+                dest += formatHex(dest, p1);
+                dest += formatString(dest, ",Y @ ");
+                dest += formatByte(dest, (uint8)address);
+
+                uint8 result = cpuBus->read(address);
+                dest += formatString(dest, " = ");
+                dest += formatByte(dest, result);
+            }
+            break;
+            case Accumulator:
+                *dest++ = 'A';
+                break;
+        }
+
+        const int32 INST_WIDTH = 32;
+        padRight(columnStart, dest - columnStart, INST_WIDTH);
+        columnStart += INST_WIDTH;
+        dest = columnStart;
+    }
+
+    formatRegistersNesTest(columnStart, cpu, ppu, cpuCycle);
+}
+
+void logInstruction(const char* filename, uint16 address, MOS6502* cpu, CPUBus* cpuBus, PPU* ppu, uint32 cpuCycle)
+{
+    if (!logFile)
+    {
+        logFile = fopen(filename, "w");
+    }
+
+    cpuBus->setReadOnly(true);
+
+    char line[128] = {};
+
+    if (isNestestLog)
+    {
+        logInstructionNesTest(line, address, cpu, cpuBus, ppu, cpuCycle);
+    }
+    else
+    {
+        logInstructionFCEU(line, address, cpu, cpuBus);
     }
 
     fputs(line, logFile);

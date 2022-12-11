@@ -715,6 +715,9 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
     uint32 frameCount = 0;
     bool soundIsValid = false;
+
+    //nes.loadRom("test/nestest/nestest.nes");
+    //nes.cpu.pc = nes.cpu.instAddr = 0xC000;
     
     while (isRunning)
     {

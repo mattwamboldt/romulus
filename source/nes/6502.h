@@ -95,7 +95,8 @@ enum AddressingMode
     ZeroPageY,
 };
 
-static const char* opCodeNames[] = {
+static const char* opCodeNames[] =
+{
     "ADC",
     "ALR",
     "ANC",
@@ -159,7 +160,7 @@ static const char* opCodeNames[] = {
     "STA",
     "STX",
     "STY",
-    "SXA"
+    "SXA",
     "TAX",
     "TAY",
     "TSX",
