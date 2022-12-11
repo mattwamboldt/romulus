@@ -460,16 +460,19 @@ void renderNametable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left)
             case 0:
                 y = top;
                 x = left + 256;
+                nametableAddress = 0x2400;
                 break;
 
             case 1:
-                y = top + 256;
+                y = top + 240;
                 x = left;
+                nametableAddress = 0x2800;
                 break;
 
             case 2:
-                y = top + 256;
+                y = top + 240;
                 x = left + 256;
+                nametableAddress = 0x2C00;
                 break;
         }
     }
@@ -677,18 +680,21 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     AppendMenuA(menuBar, MF_POPUP, (UINT_PTR)fileMenu, "&File");
 
     HMENU consoleMenu = CreateMenu();
-    AppendMenuA(consoleMenu, MF_STRING, MENU_CONSOLE_RESET, "&Reset\tCtrl+r");
+    AppendMenuA(consoleMenu, MF_STRING, MENU_CONSOLE_RESET, "&Reset\tCtrl+R");
     AppendMenuA(menuBar, MF_POPUP, (UINT_PTR)consoleMenu, "&Console");
 
     SetMenu(window, menuBar);
 
     ACCEL accelerators[2] = {};
+
     accelerators[0].key = 'O';
     accelerators[0].fVirt = FCONTROL | FVIRTKEY;
     accelerators[0].cmd = MENU_FILE_OPEN;
+
     accelerators[1].key = 'R';
     accelerators[1].fVirt = FCONTROL | FVIRTKEY;
     accelerators[1].cmd = MENU_CONSOLE_RESET;
+
     HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
 
     resizeDIBSection(&globalBackBuffer, 800, 600);
