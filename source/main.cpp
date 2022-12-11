@@ -428,6 +428,15 @@ void paintToWindow(HDC deviceContext, GDIBackBuffer buffer, int windowWidth, int
         DIB_RGB_COLORS, SRCCOPY);
 }
 
+static NES nes;
+
+enum MenuItemId
+{
+    MENU_FILE_OPEN = 1,
+    MENU_FILE_EXIT,
+    MENU_CONSOLE_RESET,
+};
+
 LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -443,6 +452,42 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT paint;
             HDC deviceContext = BeginPaint(window, &paint);
             EndPaint(window, &paint);
+        }
+        break;
+
+        case WM_COMMAND:
+        {
+            WPARAM command = wParam & 0xFFFF;
+            if (command == MENU_FILE_OPEN)
+            {
+                // https://learn.microsoft.com/en-us/windows/win32/dlgbox/using-common-dialog-boxes#opening-a-file
+                char filename[MAX_PATH];
+
+                OPENFILENAMEA openFileDesc = {};
+                openFileDesc.lStructSize = sizeof(openFileDesc);
+                openFileDesc.lpstrFile = filename;
+                openFileDesc.lpstrFile[0] = '\0'; // Docs make it seem if you use a path it'll go there
+                openFileDesc.hwndOwner = window;
+                openFileDesc.nMaxFile = sizeof(filename);
+                openFileDesc.lpstrFilter = "NES files(*.nes,*.nsf)\0*.nes;*.nsf\0";
+                openFileDesc.nFilterIndex = 1;
+                openFileDesc.lpstrInitialDir = NULL;
+                openFileDesc.lpstrFileTitle = NULL;
+                openFileDesc.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+                if (GetOpenFileNameA(&openFileDesc))
+                {
+                    nes.loadRom(filename);
+                }
+            }
+            else if (command == MENU_FILE_EXIT)
+            {
+                DestroyWindow(window);
+            }
+            else if (command == MENU_CONSOLE_RESET)
+            {
+                nes.reset();
+            }
         }
         break;
 
@@ -511,6 +556,31 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         return 0;
     }
 
+    // These can be moved into resource files closer to ship, I just wanted a better
+    // understanding of how this worked. It also avoids some potential registry shenanigans you have to do
+    // if accelerators need to change often during dev, or so I've read.
+    HMENU menuBar = CreateMenu();
+
+    HMENU fileMenu = CreateMenu();
+    AppendMenuA(fileMenu, MF_STRING, MENU_FILE_OPEN, "&Open ROM...\tCtrl+O");
+    AppendMenuA(fileMenu, MF_STRING, MENU_FILE_EXIT, "E&xit\tAlt+F4");
+    AppendMenuA(menuBar, MF_POPUP, (UINT_PTR)fileMenu, "&File");
+
+    HMENU consoleMenu = CreateMenu();
+    AppendMenuA(consoleMenu, MF_STRING, MENU_CONSOLE_RESET, "&Reset\tCtrl+r");
+    AppendMenuA(menuBar, MF_POPUP, (UINT_PTR)consoleMenu, "&Console");
+
+    SetMenu(window, menuBar);
+
+    ACCEL accelerators[2] = {};
+    accelerators[0].key = 'O';
+    accelerators[0].fVirt = FCONTROL | FVIRTKEY;
+    accelerators[0].cmd = MENU_FILE_OPEN;
+    accelerators[1].key = 'R';
+    accelerators[1].fVirt = FCONTROL | FVIRTKEY;
+    accelerators[1].cmd = MENU_CONSOLE_RESET;
+    HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
+
     resizeDIBSection(&globalBackBuffer, 720, 480);
 
     real32 framesPerSecond = 30.0f;
@@ -536,7 +606,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     uint32 frameCount = 0;
     bool soundIsValid = false;
 
-    NES nes;
     nes.loadRom("test/blargg_ppu_tests/vram_access.nes");
     
     while (isRunning)
@@ -550,16 +619,14 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
                 isRunning = false;
             }
 
-            TranslateMessage(&msg);
-            DispatchMessageA(&msg);
+            if (!TranslateAcceleratorA(window, acceleratorTable, &msg))
+            {
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
+            }
         }
 
         /*
-        if (input == 'q')
-        {
-            isRunning = false;
-        }
-
         if (input == 'd')
         {
             // debug.nextpage();
@@ -583,11 +650,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         if (input == ' ')
         {
             nes.singleStep();
-        }
-
-        if (input == '`')
-        {
-            nes.reset();
         }
         */
 
