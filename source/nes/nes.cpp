@@ -48,6 +48,11 @@ void NES::powerOn()
 
 void NES::reset()
 {
+    if (!isRunning)
+    {
+        return;
+    }
+
     cpu.reset();
     isRunning = true;
 }

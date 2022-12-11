@@ -365,6 +365,116 @@ void renderPatternTable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left,
     }
 }
 
+void renderNametable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left)
+{
+    uint16 nametableAddress = 0x2000;
+    uint8* row = (uint8*)buffer.memory + (buffer.pitch * top);
+    uint32* pixel = ((uint32*)row) + left;
+
+    uint32 x = left;
+    uint32 y = top;
+
+    for (uint16 page = 0; page < 4; ++page)
+    {
+        uint16 nameTableSelect = nametableAddress & 0x0C00;
+
+        for (int yTile = 0; yTile < 30; ++yTile)
+        {
+            for (int xTile = 0; xTile < 32; ++xTile)
+            {
+                uint16 patternByte = nes->ppuBus.read(nametableAddress);
+                uint16 patternAddress = (patternByte << 4) + nes->ppu.backgroundPatternBaseAddress;
+
+                uint16 coarseX = (nametableAddress & 0x001F) >> 2;
+                uint16 coarseY = (nametableAddress & 0x0380) >> 4;
+                uint16 attributeAddress = 0x23C0 | nameTableSelect | coarseY | coarseX;
+                uint8 attributeByte = nes->ppuBus.read(attributeAddress);
+
+                // attribute table covers a 4 x 4 tile area so bit 0 doesn't matter
+                // and the next 3 bits after this got us this attribute in the first place
+                bool isRightAttribute = nametableAddress & BIT_1;
+                bool isBottomAttribute = nametableAddress & BIT_6;
+
+                uint16 attributeValue = 0x3F00;
+
+                if (isRightAttribute)
+                {
+                    if (isBottomAttribute)
+                    {
+                        // Bottom Right
+                        attributeValue += (attributeByte & 0xC0) >> 4;
+                    }
+                    else
+                    {
+                        // Top Right
+                        attributeValue += attributeByte & 0x0C;
+                    }
+                }
+                else
+                {
+                    if (isBottomAttribute)
+                    {
+                        // Bottom Left
+                        attributeValue += (attributeByte & 0x30) >> 2;
+                    }
+                    else
+                    {
+                        // Top Left
+                        attributeValue += (attributeByte & 0x03) << 2;
+                    }
+                }
+
+                for (int tileY = 0; tileY < 8; ++tileY)
+                {
+                    uint8 patfield01 = nes->ppuBus.read(patternAddress);
+                    uint8 patfield02 = nes->ppuBus.read(patternAddress + 8);
+                    uint8* row = (uint8*)buffer.memory + (buffer.pitch * y);
+                    uint32* pixel = (uint32*)row + x;
+
+                    for (int bit = 0; bit < 8; ++bit)
+                    {
+                        uint8 paletteOffset = (patfield01 & 0b10000000) >> 7;
+                        paletteOffset |= (patfield02 & 0b10000000) >> 6;
+                        patfield01 <<= 1;
+                        patfield02 <<= 1;
+
+                        uint8 color = nes->ppuBus.read(attributeValue + paletteOffset);
+                        *pixel++ = palette[color];
+                    }
+
+                    ++patternAddress;
+                    ++y;
+                }
+
+                ++nametableAddress;
+                y -= 8;
+                x += 8;
+            }
+
+            x -= 256;
+            y += 8;
+        }
+
+        switch (page)
+        {
+            case 0:
+                y = top;
+                x = left + 256;
+                break;
+
+            case 1:
+                y = top + 256;
+                x = left;
+                break;
+
+            case 2:
+                y = top + 256;
+                x = left + 256;
+                break;
+        }
+    }
+}
+
 void render(GDIBackBuffer buffer, NES* nes)
 {
     // TODO: A bunch of this should be in platform agnostic place and copied out
@@ -547,7 +657,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         "ROMulus",
         WS_OVERLAPPEDWINDOW|WS_VISIBLE,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        CW_USEDEFAULT, CW_USEDEFAULT,
+        800, 600,
         0, 0, instance, 0
     );
 
@@ -581,7 +691,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     accelerators[1].cmd = MENU_CONSOLE_RESET;
     HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
 
-    resizeDIBSection(&globalBackBuffer, 720, 480);
+    resizeDIBSection(&globalBackBuffer, 800, 600);
 
     real32 framesPerSecond = 30.0f;
     real32 secondsPerFrame = 1.0f / framesPerSecond;
@@ -605,8 +715,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
     uint32 frameCount = 0;
     bool soundIsValid = false;
-
-    nes.loadRom("test/blargg_ppu_tests/vram_access.nes");
     
     while (isRunning)
     {
@@ -670,7 +778,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
                 nesPad.select = (pad.wButtons & XINPUT_GAMEPAD_BACK) != 0;
                 nesPad.b = (pad.wButtons & XINPUT_GAMEPAD_A) != 0;
                 nesPad.a = (pad.wButtons & XINPUT_GAMEPAD_B) != 0;
-                nes.setGamepadState(nesPad, i);
+                if (nes.isRunning)
+                {
+                    nes.setGamepadState(nesPad, i);
+                }
             }
             else
             {
@@ -683,9 +794,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         nes.update(secondsPerFrame);
 
         render(globalBackBuffer, &nes);
-        if (!nes.cartridge.isNSF)
+        if (!nes.cartridge.isNSF && nes.isRunning)
         {
-            renderPatternTable(globalBackBuffer, &nes, 0, 300, 0);
+            renderPatternTable(globalBackBuffer, &nes, 250, 0, 0);
+            renderNametable(globalBackBuffer, &nes, 10, 266);
         }
 
         // TODO: FPS Counter

@@ -45,6 +45,9 @@ public:
     uint8 screenBuffer[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
     uint16 outputOffset;
 
+    // TODO: don't expose this, only doing for a debug view that should probably be using functions or be in the ppu itself
+    uint16 backgroundPatternBaseAddress;
+
 private:
     IBus* bus;
 
@@ -58,9 +61,7 @@ private:
     uint8 spriteHeight;
 
     uint16 vramAddressIncrement;
-    // TODO: Implement
     uint16 spritePatternBaseAddress;
-    uint16 backgroundPatternBaseAddress;
 
     // TODO: Implement
     // Apparently complicated do to bugs? https://www.nesdev.org/wiki/PPU_sprite_evaluation
