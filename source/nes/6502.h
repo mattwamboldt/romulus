@@ -1,79 +1,81 @@
 #pragma once
 #include "bus.h"
 
+// References
+// https://www.nesdev.org/obelisk-6502-guide/reference.html
 enum OpCode
 {
-    ADC,
-    ALR,
-    ANC,
-    AND,
-    ARR,
-    ASL,
-    AXS,
-    ATX,
-    BCC,
-    BCS,
-    BEQ,
-    BIT,
-    BMI,
-    BNE,
-    BPL,
-    BRK,
-    BVC,
-    BVS,
-    CLC,
-    CLD,
-    CLI,
-    CLV,
-    CMP,
-    CPX,
-    CPY,
-    DCP,
-    DEC,
-    DEX,
-    DEY,
-    EOR,
-    INC,
-    INX,
-    INY,
-    ISC,
-    JMP,
-    JSR,
-    LAX,
-    LDA,
-    LDX,
-    LDY,
-    LSR,
-    NOP,
-    ORA,
-    PHA,
-    PHP,
-    PLA,
-    PLP,
-    ROL,
-    ROR,
-    RLA,
-    RRA,
-    RTI,
-    RTS,
-    SAX,
-    SBC,
-    SEC,
-    SED,
-    SEI,
-    SLO,
-    SRE,
-    STA,
-    STX,
-    STY,
-    SXA,
-    TAX,
-    TAY,
-    TSX,
-    TXA,
-    TXS,
-    TYA,
-    KILL, // Illegal opcodes
+    ADC, // ADd with Carry
+    ALR, // * 
+    ANC, // *
+    AND, // bitwise AND with accumulator
+    ARR, // *
+    ASL, // Arithmetic Shift Left
+    AXS, // *
+    ATX, // *
+    BCC, // Branch is Carry Clear
+    BCS, // Branch if Carry Set
+    BEQ, // Branch if EQual (Zero flag)
+    BIT, // BIT Test (mask Memory with A and set flags based on result)
+    BMI, // Branch if MInus (Negative flag)
+    BNE, // Branch if Not Equal
+    BPL, // Branch if Positive
+    BRK, // BReaK (Force Interrupt)
+    BVC, // Branch if oVerflow Clear
+    BVS, // Branch if oVerflow Set
+    CLC, // CLear Carry flag
+    CLD, // CLear Decimal mode
+    CLI, // CLear Interrupt disable
+    CLV, // CLear oVerflow flag
+    CMP, // CoMPare (A-M, set flags as appropriate)
+    CPX, // ComPare X (X-M, set flags as appropriate)
+    CPY, // ComPare Y (Y-M, set flags as appropriate)
+    DCP, // *
+    DEC, // DECrement memory
+    DEX, // DEcrement X
+    DEY, // DEcrement Y
+    EOR, // Exclusive OR (A^M)
+    INC, // INCrement memory
+    INX, // INcrement X
+    INY, // INcrement Y
+    ISC, // * Increase and Subtract with Carry (A-(M+1))
+    JMP, // JuMP
+    JSR, // Jump SubRoutine
+    LAX, // * 
+    LDA, // LoaD Accumulator
+    LDX, // LoaD X
+    LDY, // LoaD Y
+    LSR, // Logical Shift Right
+    NOP, // No OPeration
+    ORA, // OR Accumulator (A|M)
+    PHA, // PusH Accumulator
+    PHP, // PusH Processor status
+    PLA, // PulL Accumulator
+    PLP, // PulL Processor status
+    ROL, // ROtate Left
+    ROR, // ROtate Right
+    RLA, // *
+    RRA, // *
+    RTI, // ReTurn from Interrupt
+    RTS, // ReTurn from Subroutine
+    SAX, // *
+    SBC, // SuBtract with Carry
+    SEC, // SEt Carry flag
+    SED, // SEt Decimal flag
+    SEI, // SEt Interrupt disable
+    SLO, // * Shift Left Or (Shift one bit in memory, then A | M)
+    SRE, // * Shift Right Exlusive or (Shift right one bit in memory, then A ^ M)
+    STA, // STore Accumulator (M = A)
+    STX, // STore X (M = X)
+    STY, // STore Y (M = Y)
+    SXA, // * Store X And (AND X register with the high byte of the target address of the argument +1. Store the result in memory)
+    TAX, // Transfer Accumulator to X (X=A)
+    TAY, // Transfer Accumulator to Y (Y=A)
+    TSX, // Transfer Stack pointer to X (X=S)
+    TXA, // Transfer X to Accumulator (A=X)
+    TXS, // Transfer X to Stack pointer (S=X)
+    TYA, // Transfer Y to Accumulator (A=Y)
+    KILL, // * Catch all for any Illegal Opcode that crashes the chip/is unhandled
 };
 
 enum AddressingMode

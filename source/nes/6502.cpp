@@ -27,6 +27,8 @@ void MOS6502::handleInterrupt(uint16 vector, bool isReset)
 {
     if (isReset)
     {
+        // Should account for below pushes that would happen
+        // but write is disabled on reset
         stack -= 3;
     }
     else
@@ -55,8 +57,15 @@ void MOS6502::reset(bool isFirstBoot)
     {
         stack = 0xFF;
     }
+    else
+    {
+        stack = 0;
+        accumulator = 0;
+        x = 0;
+        y = 0;
+    }
 
-    handleInterrupt(RESET_VECTOR);
+    handleInterrupt(RESET_VECTOR, true);
 }
 
 bool MOS6502::tick()
