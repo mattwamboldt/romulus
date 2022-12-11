@@ -1,5 +1,5 @@
 #pragma once
-#include "../../common.h"
+#include "common.h"
 
 // https://www.nesdev.org/wiki/APU_Triangle
 struct TriangleChannel

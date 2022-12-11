@@ -1,5 +1,5 @@
 #pragma once
-#include "../common.h"
+#include "common.h"
 
 // PPU Memory Mapped Registers
 #define PPUCTRL    0x2000
