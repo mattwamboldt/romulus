@@ -70,13 +70,6 @@ uint8 CPUBus::read(uint16 address)
     return cart->prgRead(address);
 }
 
-uint16 CPUBus::readWord(uint16 address)
-{
-    uint8 lo = read(address);
-    uint8 hi = read(address + 1);
-    return ((uint16)hi << 8) + lo;
-}
-
 void CPUBus::write(uint16 address, uint8 value)
 {
     if (address < 0x2000)

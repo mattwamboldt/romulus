@@ -49,6 +49,8 @@ void PPU::tick()
     if (cycle == 1 && scanline == PRERENDER_LINE)
     {
         nmiRequested = false;
+        isSpriteOverflowFlagSet = false;
+        isSpriteZeroHit = false;
         outputOffset = 0;
     }
 
@@ -70,13 +72,22 @@ void PPU::tick()
         {
             pixel = backgroundPixel;
         }
-        else if (spriteRenderers[renderedSpriteIndex].getPriority())
+        else 
         {
-            pixel = backgroundPixel;
-        }
-        else
-        {
-            pixel = spritePixel;
+            // This is from a random note on the wiki, not sure if its makes much of a diffeerence
+            if (cycle != 255)
+            {
+                isSpriteZeroHit = true;
+            }
+
+            if (spriteRenderers[renderedSpriteIndex].getPriority())
+            {
+                pixel = backgroundPixel;
+            }
+            else
+            {
+                pixel = spritePixel;
+            }
         }
 
         screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);

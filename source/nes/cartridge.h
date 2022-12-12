@@ -4,7 +4,9 @@
 class Cartridge
 {
 public:
-    void load(const char* file);
+    bool load(const char* file);
+    bool loadNSF(uint8* buffer, uint32 length);
+    bool loadINES(uint8* buffer, uint32 length);
 
     uint8 prgRead(uint16 address);
     bool prgWrite(uint16 address, uint8 value);
@@ -25,12 +27,21 @@ private:
     uint8 cartRam[kilobytes(8)] = {};
     uint8 backingRom[kilobytes(32)] = {}; // Used to support NSF for now
 
+    // Number of PRG ROM chips (16KB each)
     uint8 prgRomSize;
     uint8* prgRom;
+
+    bool useVerticalMirroring;
+    bool hasPerisitantMemory;
+    bool hasFullVram;
+
     uint8* prgRomBank1;
     uint8* prgRomBank2;
 
+    // Number of CHR ROM chips (8KB each)
+    uint8 chrRomSize;
     uint8* chrRom;
+
     uint8 chrRam[kilobytes(8)];
     uint8* patternTable0;
     uint8* patternTable1;

@@ -2,8 +2,6 @@
 #include "cpuTrace.h"
 #include <string.h>
 
-#include "../wavefile.h"
-
 const uint32 masterClockHz = 21477272;
 
 NES::NES()

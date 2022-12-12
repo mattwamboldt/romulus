@@ -12,7 +12,7 @@ class PPU
 {
 public:
     void connect(IBus* bus) { this->bus = bus; }
-    // TODO: Implement
+
     void tick();
 
     bool isNMIFlagSet();
@@ -63,18 +63,15 @@ private:
     uint16 vramAddressIncrement;
     uint16 spritePatternBaseAddress;
 
-    // TODO: Implement
-    // Apparently complicated do to bugs? https://www.nesdev.org/wiki/PPU_sprite_evaluation
     bool isSpriteOverflowFlagSet;
-    // TODO: Implement
     bool isSpriteZeroHit;
 
     // Settings extracted from PPUMASK
     bool shouldRenderGreyscale; // TODO: Implement
-    bool showBackgroundInLeftEdge; // TODO: Implement
-    bool showSpritesInLeftEdge; // TODO: Implement
-    bool isBackgroundEnabled; // TODO: Implement
-    bool areSpritesEnabled; // TODO: Implement
+    bool showBackgroundInLeftEdge;
+    bool showSpritesInLeftEdge;
+    bool isBackgroundEnabled;
+    bool areSpritesEnabled;
     bool shouldEmphasizeRed; // TODO: Implement
     bool shouldEmphasizeGreen; // TODO: Implement
     bool shouldEmphasizeBlue; // TODO: Implement
