@@ -452,7 +452,8 @@ enum StatusFlags
 class MOS6502
 {
 public:
-    // Actual Registers on the system
+    // Registers on the system
+    // https://archive.org/details/mos_6500_mpu_preliminary_may_1976/page/n1/mode/1up
     uint16 pc;
     uint8 stack;
     uint8 status;
@@ -464,15 +465,19 @@ public:
     uint8 inst; // Currently executing instruction
     uint16 instAddr; // Address of current instruction
 
-    MOS6502();
+    // Address Lines, (needed since we don't always fetch pc)
+    int16 address;
 
     void connect(IBus* bus) { this->bus = bus; }
 
     void start();
+
+    // -> RES
     void reset(bool isFirstBoot = false);
     void stop() { isHalted = true; };
 
     bool tick(); // true on start of instruction
+    bool tickCycleAccurate();
     bool hasHalted() { return isHalted; }
     bool isExecuting() { return waitCycles > 0; }
     bool isFlagSet(uint8 flags) { return status & flags; }
@@ -561,13 +566,14 @@ public:
     uint8 slo(uint8 data);
     uint8 sre(uint8 data);
 
-    // Interupt functions
     void forceBreak();
 
+    // -> NMI
     // Called externally to set the state of /NMI
     // See: https://www.nesdev.org/wiki/NMI
     void setNMI(bool active);
 
+    // -> IRQ
     // Called externally to set the state of /IRQ
     // See: https://www.nesdev.org/wiki/IRQ
     void setIRQ(bool active);

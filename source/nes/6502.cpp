@@ -17,13 +17,6 @@ const uint16 IRQ_VECTOR = 0xFFFE;
 // TODO: add a cycle when branches are executed
 // TODO: Indirect addressing has a bug that needs to be emulated
 
-
-
-MOS6502::MOS6502()
-{
-    
-}
-
 // NOTE: Reset/boot uses the same sequence as interrupt but writes are disables so only SP changes
 void MOS6502::handleInterrupt(uint16 vector, bool isReset)
 {

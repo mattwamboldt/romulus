@@ -134,6 +134,13 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
         buffer += 512;
     }
 
+    if (mapperNumber != 0)
+    {
+        char message[256];
+        sprintf(message, "Unhandled Mapper number %d\n", mapperNumber);
+        OutputDebugStringA(message);
+    }
+
     prgRom = prgRomBank1 = (uint8*)buffer;
     prgRomBank2 = prgRom + kilobytes(16) * (prgRomSize - 1);
 

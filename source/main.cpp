@@ -697,7 +697,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
     HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
 
-    resizeDIBSection(&globalBackBuffer, 800, 600);
+    resizeDIBSection(&globalBackBuffer, 256, 240);
 
     real32 framesPerSecond = 30.0f;
     real32 secondsPerFrame = 1.0f / framesPerSecond;
@@ -805,8 +805,8 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         render(globalBackBuffer, &nes);
         if (!nes.cartridge.isNSF && nes.isRunning)
         {
-            renderPatternTable(globalBackBuffer, &nes, 250, 0, 0);
-            renderNametable(globalBackBuffer, &nes, 10, 266);
+            //renderPatternTable(globalBackBuffer, &nes, 250, 0, 0);
+            //renderNametable(globalBackBuffer, &nes, 10, 266);
         }
 
         // TODO: FPS Counter
