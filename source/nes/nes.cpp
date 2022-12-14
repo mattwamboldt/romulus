@@ -165,7 +165,7 @@ void NES::cpuStep()
 {
     if (traceEnabled && !cpu.hasHalted() && !cpu.isExecuting())
     {
-        logInstruction("bin/6502.log", cpu.instAddr, &cpu, &cpuBus, &ppu, currentCpuCycle);
+        logInstruction("bin/6502.log", cpu.pc, &cpu, &cpuBus, &ppu, currentCpuCycle);
     }
 
     if (cpu.tick() && cpu.hasHalted())

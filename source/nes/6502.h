@@ -529,7 +529,7 @@ public:
     bool tick(); // true on start of instruction
     bool tickCycleAccurate();
     bool hasHalted() { return isHalted; }
-    bool isExecuting() { return stage > 0; }
+    bool isExecuting();
 
     bool isFlagSet(uint8 flags) { return status & flags; }
     bool isFlagClear(uint8 flags) { return !(status & flags); }

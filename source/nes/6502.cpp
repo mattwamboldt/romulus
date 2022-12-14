@@ -72,6 +72,15 @@ void MOS6502::reset(bool isFirstBoot)
 #endif
 }
 
+bool MOS6502::isExecuting()
+{
+#if CYCLE_ACCURATE
+    return isResetRequested || stage > 0;
+#else
+    return waitCycles > 0; 
+#endif
+}
+
 bool MOS6502::tick()
 {
 #ifdef CYCLE_ACCURATE
@@ -1055,8 +1064,12 @@ void MOS6502::tickInterrupt()
     // read next instruction byte (and throw it away)
     if (stage == 1)
     {
-        // dummy read, (See lots of people increment pc again here but that seems like a mistake)
+        // dummy read
         bus->read(pc);
+        if (isBreakRequested)
+        {
+            ++pc;
+        }
     }
     else if (isResetRequested && stage <= 4)
     {
@@ -1103,10 +1116,9 @@ void MOS6502::tickInterrupt()
                 isBreakRequested = false;
                 interruptRequested = false;
             }
-
-            setFlags(STATUS_INT_DISABLE);
         }
 
+        setFlags(STATUS_INT_DISABLE);
         uint8 pcl = bus->read(address++);
         pc &= 0xFF00;
         pc |= pcl;
@@ -1330,7 +1342,7 @@ bool MOS6502::executeWriteInstruction(OpCode opcode)
         // Undocumented Instructions
         case SAX: bus->write(address, accumulator & x); break;
         // case SHA: curently treated as a kill
-        case SHX: KillUnimplemented("Illegal Opcode"); break;
+        case SHX:  break; // illegal opcode unhandled
         // case SHY: Currently treaded as a NOP, instruction 0x9C
 
         default: return false;
@@ -1535,7 +1547,7 @@ void MOS6502::tickAbsoluteIndexedInstruction()
             }
 
             p2 = bus->read(pc++);
-            address = ((uint16)p2 << 8) | (p1 + index);
+            address = ((uint16)p2 << 8) | (uint8)(p1 + index);
             break;
         }
         case 3:
@@ -1730,7 +1742,7 @@ void MOS6502::tickIndirectYInstruction()
         {
             uint8 hi = bus->read(p1);
             address += y;
-            if (address > 0x0100)
+            if (address >= 0x0100)
             {
                 pageBoundaryCrossed = true;
                 address &= 0x00FF;
@@ -1805,6 +1817,8 @@ void MOS6502::tickIndirectInstruction()
             return;
         }
     }
+
+    ++stage;
 }
 
 void MOS6502::pullPCL()
