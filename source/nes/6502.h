@@ -68,7 +68,7 @@ enum OpCode
     STA, // STore Accumulator (M = A)
     STX, // STore X (M = X)
     STY, // STore Y (M = Y)
-    SXA, // * Store X And (AND X register with the high byte of the target address of the argument +1. Store the result in memory)
+    SHX, // * Store X And (AND X register with the high byte of the target address of the argument +1. Store the result in memory)
     TAX, // Transfer Accumulator to X (X=A)
     TAY, // Transfer Accumulator to Y (Y=A)
     TSX, // Transfer Stack pointer to X (X=S)
@@ -76,23 +76,6 @@ enum OpCode
     TXS, // Transfer X to Stack pointer (S=X)
     TYA, // Transfer Y to Accumulator (A=Y)
     KILL, // * Catch all for any Illegal Opcode that crashes the chip/is unhandled
-};
-
-enum AddressingMode
-{
-    Absolute,
-    AbsoluteX,
-    AbsoluteY,
-    Accumulator,
-    Immediate,
-    Implied,
-    Indirect,
-    IndirectX,
-    IndirectY, // Very different mechanisms, but easier to keep straight this way
-    Relative,
-    ZeroPage,
-    ZeroPageX,
-    ZeroPageY,
 };
 
 static const char* opCodeNames[] =
@@ -160,7 +143,7 @@ static const char* opCodeNames[] =
     "STA",
     "STX",
     "STY",
-    "SXA",
+    "SHX",
     "TAX",
     "TAY",
     "TSX",
@@ -168,6 +151,40 @@ static const char* opCodeNames[] =
     "TXS",
     "TYA",
     "KILL" // Illegal opcodes that'll kill the machine,
+};
+
+enum AddressingMode
+{
+    Absolute,
+    AbsoluteX,
+    AbsoluteY,
+    Accumulator,
+    Immediate,
+    Implied,
+    Indirect,
+    IndirectX,
+    IndirectY, // Very different mechanisms, but easier to keep straight this way
+    Relative,
+    ZeroPage,
+    ZeroPageX,
+    ZeroPageY,
+};
+
+static const char* addressModeNames[] =
+{
+    "Absolute",
+    "AbsoluteX",
+    "AbsoluteY",
+    "Accumulator",
+    "Immediate",
+    "Implied",
+    "Indirect",
+    "IndirectX",
+    "IndirectY", // Very different mechanisms, but easier to keep straight this way
+    "Relative",
+    "ZeroPage",
+    "ZeroPageX",
+    "ZeroPageY",
 };
 
 struct Operation
@@ -317,7 +334,7 @@ static Operation operations[] = {
     { 0x86, 3, STX, ZeroPage, false },
     { 0x87, 4, SAX, ZeroPage, true },
     { 0x88, 2, DEY, Implied, false },
-    { 0x89, 2, NOP, Implied, true },
+    { 0x89, 2, NOP, Immediate, true },
     { 0x8A, 2, TXA, Implied, false },
     { 0x8B, 0, KILL, Implied, true },
     { 0x8C, 4, STY, Absolute, false },
@@ -338,7 +355,7 @@ static Operation operations[] = {
     { 0x9B, 0, KILL, Implied, true },
     { 0x9C, 4, NOP, AbsoluteX, true },
     { 0x9D, 5, STA, AbsoluteX, false },
-    { 0x9E, 5, SXA, AbsoluteY, true },
+    { 0x9E, 5, SHX, AbsoluteY, true },
     { 0x9F, 0, KILL, Implied, true },
     { 0xA0, 2, LDY, Immediate, false },
     { 0xA1, 6, LDA, IndirectX, false },
@@ -374,7 +391,7 @@ static Operation operations[] = {
     { 0xBF, 4, LAX, AbsoluteY, true },
     { 0xC0, 2, CPY, Immediate, false },
     { 0xC1, 6, CMP, IndirectX, false },
-    { 0xC2, 2, NOP, Implied, true },
+    { 0xC2, 2, NOP, Immediate, true },
     { 0xC3, 8, DCP, IndirectX, true },
     { 0xC4, 3, CPY, ZeroPage, false },
     { 0xC5, 3, CMP, ZeroPage, false },
@@ -406,7 +423,7 @@ static Operation operations[] = {
     { 0xDF, 7, DCP, AbsoluteX, true },
     { 0xE0, 2, CPX, Immediate, false },
     { 0xE1, 6, SBC, IndirectX, false },
-    { 0xE2, 2, NOP, Implied, true },
+    { 0xE2, 2, NOP, Immediate, true },
     { 0xE3, 8, ISC, IndirectX, true },
     { 0xE4, 3, CPX, ZeroPage, false },
     { 0xE5, 3, SBC, ZeroPage, false },
@@ -449,6 +466,35 @@ enum StatusFlags
     STATUS_NEGATIVE    = 0b10000000
 };
 
+// From looking at docs on cycle timings and the like there are
+// a set of sequences the processor goes through that mainly line
+// up with addressing modes and then a few unique ones
+enum MicrocodeSequence
+{
+    // First set is coving the unique cases
+    HANDLE_INTERRUPT, // BRK/NMI/IRQ/RESET
+    RETURN_INTERRUPT, // RTI
+    RETURN_SUBROUTINE, // RTS
+    PUSH_REGISTER, // PHA, PHX
+    PULL_REGISTER, // PLA, PLX
+    JUMP_SUBROUTINE, // JSR
+
+    // Address mode related (these will have a bunch of overlapping stages
+    // but its easier to maintain conceptualy for me this way)
+    // TODO: Consider if it's worth doing R/W/R+W variants to reduce the branching after the initial fetch/decode
+    TWO_CYCLE_MODES, // Absolute, Immediate, and Implied all do basically the same thing
+    SEQ_ABSOLUTE,
+    SEQ_ZEROPAGE,
+    SEQ_ZEROPAGE_INDEXED,
+    SEQ_ABSOLUTE_INDEXED,
+    SEQ_RELATIVE,
+    SEQ_INDIRECTX, // These two seem similar but are quite differenct conceptually, (Indirect Indexed, and Indexed Indirect in some docs)
+    SEQ_INDIRECTY,
+    SEQ_INDIRECT, // Used only by the JMP instruction
+
+    NUM_MICROCODE_SEQUENCES
+};
+
 class MOS6502
 {
 public:
@@ -466,7 +512,11 @@ public:
     uint16 instAddr; // Address of current instruction
 
     // Address Lines, (needed since we don't always fetch pc)
-    int16 address;
+    uint16 address;
+
+    MicrocodeSequence sequence;
+    // Tells us how far into a given sequence we are
+    uint8 stage;
 
     void connect(IBus* bus) { this->bus = bus; }
 
@@ -479,8 +529,11 @@ public:
     bool tick(); // true on start of instruction
     bool tickCycleAccurate();
     bool hasHalted() { return isHalted; }
-    bool isExecuting() { return waitCycles > 0; }
+    bool isExecuting() { return stage > 0; }
+
     bool isFlagSet(uint8 flags) { return status & flags; }
+    bool isFlagClear(uint8 flags) { return !(status & flags); }
+
     uint16 calcAddress(AddressingMode addressMode, uint16 address, uint8 p1, uint8 p2);
     bool requireRead(uint8 opCode);
 
@@ -584,6 +637,9 @@ private:
     bool nmiRequested;
     bool nmiWasActive;
     bool interruptRequested;
+    bool isResetRequested;
+    bool isBreakRequested;
+
     uint8 waitCycles;
 
     uint8 p1; // temp storage for operands
@@ -621,4 +677,40 @@ private:
     uint16 readWord(uint16 base);
     uint8 readData(AddressingMode addressMode);
     void writeData(AddressingMode addressMode, uint8 val);
+
+
+
+
+    // NEW PROCESSOR FUNCS
+    
+    bool pageBoundaryCrossed;
+    
+    // SequenceHandlers
+    void tickInterrupt(); // BRK/NMI/IRQ/RESET
+    void tickReturnInterrupt();
+    void tickReturnSubroutine();
+    void tickPushRegister();
+    void tickPullRegister();
+    void tickJumpSubroutine();
+    void tickTwoCycleInstruction();
+    void tickAbsoluteInstruction();
+    void tickZeropageInstruction();
+    void tickZeropageIndexedInstruction();
+    void tickAbsoluteIndexedInstruction();
+    void tickRelativeInstruction();
+    void tickIndirectXInstruction();
+    void tickIndirectYInstruction();
+    void tickIndirectInstruction();
+
+    void pullPCL();
+    void pushPCL();
+    void pullPCH();
+    void pushPCH();
+
+    bool executeReadInstruction(OpCode opcode);
+    bool executeWriteInstruction(OpCode opcode);
+    void executeModifyInstruction(OpCode opcode);
+
+    // TEMP: used to debug new per cycle execution
+    void KillUnimplemented(const char* message);
 };
