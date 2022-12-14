@@ -400,6 +400,11 @@ void logInstructionNesTest(char* dest, uint16 address, MOS6502* cpu, CPUBus* cpu
         dest = columnStart;
     }
 
+    if (op.isUnofficial)
+    {
+        *(dest - 1) = '*';
+    }
+
     // Write Human readable instruction and values
     {
         const char* opCodeName = opCodeNames[op.opCode];
