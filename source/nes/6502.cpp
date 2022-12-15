@@ -56,7 +56,7 @@ bool MOS6502::tick()
             {
                 --pc;
                 instAddr = pc;
-                isHalted = true;
+                KillUnimplemented("Illegal opcode");
                 return false;
             }
 
@@ -378,7 +378,7 @@ void MOS6502::arr(uint8 data)
 {
     // TODO: Implement
     // Similar to AND #i then ROR A, except sets the flags differently. N and Z are normal, but C is bit 6 and V is bit 6 xor bit 5
-    //KillUnimplemented("Unhandled ARR");
+    KillUnimplemented("Illegal opcode");
 }
 
 void MOS6502::axs(uint8 data)
@@ -386,7 +386,7 @@ void MOS6502::axs(uint8 data)
     // https://www.masswerk.at/6502/6502_instruction_set.html#SBX
     // TODO: Implement
     // "Sets X to {(A AND X) - #value without borrow}, and updates NZC." how?
-    //KillUnimplemented("Unhandled AXS");
+    KillUnimplemented("Illegal opcode");
 }
 
 void MOS6502::atx(uint8 data)
@@ -405,7 +405,7 @@ void MOS6502::sxa(uint8 data)
 {
     // TODO: Implement
     // AND X register with the high byte of the target address of the argument +1. Store the result in memory.
-    //KillUnimplemented("Unhandled SXA");
+    KillUnimplemented("Illegal opcode");
 }
 
 uint8 MOS6502::dcp(uint8 data)
@@ -847,7 +847,7 @@ bool MOS6502::executeWriteInstruction(OpCode opcode)
         // Undocumented Instructions
         case SAX: bus->write(address, accumulator & x); break;
         // case SHA: curently treated as a kill
-        case SHX:  break; // illegal opcode unhandled
+        case SHX: KillUnimplemented("Illegal opcode"); break; // illegal opcode unhandled
         // case SHY: Currently treaded as a NOP, instruction 0x9C
 
         default: return false;

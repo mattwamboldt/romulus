@@ -8,6 +8,8 @@ void PPUBus::connect(PPU* ppu, Cartridge* cart)
 // This read and write is based on mapper000, will expand later
 uint8 PPUBus::read(uint16 address)
 {
+    address &= 0x3FFF;
+
     if (address < 0x2000)
     {
         return cart->chrRead(address);
@@ -52,6 +54,8 @@ uint8 PPUBus::read(uint16 address)
 
 void PPUBus::write(uint16 address, uint8 value)
 {
+    address &= 0x3FFF;
+
     if (address < 0x2000)
     {
         cart->chrWrite(address, value);
