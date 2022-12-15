@@ -523,11 +523,10 @@ public:
     void start();
 
     // -> RES
-    void reset(bool isFirstBoot = false);
+    void reset();
     void stop() { isHalted = true; };
 
-    bool tick(); // true on start of instruction
-    bool tickCycleAccurate();
+    bool tick();
     bool hasHalted() { return isHalted; }
     bool isExecuting();
 
@@ -535,8 +534,39 @@ public:
     bool isFlagClear(uint8 flags) { return !(status & flags); }
 
     uint16 calcAddress(AddressingMode addressMode, uint16 address, uint8 p1, uint8 p2);
-    bool requireRead(uint8 opCode);
+    void jumpSubroutine(uint16 address);
 
+    // -> NMI
+    // Called externally to set the state of /NMI
+    // See: https://www.nesdev.org/wiki/NMI
+    void setNMI(bool active);
+
+    // -> IRQ
+    // Called externally to set the state of /IRQ
+    // See: https://www.nesdev.org/wiki/IRQ
+    void setIRQ(bool active);
+
+private:
+    bool isHalted;
+
+    bool nmiRequested;
+    bool nmiWasActive;
+    bool interruptRequested;
+    bool isResetRequested;
+    bool isBreakRequested;
+
+    uint8 p1; // temp storage for operands
+    uint8 p2;
+    uint8 tempData; // temp storage
+
+    IBus* bus;
+
+    // Status Register helpers
+    void setFlags(uint8 flags);
+    void clearFlags(uint8 flags);
+    void updateNZ(uint8 val);
+    
+    // Utility functions
     // Operations (individual functions w/ data param helps debugging)
     void addWithCarry(uint8 data);
     void subtractWithCarry(uint8 data);
@@ -544,27 +574,8 @@ public:
     uint8 shiftLeft(uint8 data);
     uint8 shiftRight(uint8 data);
 
-    void branchCarryClear(uint8 data);
-    void branchCarrySet(uint8 data);
-    void branchEqual(uint8 data);
-    void branchNegative(uint8 data);
-    void branchNotZero(uint8 data);
-    void branchPositive(uint8 data);
-    void branchOverflowSet(uint8 data);
-    void branchOverflowClear(uint8 data);
+    void compare(uint8 a, uint8 b);
     void bitTest(uint8 data);
-
-    void clearCarry();
-    void clearDecimal();
-    void clearInteruptDisable();
-    void clearOverflow();
-    void setCarry();
-    void setDecimal();
-    void setInteruptDisable();
-
-    void compareA(uint8 data);
-    void compareX(uint8 data);
-    void compareY(uint8 data);
 
     uint8 decrement(uint8 data);
     void decrementX();
@@ -578,9 +589,6 @@ public:
     void incrementX();
     void incrementY();
 
-    void jump(uint16 address);
-    void jumpSubroutine(uint16 address);
-
     void loadA(uint8 data);
     void loadX(uint8 data);
     void loadY(uint8 data);
@@ -592,9 +600,6 @@ public:
 
     uint8 rotateLeft(uint8 data);
     uint8 rotateRight(uint8 data);
-
-    void returnIntertupt();
-    void returnSubroutine();
 
     void transferAtoX();
     void transferAtoY();
@@ -619,67 +624,9 @@ public:
     uint8 slo(uint8 data);
     uint8 sre(uint8 data);
 
-    void forceBreak();
-
-    // -> NMI
-    // Called externally to set the state of /NMI
-    // See: https://www.nesdev.org/wiki/NMI
-    void setNMI(bool active);
-
-    // -> IRQ
-    // Called externally to set the state of /IRQ
-    // See: https://www.nesdev.org/wiki/IRQ
-    void setIRQ(bool active);
-
-private:
-    bool isHalted;
-
-    bool nmiRequested;
-    bool nmiWasActive;
-    bool interruptRequested;
-    bool isResetRequested;
-    bool isBreakRequested;
-
-    uint8 waitCycles;
-
-    uint8 p1; // temp storage for operands
-    uint8 p2;
-    uint8 tempData; // temp storage
-
-    IBus* bus;
-
-    // This model somewhat splits the operation in a way that could be
-    // made cycle accurate in future, but for now is run all at once
-    uint16 calcAddress(AddressingMode addressMode);
-    void loadOperands(AddressingMode addressMode);
-    void executeInstruction();
-
-    // Status Register helpers
-    void setFlags(uint8 flags);
-    void clearFlags(uint8 flags);
-    void updateNZ(uint8 val);
-    
-    // Utility functions
-    void compare(uint8 a, uint8 b);
-
-    void jumpOnFlagSet(uint8 flag, uint8 offset);
-    void jumpOnFlagClear(uint8 flag, uint8 offset);
-    void jumpRelative(uint8 offset);
-
-    void handleInterrupt(uint16 vector, bool isReset = false);
-
     // Stack Manipulation
     uint8 pull();
-    uint16 pullWord();
     void push(uint8 v);
-    void pushWord(uint16 v);
-
-    uint16 readWord(uint16 base);
-    uint8 readData(AddressingMode addressMode);
-    void writeData(AddressingMode addressMode, uint8 val);
-
-
-
 
     // NEW PROCESSOR FUNCS
     

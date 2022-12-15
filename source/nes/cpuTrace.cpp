@@ -395,7 +395,7 @@ void logInstructionNesTest(char* dest, uint16 address, MOS6502* cpu, CPUBus* cpu
         }
 
         const int32 HEX_WIDTH = 16;
-        padRight(columnStart, dest - columnStart, HEX_WIDTH);
+        padRight(columnStart, (int32)(dest - columnStart), HEX_WIDTH);
         columnStart += HEX_WIDTH;
         dest = columnStart;
     }
@@ -532,7 +532,7 @@ void logInstructionNesTest(char* dest, uint16 address, MOS6502* cpu, CPUBus* cpu
         }
 
         const int32 INST_WIDTH = 32;
-        padRight(columnStart, dest - columnStart, INST_WIDTH);
+        padRight(columnStart, (int32)(dest - columnStart), INST_WIDTH);
         columnStart += INST_WIDTH;
         dest = columnStart;
     }

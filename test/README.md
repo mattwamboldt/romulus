@@ -33,8 +33,8 @@ This is the current state of what has been tested:
 | nestest       | Pass | Success beep doesn't go away?
 | instr_test-v5 | In Progress |
 | - 03-immediate | Fail | Not handling some illegal opcodes properly
-| - 07-abs_xy | Fail | Not handling some illegal opcodes properly
-| - 15-brk | Fail | No idea, needs to test
+| - 07-abs_xy   | Fail | Not handling some illegal opcodes properly
+| cpu_reset     | Pass | 
 
 ### APU Tests
 
