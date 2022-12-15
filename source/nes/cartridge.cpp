@@ -115,8 +115,12 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
         {
             if (header->rawBytes[i])
             {
-                OutputDebugStringA("Failed to parse modern iNES\n");
-                return false;
+                OutputDebugStringA("Failed to parse modern iNES:\n");
+                char message[256];
+                sprintf(message, " - Mapper number %d\n", mapperNumber & 0x0F);
+                OutputDebugStringA(message);
+                mapperNumber &= 0x0F;
+                break;
             }
         }
     }
@@ -126,7 +130,7 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
         // So for now its trash
         // TODO: Output an error of some kind
         OutputDebugStringA("0.7 or archaic\n");
-        return false;
+        mapperNumber &= 0x0F;
     }
 
     if (hasTrainer)
@@ -134,7 +138,15 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
         buffer += 512;
     }
 
-    if (mapperNumber != 0)
+    if (mapperNumber == 0)
+    {
+        OutputDebugStringA("Mapper: 000 NROM\n");
+    }
+    else if (mapperNumber == 1)
+    {
+        OutputDebugStringA("Mapper: 002 UxROM\n");
+    }
+    else
     {
         char message[256];
         sprintf(message, "Unhandled Mapper number %d\n", mapperNumber);
@@ -218,6 +230,17 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
     {
         cartRam[address - 0x6000] = value;
         return true;
+    }
+
+    // Mappers take advantage of the fact that the upper section
+    // of memory is (typically) ROM and thus unwritable. The write request
+    // is intercepted and shoved off to another set of chips that
+    // can change the configuration of the mapper.
+
+    if (mapperNumber == 2)
+    {
+        bankSelect = value;
+        prgRomBank1 = prgRom + kilobytes(16) * bankSelect;
     }
 
     return false;

@@ -45,4 +45,6 @@ private:
     uint8 chrRam[kilobytes(8)];
     uint8* patternTable0;
     uint8* patternTable1;
+
+    uint8 bankSelect;
 };
