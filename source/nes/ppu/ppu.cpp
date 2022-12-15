@@ -74,8 +74,7 @@ void PPU::tick()
         }
         else 
         {
-            // This is from a random note on the wiki, not sure if its makes much of a diffeerence
-            if (cycle != 255)
+            if (renderedSpriteIndex == 0 && spriteRenderers[renderedSpriteIndex].getX() != 0xFF && cycle != NES_SCREEN_WIDTH)
             {
                 isSpriteZeroHit = true;
             }
@@ -215,7 +214,7 @@ void PPU::tick()
                 uint8 yPosition = oamSecondary[i * 4];
                 uint8 tileIndex = oamSecondary[(i * 4) + 1];
                 spriteRenderers[i].setAttribute(oamSecondary[(i * 4) + 2]);
-                spriteRenderers[i].xCounter = oamSecondary[(i * 4) + 3];
+                spriteRenderers[i].setX(oamSecondary[(i * 4) + 3]);
 
                 // Calculate the shift values
                 uint16 patternTableAddress = 0;

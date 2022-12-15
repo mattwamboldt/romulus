@@ -36,10 +36,20 @@ void SpriteRenderUnit::reset()
 {
     isEnabled = false;
     setAttribute(0);
+    setX(0);
     patternLoShift = 0;
     patternHiShift = 0;
-    xCounter = 0;
     currentPixel = 0;
+}
+
+void SpriteRenderUnit::setX(uint8 value)
+{
+    xCounter = xPosition = value;
+}
+
+uint8 SpriteRenderUnit::getX()
+{
+    return xPosition;
 }
 
 void SpriteRenderUnit::setAttribute(uint8 attribute)
