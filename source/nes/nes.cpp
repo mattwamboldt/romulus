@@ -91,7 +91,7 @@ void NES::update(real32 secondsPerFrame)
     uint32 cyclesPerSample = (uint32)(masterCycles / (secondsPerFrame * 48000));
     for (uint32 i = 0; i < masterCycles; ++i)
     {
-        if (i % 12 == 0)
+        if (clockDivider == 0)
         {
             // TODO: There may be some conditions to emulate with this and the dmc cross talking? Need to look that up
             if (cpuBus.isDmaActive)
@@ -133,10 +133,13 @@ void NES::update(real32 secondsPerFrame)
             audioOutputCounter -= cyclesPerSample;
         }
 
-        if (i % 4 == 0)
+        if (clockDivider % 4 == 0)
         {
             ppu.tick();
         }
+
+        ++clockDivider;
+        clockDivider %= 12;
 
         if (cartridge.isNSF)
         {

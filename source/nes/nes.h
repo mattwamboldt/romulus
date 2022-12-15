@@ -38,6 +38,7 @@ private:
     void cpuStep();
 
     uint32 currentCpuCycle;
+    uint8 clockDivider;
 
     int16 apuBuffer[48000];
     uint32 writeHead;
