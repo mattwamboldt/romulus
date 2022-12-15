@@ -12,19 +12,8 @@
 - Add a nametable render view that overlays a box based on current scroll position
   - This will help with making sure the lookups are correct and establish some util functions
 - Do a performance pass once the general rendering is complete to make sure bit operations are good
-- If nestest renders:
-    - Tweak until nestest runs in full nametable mode
 - Otherwise:
     - reevaluate this priority list
-*/
-
-/* Objectives:
-- Run nestest correctly (Just the visible screen and fixing bugs)
-- Run through the basic test roms
-- Run NEStress
-- Run through more complicated test roms
-- Run an actual game
-- GET CREATIVE!!! (Remove all green)
 */
 
 // TODO: Better error handling/logging. For now using OutputDebugStringA everywhere
@@ -697,7 +686,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
     HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
 
-    resizeDIBSection(&globalBackBuffer, 256, 240);
+    resizeDIBSection(&globalBackBuffer, 800, 600);
 
     real32 framesPerSecond = 30.0f;
     real32 secondsPerFrame = 1.0f / framesPerSecond;
@@ -805,8 +794,8 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         render(globalBackBuffer, &nes);
         if (!nes.cartridge.isNSF && nes.isRunning)
         {
-            //renderPatternTable(globalBackBuffer, &nes, 250, 0, 0);
-            //renderNametable(globalBackBuffer, &nes, 10, 266);
+            renderPatternTable(globalBackBuffer, &nes, 250, 0, 0);
+            renderNametable(globalBackBuffer, &nes, 10, 266);
         }
 
         // TODO: FPS Counter

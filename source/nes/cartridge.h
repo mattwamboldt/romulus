@@ -14,6 +14,7 @@ public:
     bool chrWrite(uint16 address, uint8 value);
 
     int mapperNumber;
+    bool useVerticalMirroring;
 
     // NSF Config
     bool isNSF;
@@ -31,7 +32,6 @@ private:
     uint8 prgRomSize;
     uint8* prgRom;
 
-    bool useVerticalMirroring;
     bool hasPerisitantMemory;
     bool hasFullVram;
 
