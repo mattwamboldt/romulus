@@ -53,8 +53,8 @@ This is the current state of what has been tested:
 | ----           | ---- | -----
 | blargg_ppu_tests | In Progress |
 | - power_up_palette | Fail | Each NES will have a random palette ram state on boot cause quanum mechaincs so won't fix. Kept in the table to mentione that.
-| - vbl_clear_time | unstable | Error #3 Too late. Now inconsistent. Likely because of the way cycles/frame is mapped back to the emulator, I'm gaining extra ppu cycles on occasion
-| - vram_access | Fail | Error #2. VRAM reads should be buffered. Not implemented
+| - vbl_clear_time | unstable | Error #3 Too late. Now inconsistent. No idea why its inconsistent now. I'd guess reset state since thats completely unhandled in the ppu
+| - vram_access | Fail | Error #6. "Palette read should also read VRAM into read buffer" I am, so very confused on whats happening there
 
 
 

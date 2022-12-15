@@ -538,7 +538,9 @@ void PPU::setOamData(uint8 value)
 uint8 PPU::getOamData()
 {
     // Part of the Secondary OAM initialization
-    if (scanline > 0 && scanline < NES_SCREEN_HEIGHT && cycle > 0 && cycle <= 64)
+    bool inSpriteEvaluation = scanline > 0 && scanline < NES_SCREEN_HEIGHT&& cycle > 0 && cycle <= 64;
+
+    if (inSpriteEvaluation)
     {
         return 0xFF;
     }
@@ -602,15 +604,26 @@ void PPU::setData(uint8 value)
 
 uint8 PPU::getData(bool readOnly)
 {
-    // TODO: The PPUDATA read buffer needs to potentially be handled
-    // https://www.nesdev.org/wiki/PPU_registers#The_PPUDATA_read_buffer_(post-fetch)
-    uint8 result = bus->read(vramAddress);
     if (readOnly)
     {
-        return result;
+        if (vramAddress >= 0x3F00)
+        {
+            return bus->read(vramAddress);
+        }
+
+        return ppuDataReadBuffer;
     }
 
+    uint8 result = ppuDataReadBuffer;
+    ppuDataReadBuffer = bus->read(vramAddress);
     vramAddress += vramAddressIncrement;
+
+    // pallete ram gets returned immediately
+    if (vramAddress >= 0x3F00)
+    {
+        result = ppuDataReadBuffer;
+    }
+
     return result;
 }
 

@@ -56,6 +56,10 @@ private:
     bool nmiRequested;
     bool nmiEnabled;
 
+    // This is a special mechanism for accesses through the PPUDATA register
+    // See https://www.nesdev.org/wiki/PPU_registers#The_PPUDATA_read_buffer_(post-fetch)
+    uint8 ppuDataReadBuffer;
+
     // TODO: Implement
     bool useTallSprites;
     uint8 spriteHeight;
