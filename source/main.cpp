@@ -3,6 +3,8 @@
 
 #include "nes\nes.h"
 
+#define SHOW_DEBUG_VIEWS 1
+
 // TODO: New main objective - get parity with the console app
 
 /* Current objective: Ability to run nestest visually
@@ -685,8 +687,11 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     accelerators[1].cmd = MENU_CONSOLE_RESET;
 
     HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
-
+#ifdef SHOW_DEBUG_VIEWS
+    resizeDIBSection(&globalBackBuffer, 800, 600);
+#else
     resizeDIBSection(&globalBackBuffer, 256, 240);
+#endif
 
     real32 framesPerSecond = 30.0f;
     real32 secondsPerFrame = 1.0f / framesPerSecond;
@@ -792,11 +797,14 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         nes.update(secondsPerFrame);
 
         render(globalBackBuffer, &nes);
+
+#ifdef SHOW_DEBUG_VIEWS
         if (!nes.cartridge.isNSF && nes.isRunning)
         {
-            //renderPatternTable(globalBackBuffer, &nes, 250, 0, 0);
-            //renderNametable(globalBackBuffer, &nes, 10, 266);
+            renderPatternTable(globalBackBuffer, &nes, 250, 0, 0);
+            renderNametable(globalBackBuffer, &nes, 10, 266);
         }
+#endif
 
         // TODO: FPS Counter
         // TODO: Memory/debugging view
