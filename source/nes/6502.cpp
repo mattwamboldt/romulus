@@ -1405,3 +1405,8 @@ void MOS6502::KillUnimplemented(const char* message)
     isHalted = true;
     assert(false);
 }
+
+void MOS6502::forceClearNMI()
+{
+    nmiPending = false;
+}

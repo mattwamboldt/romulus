@@ -3,12 +3,7 @@
 const uint32 PRERENDER_LINE = 261;
 const uint32 CYCLES_PER_SCANLINE = 340;
 
-// Masks to help simplify understanding the vram address
-// yyy NN YYYYY XXXXX
-// ||| || ||||| +++++-- coarse X scroll
-// ||| || +++++-------- coarse Y scroll
-// ||| ++-------------- nametable select
-// +++----------------- fine Y scroll
+// Masks to help simplify understanding the vram address components
 
 const uint16 COARSE_X_MASK =  0x001F; // ........ ...XXXXX
 const uint16 COARSE_Y_MASK =  0x03E0; // ......YY YYY.....
@@ -33,7 +28,7 @@ void PPU::tick()
     {
         if (cycle == 1 && scanline == 241)
         {
-            nmiRequested = true;
+            nmiRequested = !suppressNmi;
         }
 
         ++cycle;
@@ -51,6 +46,7 @@ void PPU::tick()
         nmiRequested = false;
         isSpriteOverflowFlagSet = false;
         isSpriteZeroHit = false;
+        suppressNmi = false;
         outputOffset = 0;
     }
 
@@ -448,6 +444,11 @@ void PPU::tick()
         if (scanline > PRERENDER_LINE)
         {
             scanline = 0;
+            isOddFrame = !isOddFrame;
+            if (isOddFrame && isBackgroundEnabled)
+            {
+                cycle = 1;
+            }
         }
     }
 }
@@ -460,6 +461,16 @@ bool PPU::isNMIFlagSet()
 void PPU::setControl(uint8 value)
 {
     nmiEnabled = value & BIT_7;
+
+    if (nmiEnabled)
+    {
+        suppressNmi = false;
+    }
+    else if (nmiRequested && (scanline == 241 && (cycle == 2 || cycle == 3)))
+    {
+        suppressNmi = true;
+    }
+
     // NOTE: Bit 6 is tied to ground on the NES. So its safe to ignore
     useTallSprites = value & BIT_5;
     if (useTallSprites)
@@ -516,12 +527,15 @@ uint8 PPU::getStatus(bool readOnly)
         return status;
     }
 
-    // TODO: Might have to worry about this from the wiki?
-    // Race Condition Warning: Reading PPUSTATUS within two cycles of the start
-    // of vertical blank will return 0 in bit 7 but clear the latch anyway, causing
-    // NMI to not occur that frame. See NMI and PPU_frame_timing for details.
     nmiRequested = false;
     isWriteLatchActive = false;
+
+    // Per the wiki NMI shouldn't happen if PPUSTATUS is read within 2 cycles of start of VBlank
+    // The if check is to make sure we don't accidentally turn off suppression from another source
+    if (!suppressNmi && scanline == 241)
+    {
+        suppressNmi = cycle == 1 || cycle == 2 || cycle == 3;
+    }
 
     return status;
 }

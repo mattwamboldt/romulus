@@ -159,7 +159,14 @@ void NES::update(real32 secondsPerFrame)
             // Gather up all the potenial interrupt sources to assert the right status in the cpu
             // TODO: Only have the apu for now, other sources will come later
             cpu.setIRQ(apu.isFrameInteruptFlagSet || apu.isDmcInterruptFlagSet);
-            cpu.setNMI(ppu.isNMIFlagSet());
+            if (ppu.isNMISuppressed())
+            {
+                cpu.forceClearNMI();
+            }
+            else
+            {
+                cpu.setNMI(ppu.isNMIFlagSet());
+            }
         }
     }
 }

@@ -541,6 +541,10 @@ public:
     // See: https://www.nesdev.org/wiki/NMI
     void setNMI(bool active);
 
+    // A back door to forcably suppress nmi signals that shouldn't have made it through
+    // Need this for a race condition with the ppu
+    void forceClearNMI();
+
     // -> IRQ
     // Called externally to set the state of /IRQ
     // See: https://www.nesdev.org/wiki/IRQ

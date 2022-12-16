@@ -16,6 +16,7 @@ public:
     void tick();
 
     bool isNMIFlagSet();
+    bool isNMISuppressed() { return suppressNmi; }
 
     // CPU <=> PPU Bus functions
 
@@ -55,6 +56,12 @@ private:
     // Cleared at the end of vblank: dot 1 of pre-render
     bool nmiRequested;
     bool nmiEnabled;
+
+    bool isOddFrame;
+
+    // Handles an edge condition where reading PPUSTATUS within two cycles of the start
+    // of vblank will and prevent nmi from occuring.
+    bool suppressNmi;
 
     // This is a special mechanism for accesses through the PPUDATA register
     // See https://www.nesdev.org/wiki/PPU_registers#The_PPUDATA_read_buffer_(post-fetch)
