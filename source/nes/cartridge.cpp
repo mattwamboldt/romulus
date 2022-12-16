@@ -144,6 +144,11 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
     }
     else if (mapperNumber == 1)
     {
+        OutputDebugStringA("Mapper: 001 MMC1\n");
+        mmc1ShiftRegister = BIT_4;
+    }
+    else if (mapperNumber == 2)
+    {
         OutputDebugStringA("Mapper: 002 UxROM\n");
     }
     else
@@ -166,7 +171,8 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
     }
     else
     {
-        patternTable0 = chrRam;
+        // means we have no chr space on the cart and should use the system ram
+        chrRom = patternTable0 = chrRam;
         patternTable1 = chrRam + kilobytes(4);
     }
 
@@ -237,7 +243,116 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
     // is intercepted and shoved off to another set of chips that
     // can change the configuration of the mapper.
 
-    if (mapperNumber == 2)
+    // MMC1 
+    if (mapperNumber == 1)
+    {
+        if (value & BIT_7)
+        {
+            mmc1ShiftRegister = BIT_4;
+        }
+        else 
+        {
+            bool isFifthWrite = mmc1ShiftRegister & BIT_0;
+
+            // Every write we load bit 0 into the left side of the register
+            mmc1ShiftRegister >>= 1;
+            mmc1ShiftRegister |= (value & BIT_0) << 4;
+
+            // Load into the right internal register based on bits 13 and 14 of the address
+            if (isFifthWrite)
+            {
+                uint16 selectBits = (address >> 13) & 0x0003;
+                if (selectBits == 0)
+                {
+                    mmc1Control = mmc1ShiftRegister;
+
+                    // Need to reset all the pointers in case the mode has changed (Could check if its
+                    // changed but that just more overhead potentially)
+
+                    uint8 mode = (mmc1Control >> 2) & 0x03;
+                    if (mode == 2)
+                    {
+                        prgRomBank1 = prgRom;
+                        prgRomBank2 = prgRom + (mmc1PrgBank * kilobytes(16));
+                    }
+                    else if (mode == 3)
+                    {
+                        prgRomBank1 = prgRom + (mmc1PrgBank * kilobytes(16));
+                        prgRomBank2 = prgRom + (kilobytes(16) * (prgRomSize - 1));
+                    }
+                    else
+                    {
+                        prgRomBank1 = prgRom + ((mmc1PrgBank & 0xFE) * kilobytes(16));
+                        prgRomBank2 = prgRomBank1 + kilobytes(16);
+                    }
+
+                    // CHR ROM mode (0: single 8kb bank, 1: 2 x 4kb banks)
+                    if ((mmc1Control & BIT_4) == 0)
+                    {
+                        // low bit ignored in 8kb mode to avoid overflow
+                        patternTable0 = chrRom + ((mmc1Chr0 & 0xFE) * kilobytes(4));
+                        patternTable1 = patternTable0 + kilobytes(4);
+                    }
+                    else
+                    {
+                        patternTable0 = chrRom + (mmc1Chr0 * kilobytes(4));
+                        patternTable1 = chrRom + (mmc1Chr1 * kilobytes(4));
+                    }
+                }
+                else if (selectBits == 1)
+                {
+                    mmc1Chr0 = mmc1ShiftRegister;
+
+                    // CHR ROM mode (0: single 8kb bank, 1: 2 x 4kb banks)
+                    if ((mmc1Control & BIT_4) == 0)
+                    {
+                        // low bit ignored in 8kb mode to avoid overflow
+                        patternTable0 = chrRom + ((mmc1Chr0 & 0xFE) * kilobytes(4));
+                        patternTable1 = patternTable0 + kilobytes(4);
+                    }
+                    else
+                    {
+                        patternTable0 = chrRom + (mmc1Chr0 * kilobytes(4));
+                    }
+                }
+                else if (selectBits == 2)
+                {
+                    mmc1Chr1 = mmc1ShiftRegister;
+                    // CHR ROM mode (0: single 8kb bank, 1: 2 x 4kb banks)
+                    if (mmc1Control & BIT_4)
+                    {
+                        patternTable1 = chrRom + (mmc1Chr1 * kilobytes(4));
+                    }
+                }
+                else if (selectBits == 3)
+                {
+                    mmc1PrgBank = mmc1ShiftRegister;
+                    assert(mmc1PrgBank < prgRomSize)
+                    
+                    uint8 mode = (mmc1Control >> 2) & 0x03;
+                    if (mode == 2)
+                    {
+                        prgRomBank1 = prgRom;
+                        prgRomBank2 = prgRom + (mmc1PrgBank * kilobytes(16));
+                    }
+                    else if (mode == 3)
+                    {
+                        prgRomBank1 = prgRom + (mmc1PrgBank * kilobytes(16));
+                        prgRomBank2 = prgRom + (kilobytes(16) * (prgRomSize - 1));
+                    }
+                    else
+                    {
+                        prgRomBank1 = prgRom + ((mmc1PrgBank & 0xFE) * kilobytes(16));
+                        prgRomBank2 = prgRomBank1 + kilobytes(16);
+                    }
+                }
+
+                mmc1ShiftRegister = BIT_4;
+            }
+        }
+    }
+    // UxROM varieties are a direct mapping
+    else if (mapperNumber == 2)
     {
         bankSelect = value;
         prgRomBank1 = prgRom + kilobytes(16) * bankSelect;

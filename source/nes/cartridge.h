@@ -47,4 +47,10 @@ private:
     uint8* patternTable1;
 
     uint8 bankSelect;
+
+    uint8 mmc1ShiftRegister;
+    uint8 mmc1Control;
+    uint8 mmc1Chr0;
+    uint8 mmc1Chr1;
+    uint8 mmc1PrgBank;
 };

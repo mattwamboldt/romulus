@@ -60,6 +60,7 @@ void PPU::tick()
     // Render
     if (scanline != PRERENDER_LINE && cycle <= NES_SCREEN_WIDTH)
     {
+        // TODO: Not handling transparency properly for overlap
         uint8 backgroundPixel = calculateBackgroundPixel();
         uint8 spritePixel = calculateSpritePixel();
 
