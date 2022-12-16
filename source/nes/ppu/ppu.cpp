@@ -212,40 +212,41 @@ void PPU::tick()
                 spriteRenderers[i].isEnabled = true;
 
                 uint8 yPosition = oamSecondary[i * 4];
-                uint8 tileIndex = oamSecondary[(i * 4) + 1];
+                uint16 tileIndex = oamSecondary[(i * 4) + 1];
                 spriteRenderers[i].setAttribute(oamSecondary[(i * 4) + 2]);
                 spriteRenderers[i].setX(oamSecondary[(i * 4) + 3]);
 
                 // Calculate the shift values
                 uint16 patternTableAddress = 0;
+
+                // TODO: Test vertical flip (Hasn't been hit in debugger yet)
+                uint16 fineY = scanline - yPosition;
+                if (spriteRenderers[i].isVerticallyFlipped())
+                {
+                    fineY = (spriteHeight - 1) - fineY;
+                }
+
+                uint16 spriteBank = spritePatternBaseAddress;
+
                 if (useTallSprites)
                 {
-                    // TODO: Figure out tall sprites
-                    spriteRenderers[i].isEnabled = false;
-                    // Pattern table address Scheme
-                    // 0H RRRR CCCC PTTT
-                    // || |||| |||| |+++--- T : Fine Y offset, the row number within a tile
-                    // || |||| |||| +------ P : Bit plane (0: "lower"; 1: "upper")
-                    // || |||| ++++-------- C : Tile column
-                    // || ++++------------- R : Tile row
-                    // |+------------------ H : Half of pattern table (0: "left"; 1: "right")
-                    // +------------------- 0 : Pattern table is at $0000 - $1FFF
-                }
-                else
-                {
-                    uint16 tileOffset = ((uint16)tileIndex) << 4;
-                    // TODO: Test vertical flip (Hasn't been hit in debugger yet)
-                    uint16 fineY = scanline - yPosition;
-                    if (spriteRenderers[i].isVerticallyFlipped())
-                    {
-                        fineY = (spriteHeight - 1) - fineY;
-                    }
+                    // On tall sprites the last bit is the bank select and the rest is the tile index
+                    spriteBank = (tileIndex & BIT_0) << 12;
+                    tileIndex &= 0xFFFE;
 
-                    patternTableAddress = fineY | tileOffset | spritePatternBaseAddress;
-                    spriteRenderers[i].patternLoShift = bus->read(patternTableAddress);
-                    patternTableAddress |= BIT_3;
-                    spriteRenderers[i].patternHiShift = bus->read(patternTableAddress);
+                    // The bottom half the tile is to the right (BIT 0 of the normal style index)
+                    if (fineY >= 8)
+                    {
+                        fineY -= 8;
+                        ++tileIndex;
+                    }
                 }
+
+                uint16 tileOffset = tileIndex << 4;
+                patternTableAddress = fineY | tileOffset | spriteBank;
+                spriteRenderers[i].patternLoShift = bus->read(patternTableAddress);
+                patternTableAddress |= BIT_3;
+                spriteRenderers[i].patternHiShift = bus->read(patternTableAddress);
             }
         }
     }
