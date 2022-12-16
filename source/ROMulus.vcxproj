@@ -42,6 +42,7 @@
   <ItemGroup>
     <ClCompile Include="nes\6502.cpp" />
     <ClCompile Include="nes\apu\apu.cpp" />
+    <ClCompile Include="nes\apu\deltaModulationChannel.cpp" />
     <ClCompile Include="nes\apu\envelope.cpp" />
     <ClCompile Include="nes\apu\noiseChannel.cpp" />
     <ClCompile Include="nes\apu\pulseChannel.cpp" />

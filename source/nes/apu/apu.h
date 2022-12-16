@@ -15,15 +15,6 @@ public:
 
     void tick(uint32 cpuCycleCount);
 
-    // Write 0x4010
-    void writeDmcControls(uint8 value);
-    // Write 0x4011
-    void writeDmcCounter(uint8 value);
-    // Write 0x4012
-    void writeDmcSampleAddress(uint8 value);
-    // Write 0x4013
-    void writeDmcSampleLength(uint8 value);
-
     // Read 0x4015
     uint8 getStatus(bool readOnly);
 
@@ -47,7 +38,6 @@ public:
     DeltaModulationChannel dmc;
 
     bool isFrameInteruptFlagSet;
-    bool isDmcInterruptFlagSet;
 
     // https://www.nesdev.org/wiki/APU_Frame_Counter
     // TODO: They mention half frames which makes me think its actually clocked by the cpu

@@ -76,6 +76,7 @@ void APU::tick(uint32 cpuCycleCount)
     pulse1.tick();
     pulse2.tick();
     noise.tick();
+    dmc.tick();
 
     if (sequenceComplete)
     {
@@ -87,26 +88,6 @@ void APU::tick(uint32 cpuCycleCount)
     }
 }
 
-void APU::writeDmcControls(uint8 value)
-{
-
-}
-
-void APU::writeDmcSampleAddress(uint8 value)
-{
-
-}
-
-void APU::writeDmcSampleLength(uint8 value)
-{
-
-}
-
-void APU::writeDmcCounter(uint8 value)
-{
-
-}
-
 // https://www.nesdev.org/wiki/APU#Status_($4015)
 uint8 APU::getStatus(bool readOnly)
 {
@@ -115,9 +96,9 @@ uint8 APU::getStatus(bool readOnly)
     if (pulse2.lengthCounter > 0)   result |= 0x02;
     if (triangle.lengthCounter > 0) result |= 0x04;
     if (noise.lengthCounter > 0)    result |= 0x08;
-    if (dmc.bytesRemaining > 0)     result |= 0x10;
+    if (dmc.getBytesRemaining())    result |= 0x10;
     if (isFrameInteruptFlagSet)     result |= 0x40;
-    if (isDmcInterruptFlagSet)      result |= 0x80;
+    if (dmc.isInterruptFlagSet)      result |= 0x80;
 
     if (!readOnly)
     {
@@ -135,10 +116,7 @@ void APU::writeControl(uint8 value)
     pulse2.setEnabled(value & 0b00000010);
     triangle.setEnabled(value & 0b00000100);
     noise.setEnabled(value & 0b00001000);
-
-    // TODO: Handle write side effects on units that changed
-    dmc.isEnabled = value & 0b00010000;
-    isDmcInterruptFlagSet = 0;
+    dmc.setEnabled(value & 0b00010000);
 }
 
 void APU::writeFrameCounterControl(uint8 value)
@@ -156,12 +134,50 @@ void APU::writeFrameCounterControl(uint8 value)
 
 real32 APU::getOutput()
 {
-    // TODO: for now just getting something out
+    // TODO: Actual mixing, for now just getting something out
+
     uint32 output = 0;
-    if (!DEBUG_PULSE1_MUTE) output += pulse1.getOutput();
-    if (!DEBUG_PULSE2_MUTE) output += pulse2.getOutput();
-    if (!DEBUG_TRIANGLE_MUTE) output += triangle.getOutput();
-    if (!DEBUG_NOISE_MUTE) output += noise.getOutput();
-    if (!DEBUG_DMC_MUTE) output += dmc.getOutput();
-    return output / 60.0f;
+    real32 maxValue = 0;
+    if (!DEBUG_PULSE1_MUTE)
+    {
+        output += pulse1.getOutput();
+        maxValue += 15.0f;
+    }
+
+    if (!DEBUG_PULSE2_MUTE)
+    {
+        output += pulse2.getOutput();
+        maxValue += 15.0f;
+    }
+    
+    if (!DEBUG_TRIANGLE_MUTE)
+    {
+        output += triangle.getOutput();
+        maxValue += 15.0f;
+    }
+
+    if (!DEBUG_NOISE_MUTE)
+    {
+        output += noise.getOutput();
+        maxValue += 15.0f;
+    }
+
+    if (!DEBUG_DMC_MUTE)
+    {
+        output += dmc.getOutput();
+        maxValue += 127.0f;
+    }
+
+    if (maxValue == 0)
+    {
+        return 0.0f;
+    }
+
+    real32 returnValue = output / maxValue;
+    if (returnValue > 1.0)
+    {
+        return 1.0;
+    }
+
+    return returnValue;
 }

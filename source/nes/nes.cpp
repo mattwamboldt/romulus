@@ -117,6 +117,13 @@ void NES::update(real32 secondsPerFrame)
             }
             
             apu.tick(currentCpuCycle);
+
+            // TODO: Should hijack the cpu for some amount of time. Skipping for now to get initial playback
+            if (apu.dmc.readRequired())
+            {
+                apu.dmc.loadSample(cpuBus.read(apu.dmc.getCurrentAddress()));
+            }
+
             ++currentCpuCycle;
         }
 
@@ -158,7 +165,7 @@ void NES::update(real32 secondsPerFrame)
         {
             // Gather up all the potenial interrupt sources to assert the right status in the cpu
             // TODO: Only have the apu for now, other sources will come later
-            cpu.setIRQ(apu.isFrameInteruptFlagSet || apu.isDmcInterruptFlagSet);
+            cpu.setIRQ(apu.isFrameInteruptFlagSet || apu.dmc.isInterruptFlagSet);
             if (ppu.isNMISuppressed())
             {
                 cpu.forceClearNMI();

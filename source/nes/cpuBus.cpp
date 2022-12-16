@@ -115,10 +115,10 @@ void CPUBus::write(uint16 address, uint8 value)
             case NOISE_VOL:  apu->noise.setEnvelope(value);         break;
             case NOISE_LO:   apu->noise.setPeriod(value);           break;
             case NOISE_HI:   apu->noise.setLengthCounter(value);    break;
-            case DMC_FREQ:   apu->writeDmcControls(value);          break;
-            case DMC_RAW:    apu->writeDmcCounter(value);           break;
-            case DMC_START:  apu->writeDmcSampleAddress(value);     break;
-            case DMC_LEN:    apu->writeDmcSampleLength(value);      break;
+            case DMC_FREQ:   apu->dmc.setControls(value);           break;
+            case DMC_RAW:    apu->dmc.setOutputLevel(value);        break;
+            case DMC_START:  apu->dmc.setSampleAddress(value);      break;
+            case DMC_LEN:    apu->dmc.setSampleLength(value);       break;
             case OAMDMA:
             {
                 isDmaActive = true;
