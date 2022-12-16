@@ -549,9 +549,13 @@ public:
 private:
     bool isHalted;
 
-    bool nmiRequested;
+    // Used for the "edge" detection
     bool nmiWasActive;
-    bool interruptRequested;
+
+    // State of whether the nmi line is active
+    bool nmiPending;
+    bool irqActive;
+
     bool isResetRequested;
     bool isBreakRequested;
 
@@ -560,6 +564,9 @@ private:
     uint8 tempData; // temp storage
 
     IBus* bus;
+
+    bool interruptPending;
+    void pollInterrupts();
 
     // Status Register helpers
     void setFlags(uint8 flags);

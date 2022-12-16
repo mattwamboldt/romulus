@@ -39,10 +39,11 @@ bool MOS6502::tick()
 
     if (stage == 0)
     {
-        if (nmiRequested || interruptRequested || isResetRequested)
+        if (interruptPending || isResetRequested)
         {
-            // Still does a dummy read and takes 7 cycles
             sequence = HANDLE_INTERRUPT;
+            interruptPending = false;
+            // Still does a dummy read and takes 7 cycles
             bus->read(pc);
         }
         else
@@ -552,7 +553,7 @@ void MOS6502::setNMI(bool active)
     {
         // NMI is "edge" detected, meaning it flip flops, rather than being a state
         // Should only trigger when going inactive to active
-        nmiRequested = active;
+        nmiPending = true;
     }
 
     nmiWasActive = active;
@@ -560,7 +561,14 @@ void MOS6502::setNMI(bool active)
 
 void MOS6502::setIRQ(bool active)
 {
-    interruptRequested = !isFlagSet(STATUS_INT_DISABLE) && active;
+    irqActive = active;
+}
+
+// This seems like it could be done at the start of every microcode tick, but some
+// operate very specifically. Therefore I'm sprinkling it around as needed.
+void MOS6502::pollInterrupts()
+{
+    interruptPending = nmiPending || (irqActive && !isFlagSet(STATUS_INT_DISABLE));
 }
 
 // TODO: Find timing of address evaluation, I'm putting it in the first vector read cycle for now
@@ -610,16 +618,15 @@ void MOS6502::tickInterrupt()
         }
         else 
         {
-            if (nmiRequested)
+            if (nmiPending)
             {
                 address = NMI_VECTOR;
-                nmiRequested = false;
+                nmiPending = false;
             }
             else
             {
                 address = IRQ_VECTOR;
                 isBreakRequested = false;
-                interruptRequested = false;
             }
         }
 
@@ -650,7 +657,13 @@ void MOS6502::tickReturnInterrupt()
         // case 2: bus->read(pc); break;
         case 3: pullStatus(); break;
         case 4: pullPCL(); break;
-        case 5: pullPCH(); stage = 0; return;
+        case 5:
+        {
+            pollInterrupts();
+            pullPCH();
+            stage = 0;
+            return;
+        }
     }
 
     ++stage;
@@ -666,7 +679,12 @@ void MOS6502::tickReturnSubroutine()
         // case 2: bus->read(pc); break;
         case 3: pullPCL(); break;
         case 4: pullPCH(); break;
-        case 5: bus->read(pc++); stage = 0; return;
+        case 5:
+        {
+            pollInterrupts();
+            bus->read(pc++); stage = 0;
+            return;
+        }
     }
 
     ++stage;
@@ -681,6 +699,8 @@ void MOS6502::tickPushRegister()
     }
     else
     {
+        pollInterrupts();
+
         Operation operation = operations[inst];
         if (operation.opCode == PHA)
         {
@@ -708,6 +728,8 @@ void MOS6502::tickPullRegister()
     }
     else
     {
+        pollInterrupts();
+
         Operation operation = operations[inst];
         if (operation.opCode == PLA)
         {
@@ -732,6 +754,7 @@ void MOS6502::tickJumpSubroutine()
         case 4: pushPCL(); break;
         case 5:
         {
+            pollInterrupts();
             // "copy low address byte to PCL, fetch high address byte to PCH"
             pc = ((uint16)bus->read(pc) << 8) | p1;
             stage = 0;
@@ -744,6 +767,8 @@ void MOS6502::tickJumpSubroutine()
 
 void MOS6502::tickTwoCycleInstruction()
 {
+    pollInterrupts();
+
     // NOTE: This one almost doesn't feel worth a function, but I kinda want to isolate
     // things as much as possible cause its already a lot to keep in mind at once
     Operation operation = operations[inst];
@@ -883,6 +908,8 @@ void MOS6502::executeModifyInstruction(OpCode opcode)
 
 void MOS6502::tickAbsoluteInstruction()
 {
+    pollInterrupts();
+
     Operation operation = operations[inst];
 
     switch (stage)
@@ -938,6 +965,8 @@ void MOS6502::tickAbsoluteInstruction()
 
 void MOS6502::tickZeropageInstruction()
 {
+    pollInterrupts();
+
     Operation operation = operations[inst];
 
     switch (stage)
@@ -979,6 +1008,8 @@ void MOS6502::tickZeropageInstruction()
 
 void MOS6502::tickZeropageIndexedInstruction()
 {
+    pollInterrupts();
+
     Operation operation = operations[inst];
 
     switch (stage)
@@ -1033,6 +1064,8 @@ void MOS6502::tickZeropageIndexedInstruction()
 
 void MOS6502::tickAbsoluteIndexedInstruction()
 {
+    pollInterrupts();
+
     Operation operation = operations[inst];
 
     switch (stage)
@@ -1115,6 +1148,8 @@ void MOS6502::tickRelativeInstruction()
     {
         case 1:
         {
+            pollInterrupts();
+
             p1 = bus->read(pc++);
 
             bool shouldBranch = false;
@@ -1161,6 +1196,7 @@ void MOS6502::tickRelativeInstruction()
         }
         case 3:
         {
+            pollInterrupts();
             // dummy read (TODO: don't know if necessary), the excess cycle is for sure
             bus->read(address);
             stage = 0;
@@ -1173,6 +1209,8 @@ void MOS6502::tickRelativeInstruction()
 
 void MOS6502::tickIndirectXInstruction()
 {
+    pollInterrupts();
+
     Operation operation = operations[inst];
 
     switch (stage)
@@ -1231,6 +1269,8 @@ void MOS6502::tickIndirectXInstruction()
 
 void MOS6502::tickIndirectYInstruction()
 {
+    pollInterrupts();
+
     Operation operation = operations[inst];
 
     switch (stage)
@@ -1313,6 +1353,8 @@ void MOS6502::tickIndirectInstruction()
         case 3: tempData = bus->read((uint16)p2 << 8 | p1); break;
         case 4:
         {
+            pollInterrupts();
+
             // page boundaries not handled for this mode
             uint16 hi = bus->read((uint16)p2 << 8 | (uint8)(p1 + 1));
             pc = ((uint16)hi << 8) + tempData;
