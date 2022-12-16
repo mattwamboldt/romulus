@@ -60,20 +60,15 @@ void PPU::tick()
     // Render
     if (scanline != PRERENDER_LINE && cycle <= NES_SCREEN_WIDTH)
     {
-        // TODO: Not handling transparency properly for overlap
+        // TODO: Handle rendering disabled (background pallette hack)
         uint8 backgroundPixel = calculateBackgroundPixel();
         uint8 spritePixel = calculateSpritePixel();
 
+        bool backgroundVisible = backgroundPixel & 0x03;
+        bool spriteVisible = spritePixel & 0x03;
+
         uint8 pixel = backgroundPixel;
-        if (backgroundPixel == 0)
-        {
-            pixel = spritePixel;
-        }
-        else if (spritePixel == 0)
-        {
-            pixel = backgroundPixel;
-        }
-        else 
+        if (backgroundVisible && spriteVisible)
         {
             if (renderedSpriteIndex == 0 && spriteRenderers[renderedSpriteIndex].getX() != 0xFF && cycle != NES_SCREEN_WIDTH)
             {
@@ -88,6 +83,10 @@ void PPU::tick()
             {
                 pixel = spritePixel;
             }
+        }
+        else if (spriteVisible)
+        {
+            pixel = spritePixel;
         }
 
         screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);
