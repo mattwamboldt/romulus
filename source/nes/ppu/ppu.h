@@ -11,8 +11,11 @@
 class PPU
 {
 public:
+    PPU();
     void connect(IBus* bus) { this->bus = bus; }
 
+    // TODO: Fully implement
+    void reset();
     void tick();
 
     bool isNMIFlagSet();
@@ -43,7 +46,12 @@ public:
 
     // Temp for now, will have a screen abstraction later
     // Stores the pallette data while it's being written
-    uint8 screenBuffer[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
+    uint8 screenBufferOne[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
+    uint8 screenBufferTwo[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
+
+    uint8* frontBuffer;
+    uint8* backbuffer;
+
     uint16 outputOffset;
 
     // TODO: don't expose this, only doing for a debug view that should probably be using functions or be in the ppu itself

@@ -10,6 +10,32 @@ const uint16 COARSE_Y_MASK =  0x03E0; // ......YY YYY.....
 const uint16 NAMETABLE_MASK = 0x0C00; // ....NN.. ........
 const uint16 FINE_Y_MASK =    0x7000; // .yyy.... ........
 
+PPU::PPU()
+{
+    reset();
+}
+
+void PPU::reset()
+{
+    for (int i = 0; i < NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT; ++i)
+    {
+        screenBufferOne[i] = 0;
+        screenBufferTwo[i] = 0;
+    }
+
+    frontBuffer = screenBufferOne;
+    backbuffer = screenBufferTwo;
+
+    cycle = 0;
+    scanline = 0;
+    outputOffset = 0;
+
+    nmiRequested = false;
+    isSpriteOverflowFlagSet = false;
+    isSpriteZeroHit = false;
+    suppressNmi = false;
+}
+
 // The key to understanding what hapens on a ppu update was a combo of these pages
 // https://www.nesdev.org/wiki/PPU_scrolling#At_dot_256_of_each_scanline
 // https://www.nesdev.org/wiki/PPU_rendering#Line-by-line_timing
@@ -29,6 +55,11 @@ void PPU::tick()
         if (cycle == 1 && scanline == 241)
         {
             nmiRequested = !suppressNmi;
+
+            // Swap outputs
+            uint8* temp = frontBuffer;
+            frontBuffer = backbuffer;
+            backbuffer = temp;
         }
 
         ++cycle;
@@ -85,7 +116,7 @@ void PPU::tick()
             pixel = spritePixel;
         }
 
-        screenBuffer[outputOffset++] = bus->read(0x3F00 + pixel);
+        backbuffer[outputOffset++] = bus->read(0x3F00 + pixel);
 
         // Clock sprite counters and shift registers
         for (int i = 0; i < 8; ++i)

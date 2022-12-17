@@ -472,7 +472,7 @@ void renderNametable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left)
 void render(GDIBackBuffer buffer, NES* nes)
 {
     // TODO: A bunch of this should be in platform agnostic place and copied out
-    uint8* nesBuffer = nes->ppu.screenBuffer;
+    uint8* nesBuffer = nes->ppu.frontBuffer;
     uint8* row = (uint8*)buffer.memory;
 
     if (!nes->cpu.hasHalted())

@@ -41,6 +41,7 @@ void NES::powerOn()
 {
     cpu.start();
     apu.reset();
+    ppu.reset();
     apu.noise.shiftRegister = 1;
     isRunning = true;
 }
@@ -54,6 +55,7 @@ void NES::reset()
 
     cpu.reset();
     apu.reset();
+    ppu.reset();
     isRunning = true;
 }
 
