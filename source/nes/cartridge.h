@@ -13,8 +13,17 @@ public:
     uint8 chrRead(uint16 address);
     bool chrWrite(uint16 address, uint8 value);
 
+    bool hasVerticalMirroring()
+    {
+        if (mapperNumber == 1)
+        {
+            return (mmc1Control & 0x03) == 2;
+        }
+
+        return useVerticalMirroring;
+    }
+
     int mapperNumber;
-    bool useVerticalMirroring;
 
     // NSF Config
     bool isNSF;
@@ -24,6 +33,8 @@ public:
     uint16 playSpeed;
 
 private:
+    bool useVerticalMirroring;
+
     // TODO: This stuff will change when we get multiple mappers
     uint8 cartRam[kilobytes(8)] = {};
     uint8 backingRom[kilobytes(32)] = {}; // Used to support NSF for now

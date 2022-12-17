@@ -28,7 +28,7 @@ uint8 PPUBus::read(uint16 address)
         // V => CIRAM 10 = PPU 10
         // H => CIRAM 10 = PPU 11
         // https://www.nesdev.org/wiki/INES
-        if (cart->useVerticalMirroring)
+        if (cart->hasVerticalMirroring())
         {
             ciramAddress |= address & 0x0400;
         }
@@ -71,7 +71,7 @@ void PPUBus::write(uint16 address, uint8 value)
         uint16 ciramAddress = address & 0x03FF;
 
         // TODO: handle mapper mirroring config
-        if (cart->useVerticalMirroring)
+        if (cart->hasVerticalMirroring())
         {
             ciramAddress |= address & 0x0400;
         }
