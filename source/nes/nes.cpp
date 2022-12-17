@@ -131,7 +131,7 @@ void NES::update(real32 secondsPerFrame)
         if (audioOutputCounter >= cyclesPerSample)
         {
             real32 output = apu.getOutput(); // Testing pulse only, values in range of 0.0-1.0 for now;
-            apuBuffer[writeHead++] = (int16)(output * 30000); // TODO: Do math
+            apuBuffer[writeHead++] = (int16)(output * 32768); // TODO: Do math
             if (writeHead >= 48000)
             {
                 writeHead = 0;

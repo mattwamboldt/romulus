@@ -4,7 +4,7 @@ const bool DEBUG_PULSE1_MUTE = 0;
 const bool DEBUG_PULSE2_MUTE = 0;
 const bool DEBUG_TRIANGLE_MUTE = 0;
 const bool DEBUG_NOISE_MUTE = 0;
-const bool DEBUG_DMC_MUTE = 1;
+const bool DEBUG_DMC_MUTE = 0;
 
 void APU::quarterClock()
 {
@@ -134,50 +134,44 @@ void APU::writeFrameCounterControl(uint8 value)
 
 real32 APU::getOutput()
 {
-    // TODO: Actual mixing, for now just getting something out
+    // Using the linear approximation for now
+    // https://www.nesdev.org/wiki/APU_Mixer#Linear_Approximation
 
-    uint32 output = 0;
-    real32 maxValue = 0;
+    real32 pulseOutput = 0.0f;
+    
     if (!DEBUG_PULSE1_MUTE)
     {
-        output += pulse1.getOutput();
-        maxValue += 15.0f;
+        pulseOutput += pulse1.getOutput();
     }
 
     if (!DEBUG_PULSE2_MUTE)
     {
-        output += pulse2.getOutput();
-        maxValue += 15.0f;
+        pulseOutput += pulse2.getOutput();
     }
+
+    pulseOutput *= 0.00752f;
     
+    real32 tndOut = 0.0f;
+
     if (!DEBUG_TRIANGLE_MUTE)
     {
-        output += triangle.getOutput();
-        maxValue += 15.0f;
+        tndOut += 0.00851f * triangle.getOutput();
     }
 
     if (!DEBUG_NOISE_MUTE)
     {
-        output += noise.getOutput();
-        maxValue += 15.0f;
+        tndOut += 0.00494f * noise.getOutput();
     }
 
     if (!DEBUG_DMC_MUTE)
     {
-        output += dmc.getOutput();
-        maxValue += 127.0f;
+        tndOut += 0.00335f * dmc.getOutput();
     }
 
-    if (maxValue == 0)
+    if (pulseOutput + tndOut > 1.0)
     {
-        return 0.0f;
+        return 1.0f;
     }
 
-    real32 returnValue = output / maxValue;
-    if (returnValue > 1.0)
-    {
-        return 1.0;
-    }
-
-    return returnValue;
+    return pulseOutput + tndOut;
 }
