@@ -5,6 +5,30 @@ uint16 dmcRateTable[] =
     428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106,  84,  72,  54
 };
 
+void DeltaModulationChannel::reset()
+{
+    isEnabled = 0;
+
+    irqEnabled = false;
+    isLooping = false;
+    sampleAddress = 0;
+    sampleLength = 0;
+    outputLevel = 0;
+
+    currentAddress = 0;
+    bytesRemaining = 0;
+    sampleBuffer = 0;
+    sampleBufferFilled = false;
+
+    outputShiftRegister = 0;
+    bitsRemaining = 0;
+    silenceActive = true;
+
+    // Maps to rate intput
+    timerLength = dmcRateTable[0];
+    timerCurrentTick = 0;
+}
+
 void DeltaModulationChannel::tick()
 {
     if (timerCurrentTick == 0)

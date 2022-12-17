@@ -7,6 +7,7 @@ class DeltaModulationChannel
 public:
     bool isInterruptFlagSet;
 
+    void reset();
     void tick();
 
     void setEnabled(uint8 enabled);

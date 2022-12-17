@@ -6,6 +6,11 @@ const bool DEBUG_TRIANGLE_MUTE = 0;
 const bool DEBUG_NOISE_MUTE = 0;
 const bool DEBUG_DMC_MUTE = 0;
 
+void APU::reset()
+{
+    dmc.reset();
+}
+
 void APU::quarterClock()
 {
     // Tick the envelopes and triangle linear counter

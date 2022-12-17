@@ -40,6 +40,7 @@ void NES::loadRom(const char * path)
 void NES::powerOn()
 {
     cpu.start();
+    apu.reset();
     apu.noise.shiftRegister = 1;
     isRunning = true;
 }
@@ -52,6 +53,7 @@ void NES::reset()
     }
 
     cpu.reset();
+    apu.reset();
     isRunning = true;
 }
 

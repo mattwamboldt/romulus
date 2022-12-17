@@ -13,6 +13,8 @@ class APU
 {
 public:
 
+    void reset();
+
     void tick(uint32 cpuCycleCount);
 
     // Read 0x4015
