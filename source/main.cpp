@@ -3,7 +3,7 @@
 
 #include "nes\nes.h"
 
-#define SHOW_DEBUG_VIEWS 1
+// #define SHOW_DEBUG_VIEWS 1
 
 // TODO: New main objective - get parity with the console app
 
