@@ -90,4 +90,6 @@ private:
     void mmc1Reset();
     void mmc1RemapPrg();
     void mmc1RemapChr();
+
+    bool ignoreNextWrite;
 };

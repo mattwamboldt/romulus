@@ -206,6 +206,8 @@ bool Cartridge::load(const char* file)
 
 uint8 Cartridge::prgRead(uint16 address)
 {
+    ignoreNextWrite = false;
+
     if (address < 0x6000)
     {
         return 0;
@@ -221,6 +223,7 @@ uint8 Cartridge::prgRead(uint16 address)
         return backingRom[address - 0x8000];
     }
 
+
     if (address < 0xC000)
     {
         return prgRomBank1[address - 0x8000];
@@ -231,7 +234,12 @@ uint8 Cartridge::prgRead(uint16 address)
 
 bool Cartridge::prgWrite(uint16 address, uint8 value)
 {
-    if (address > 0x6000 && address < 0x8000)
+    if (address < 0x6000)
+    {
+        return false;
+    }
+
+    if (address < 0x8000)
     {
         cartRam[address - 0x6000] = value;
         return true;
@@ -245,9 +253,18 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
     // MMC1 
     if (mapperNumber == 1)
     {
+        if (ignoreNextWrite)
+        {
+            return false;
+        }
+
+        ignoreNextWrite = true;
+
         if (value & BIT_7)
         {
             mmc1ShiftRegister = BIT_4;
+            mmc1Control |= 0x0C;
+            mmc1RemapPrg();
         }
         else 
         {
@@ -282,7 +299,7 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
                 }
                 else if (selectBits == 3)
                 {
-                    mmc1PrgBank = mmc1ShiftRegister;
+                    mmc1PrgBank = (mmc1ShiftRegister & 0x0F);
                     mmc1RemapPrg();
                 }
 
@@ -343,6 +360,7 @@ void Cartridge::reset()
 
 void Cartridge::mmc1Reset()
 {
+    ignoreNextWrite = false;
     mmc1ShiftRegister = BIT_4;
     mmc1Control = 0;
 
@@ -356,7 +374,7 @@ void Cartridge::mmc1Reset()
 
     // Going to default the ROM bank mode to be similar to UxROM for now
     // That means first bank fixed, second bank on the last ROM chip
-    mmc1Control |= 0x08;
+    mmc1Control |= 0x0C;
     mmc1PrgBank = prgRomSize - 1;
 
     // CHR config can stay on the zero induced default of 8kb for now
@@ -372,7 +390,7 @@ void Cartridge::mmc1RemapPrg()
 {
     assert(mmc1PrgBank < prgRomSize)
 
-        uint8 mode = (mmc1Control >> 2) & 0x03;
+    uint8 mode = (mmc1Control >> 2) & 0x03;
     if (mode == 2)
     {
         prgRomBank1 = prgRom;
