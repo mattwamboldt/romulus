@@ -145,7 +145,6 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
     else if (mapperNumber == 1)
     {
         OutputDebugStringA("Mapper: 001 MMC1\n");
-        mmc1ShiftRegister = BIT_4;
     }
     else if (mapperNumber == 2)
     {
@@ -158,23 +157,23 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
         OutputDebugStringA(message);
     }
 
-    prgRom = prgRomBank1 = (uint8*)buffer;
-    prgRomBank2 = prgRom + kilobytes(16) * (prgRomSize - 1);
+    prgRom = (uint8*)buffer;
 
     buffer += header->prgRomSize * kilobytes(16);
 
     chrRom = 0;
     if (chrRomSize > 0)
     {
-        chrRom = patternTable0 = (uint8*)buffer;
-        patternTable1 = chrRom + kilobytes(4);
+        chrRom = (uint8*)buffer;
+        chrBase = chrRom;
     }
     else
     {
         // means we have no chr space on the cart and should use the system ram
-        chrRom = patternTable0 = chrRam;
-        patternTable1 = chrRam + kilobytes(4);
+        chrBase = chrRam;
     }
+
+    reset();
 
     return true;
 }
@@ -268,83 +267,23 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
 
                     // Need to reset all the pointers in case the mode has changed (Could check if its
                     // changed but that just more overhead potentially)
-
-                    uint8 mode = (mmc1Control >> 2) & 0x03;
-                    if (mode == 2)
-                    {
-                        prgRomBank1 = prgRom;
-                        prgRomBank2 = prgRom + (mmc1PrgBank * kilobytes(16));
-                    }
-                    else if (mode == 3)
-                    {
-                        prgRomBank1 = prgRom + (mmc1PrgBank * kilobytes(16));
-                        prgRomBank2 = prgRom + (kilobytes(16) * (prgRomSize - 1));
-                    }
-                    else
-                    {
-                        prgRomBank1 = prgRom + ((mmc1PrgBank & 0xFE) * kilobytes(16));
-                        prgRomBank2 = prgRomBank1 + kilobytes(16);
-                    }
-
-                    // CHR ROM mode (0: single 8kb bank, 1: 2 x 4kb banks)
-                    if ((mmc1Control & BIT_4) == 0)
-                    {
-                        // low bit ignored in 8kb mode to avoid overflow
-                        patternTable0 = chrRom + ((mmc1Chr0 & 0xFE) * kilobytes(4));
-                        patternTable1 = patternTable0 + kilobytes(4);
-                    }
-                    else
-                    {
-                        patternTable0 = chrRom + (mmc1Chr0 * kilobytes(4));
-                        patternTable1 = chrRom + (mmc1Chr1 * kilobytes(4));
-                    }
+                    mmc1RemapPrg();
+                    mmc1RemapChr();
                 }
                 else if (selectBits == 1)
                 {
                     mmc1Chr0 = mmc1ShiftRegister;
-
-                    // CHR ROM mode (0: single 8kb bank, 1: 2 x 4kb banks)
-                    if ((mmc1Control & BIT_4) == 0)
-                    {
-                        // low bit ignored in 8kb mode to avoid overflow
-                        patternTable0 = chrRom + ((mmc1Chr0 & 0xFE) * kilobytes(4));
-                        patternTable1 = patternTable0 + kilobytes(4);
-                    }
-                    else
-                    {
-                        patternTable0 = chrRom + (mmc1Chr0 * kilobytes(4));
-                    }
+                    mmc1RemapChr();
                 }
                 else if (selectBits == 2)
                 {
                     mmc1Chr1 = mmc1ShiftRegister;
-                    // CHR ROM mode (0: single 8kb bank, 1: 2 x 4kb banks)
-                    if (mmc1Control & BIT_4)
-                    {
-                        patternTable1 = chrRom + (mmc1Chr1 * kilobytes(4));
-                    }
+                    mmc1RemapChr();
                 }
                 else if (selectBits == 3)
                 {
                     mmc1PrgBank = mmc1ShiftRegister;
-                    assert(mmc1PrgBank < prgRomSize)
-                    
-                    uint8 mode = (mmc1Control >> 2) & 0x03;
-                    if (mode == 2)
-                    {
-                        prgRomBank1 = prgRom;
-                        prgRomBank2 = prgRom + (mmc1PrgBank * kilobytes(16));
-                    }
-                    else if (mode == 3)
-                    {
-                        prgRomBank1 = prgRom + (mmc1PrgBank * kilobytes(16));
-                        prgRomBank2 = prgRom + (kilobytes(16) * (prgRomSize - 1));
-                    }
-                    else
-                    {
-                        prgRomBank1 = prgRom + ((mmc1PrgBank & 0xFE) * kilobytes(16));
-                        prgRomBank2 = prgRomBank1 + kilobytes(16);
-                    }
+                    mmc1RemapPrg();
                 }
 
                 mmc1ShiftRegister = BIT_4;
@@ -354,8 +293,7 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
     // UxROM varieties are a direct mapping
     else if (mapperNumber == 2)
     {
-        bankSelect = value;
-        prgRomBank1 = prgRom + kilobytes(16) * bankSelect;
+        prgRomBank1 = prgRom + kilobytes(16) * value;
     }
 
     return false;
@@ -383,4 +321,87 @@ bool Cartridge::chrWrite(uint16 address, uint8 value)
     }
 
     return true;
+}
+
+void Cartridge::reset()
+{
+    // NOTE: These default pointers seem to work for several mappers
+ 
+    // 0x8000 on the first bank and 0xC000 mapped to the last one
+    prgRomBank1 = prgRom;
+    prgRomBank2 = prgRom + kilobytes(16) * (prgRomSize - 1);
+
+    // Mapped as if there's no switching
+    patternTable0 = chrBase;
+    patternTable1 = chrBase + kilobytes(4);
+
+    if (mapperNumber == 1)
+    {
+        mmc1Reset();
+    }
+}
+
+void Cartridge::mmc1Reset()
+{
+    mmc1ShiftRegister = BIT_4;
+    mmc1Control = 0;
+
+    // NOTE: Not sure if this is helpful, but it seems some roms may specify this
+    if (useVerticalMirroring)
+    {
+        // TODO: From what I've read it may actually matter for some games which mode it starts in
+        // as the devs didn't put the proper reset vector on all the banks (Verify)
+        mmc1Control |= 2;
+    }
+
+    // Going to default the ROM bank mode to be similar to UxROM for now
+    // That means first bank fixed, second bank on the last ROM chip
+    mmc1Control |= 0x08;
+    mmc1PrgBank = prgRomSize - 1;
+
+    // CHR config can stay on the zero induced default of 8kb for now
+    mmc1Chr0 = 0;
+    mmc1Chr1 = 0;
+
+    // Reset the pointers based on the rules
+    mmc1RemapPrg();
+    mmc1RemapChr();
+}
+
+void Cartridge::mmc1RemapPrg()
+{
+    assert(mmc1PrgBank < prgRomSize)
+
+        uint8 mode = (mmc1Control >> 2) & 0x03;
+    if (mode == 2)
+    {
+        prgRomBank1 = prgRom;
+        prgRomBank2 = prgRom + (mmc1PrgBank * kilobytes(16));
+    }
+    else if (mode == 3)
+    {
+        prgRomBank1 = prgRom + (mmc1PrgBank * kilobytes(16));
+        prgRomBank2 = prgRom + (kilobytes(16) * (prgRomSize - 1));
+    }
+    else
+    {
+        prgRomBank1 = prgRom + ((mmc1PrgBank & 0xFE) * kilobytes(16));
+        prgRomBank2 = prgRomBank1 + kilobytes(16);
+    }
+}
+
+void Cartridge::mmc1RemapChr()
+{
+    // CHR ROM mode (0: single 8kb bank, 1: 2 x 4kb banks)
+    if ((mmc1Control & BIT_4) == 0)
+    {
+        // low bit ignored in 8kb mode to avoid overflow
+        patternTable0 = chrBase + ((mmc1Chr0 & 0xFE) * kilobytes(4));
+        patternTable1 = patternTable0 + kilobytes(4);
+    }
+    else
+    {
+        patternTable0 = chrBase + (mmc1Chr0 * kilobytes(4));
+        patternTable1 = chrBase + (mmc1Chr1 * kilobytes(4));
+    }
 }

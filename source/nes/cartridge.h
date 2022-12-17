@@ -8,11 +8,15 @@ public:
     bool loadNSF(uint8* buffer, uint32 length);
     bool loadINES(uint8* buffer, uint32 length);
 
+    // Resets variables and banks to their default positions for the loaded rom
+    void reset();
+
     uint8 prgRead(uint16 address);
     bool prgWrite(uint16 address, uint8 value);
     uint8 chrRead(uint16 address);
     bool chrWrite(uint16 address, uint8 value);
 
+    // TODO: Mirroring config is more involved and can even be full vram
     bool hasVerticalMirroring()
     {
         if (mapperNumber == 1)
@@ -34,34 +38,56 @@ public:
 
 private:
     bool useVerticalMirroring;
-
-    // TODO: This stuff will change when we get multiple mappers
-    uint8 cartRam[kilobytes(8)] = {};
-    uint8 backingRom[kilobytes(32)] = {}; // Used to support NSF for now
-
-    // Number of PRG ROM chips (16KB each)
-    uint8 prgRomSize;
-    uint8* prgRom;
-
     bool hasPerisitantMemory;
     bool hasFullVram;
 
+    // Used to support NSF only
+    uint8 backingRom[kilobytes(32)] = {};
+
+    // Provides RAM in range 0x6000 - 0x7FFF
+    // Can be written out to disk for games that have persistant
+    // (battery backed) memory
+    uint8 cartRam[kilobytes(8)] = {};
+
+    // Number of PRG ROM chips (16KB each)
+    uint8 prgRomSize;
+
+    // Base for all prg ROM loaded from disk
+    uint8* prgRom;
+
+    // Points to the PRG bank mapped to 0x8000
     uint8* prgRomBank1;
+
+    // Points to the PRG bank mapped to 0xC000
     uint8* prgRomBank2;
 
     // Number of CHR ROM chips (8KB each)
     uint8 chrRomSize;
+
+    // Base for all chr ROM loaded from disk
     uint8* chrRom;
 
-    uint8 chrRam[kilobytes(8)];
+    // Points to the CHR bank mapped to 0x0000
     uint8* patternTable0;
+
+    // Points to the CHR bank mapped to 0x1000
     uint8* patternTable1;
 
-    uint8 bankSelect;
+    // Used in place of CHR ROM when none is provided
+    uint8 chrRam[kilobytes(8)];
+
+    // Points to chrROM or chrRAM depending on the mapper
+    uint8* chrBase;
 
     uint8 mmc1ShiftRegister;
     uint8 mmc1Control;
     uint8 mmc1Chr0;
     uint8 mmc1Chr1;
     uint8 mmc1PrgBank;
+
+    // Resets the mmc1 variables to a known state and
+    // resets pointers based on the loaded rom
+    void mmc1Reset();
+    void mmc1RemapPrg();
+    void mmc1RemapChr();
 };
