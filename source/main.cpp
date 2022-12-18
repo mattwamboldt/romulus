@@ -577,7 +577,7 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
                 openFileDesc.nFilterIndex = 1;
                 openFileDesc.lpstrInitialDir = NULL;
                 openFileDesc.lpstrFileTitle = NULL;
-                openFileDesc.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                openFileDesc.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
                 if (GetOpenFileNameA(&openFileDesc))
                 {

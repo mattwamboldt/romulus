@@ -1,4 +1,4 @@
-﻿#include "nes.h"
+#include "nes.h"
 #include "cpuTrace.h"
 #include <string.h>
 
@@ -184,9 +184,9 @@ void NES::update(real32 secondsPerFrame)
 
 void NES::cpuStep()
 {
-    if (traceEnabled && !cpu.hasHalted() && !cpu.isExecuting())
+    if (isRunning && traceEnabled && !cpu.hasHalted() && !cpu.isExecuting())
     {
-        logInstruction("bin/6502.log", cpu.pc, &cpu, &cpuBus, &ppu, currentCpuCycle);
+        logInstruction("data/6502.log", cpu.pc, &cpu, &cpuBus, &ppu, currentCpuCycle);
     }
 
     if (cpu.tick() && cpu.hasHalted())

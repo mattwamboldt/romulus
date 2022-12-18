@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
+// TODO: Need to keep all use of this in platform layer
+#include <windows.h>
+
 FILE* logFile = 0;
 bool isNestestLog = true;
 
@@ -545,6 +548,10 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, CPUBus* 
     if (!logFile)
     {
         logFile = fopen(filename, "w");
+        if (!logFile)
+        {
+            OutputDebugStringA(strerror(errno));
+        }
     }
 
     cpuBus->setReadOnly(true);
@@ -560,7 +567,10 @@ void logInstruction(const char* filename, uint16 address, MOS6502* cpu, CPUBus* 
         logInstructionFCEU(line, address, cpu, cpuBus);
     }
 
-    fputs(line, logFile);
+    if (logFile)
+    {
+        fputs(line, logFile);
+    }
 
     cpuBus->setReadOnly(false);
 }

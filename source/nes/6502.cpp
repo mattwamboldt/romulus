@@ -1394,8 +1394,9 @@ void MOS6502::KillUnimplemented(const char* message)
     Operation operation = operations[inst];
     sprintf(
         output,
-        "[CPU] %s: 0x%02X %s (%s, %d)\n",
+        "[CPU] %s: 0x%04X 0x%02X %s (%s, %d)\n",
         message,
+        instAddr,
         inst,
         opCodeNames[operation.opCode],
         addressModeNames[operation.addressMode],
