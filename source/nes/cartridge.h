@@ -1,6 +1,14 @@
 #pragma once
 #include "common.h"
 
+enum MirrorMode
+{
+    MIRROR_HORIZONTAL,
+    MIRROR_VERTICAL,
+    SINGLE_SCREEN_LOWER,
+    SINGLE_SCREEN_UPPER,
+};
+
 class Cartridge
 {
 public:
@@ -13,19 +21,11 @@ public:
 
     uint8 prgRead(uint16 address);
     bool prgWrite(uint16 address, uint8 value);
+
     uint8 chrRead(uint16 address);
     bool chrWrite(uint16 address, uint8 value);
 
-    // TODO: Mirroring config is more involved and can even be full vram
-    bool hasVerticalMirroring()
-    {
-        if (mapperNumber == 1)
-        {
-            return (mmc1Control & 0x03) == 2;
-        }
-
-        return useVerticalMirroring;
-    }
+    MirrorMode getMirroring() { return mirrorMode; }
 
     int mapperNumber;
 
@@ -37,9 +37,12 @@ public:
     uint16 playSpeed;
 
 private:
+    // Settings from the header
     bool useVerticalMirroring;
     bool hasPerisitantMemory;
     bool hasFullVram;
+
+    MirrorMode mirrorMode;
 
     // Used to support NSF only
     uint8 backingRom[kilobytes(32)] = {};
@@ -81,6 +84,8 @@ private:
     uint8* chrBase;
 
     bool ignoreNextWrite;
+
+    // TODO: MMC1, Handle CHR RAM variants like SNROM, SOROM, etc.
 
     uint8 mmc1ShiftRegister;
     uint8 mmc1Control;

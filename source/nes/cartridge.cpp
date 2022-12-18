@@ -295,6 +295,24 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
                 {
                     mmc1Control = mmc1ShiftRegister;
 
+                    uint8 mirroring = mmc1Control & 0x03;
+                    if (mirroring == 0)
+                    {
+                        mirrorMode = SINGLE_SCREEN_LOWER;
+                    }
+                    else if (mirroring == 1)
+                    {
+                        mirrorMode = SINGLE_SCREEN_UPPER;
+                    }
+                    else if (mirroring == 2)
+                    {
+                        mirrorMode = MIRROR_VERTICAL;
+                    }
+                    else
+                    {
+                        mirrorMode = MIRROR_HORIZONTAL;
+                    }
+
                     // Need to reset all the pointers in case the mode has changed (Could check if its
                     // changed but that just more overhead potentially)
                     mmc1RemapPrg();
@@ -361,7 +379,30 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
         }
         else if (registerSelect == 0xF000)
         {
-            useVerticalMirroring = (value & BIT_0) == 0;
+            if (value & BIT_0)
+            {
+                mirrorMode = MIRROR_HORIZONTAL;
+            }
+            else
+            {
+                mirrorMode = MIRROR_VERTICAL;
+            }
+        }
+    }
+    // AxROM
+    else if (mapperNumber == 7)
+    {
+        uint8 bank = value & 0x07;
+        prgRomBank1 = prgRom + (bank * kilobytes(32));
+        prgRomBank2 = prgRomBank1 + kilobytes(16);
+
+        if (value & BIT_4)
+        {
+            mirrorMode = SINGLE_SCREEN_UPPER;
+        }
+        else
+        {
+            mirrorMode = SINGLE_SCREEN_LOWER;
         }
     }
 
@@ -434,6 +475,12 @@ void Cartridge::reset()
     patternTable0 = chrBase;
     patternTable1 = chrBase + kilobytes(4);
 
+    mirrorMode = MIRROR_HORIZONTAL;
+    if (useVerticalMirroring)
+    {
+        mirrorMode = MIRROR_VERTICAL;
+    }
+
     if (mapperNumber == 1)
     {
         mmc1Reset();
@@ -452,20 +499,26 @@ void Cartridge::reset()
         mmc2ChrRom0FE = chrRom;
         mmc2ChrRom1FE = chrRom + kilobytes(4);
     }
+    else if (mapperNumber == 7)
+    {
+        // Mapper 7 switches on 32 kb instead of 16
+        prgRomBank1 = prgRom;
+        prgRomBank2 = prgRomBank1 + kilobytes(16);
+
+        mirrorMode = SINGLE_SCREEN_LOWER;
+    }
 }
 
 void Cartridge::mmc1Reset()
 {
     ignoreNextWrite = false;
     mmc1ShiftRegister = BIT_4;
-    mmc1Control = 0;
 
-    // NOTE: Not sure if this is helpful, but it seems some roms may specify this
-    if (useVerticalMirroring)
+    // Horizontal by default
+    mmc1Control = 3;
+    if (mirrorMode == MIRROR_VERTICAL)
     {
-        // TODO: From what I've read it may actually matter for some games which mode it starts in
-        // as the devs didn't put the proper reset vector on all the banks (Verify)
-        mmc1Control |= 2;
+        mmc1Control = 2;
     }
 
     // Going to default the ROM bank mode to be similar to UxROM for now

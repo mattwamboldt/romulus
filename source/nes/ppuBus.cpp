@@ -23,18 +23,23 @@ uint8 PPUBus::read(uint16 address)
         // We extract the bits for the specific nametable and then set the top bit for
         // specific half of vram based on the mirroring config
         uint16 ciramAddress = address & 0x03FF;
-        
-        // TODO: handle mapper mirroring config
-        // V => CIRAM 10 = PPU 10
-        // H => CIRAM 10 = PPU 11
-        // https://www.nesdev.org/wiki/INES
-        if (cart->hasVerticalMirroring())
+        switch (cart->getMirroring())
         {
-            ciramAddress |= address & 0x0400;
-        }
-        else
-        {
-            ciramAddress |= (address & 0x0800) >> 1;
+            case MIRROR_HORIZONTAL:
+                // H => CIRAM 10 = PPU 11
+                ciramAddress |= (address & 0x0800) >> 1;
+                break;
+
+            case MIRROR_VERTICAL:
+                // V => CIRAM 10 = PPU 10
+                ciramAddress |= address & 0x0400;
+                break;
+
+            case SINGLE_SCREEN_UPPER:
+                ciramAddress |= 0x400;
+                break;
+
+            // SINGLE_SCREEN_LOWER is what we have already
         }
 
         return vram[ciramAddress];
@@ -69,15 +74,23 @@ void PPUBus::write(uint16 address, uint8 value)
         // We extract the bits for the specific nametable and then set the top bit for
         // specific half of vram based on the mirroring config
         uint16 ciramAddress = address & 0x03FF;
+        switch (cart->getMirroring())
+        {
+            case MIRROR_HORIZONTAL:
+                // H => CIRAM 10 = PPU 11
+                ciramAddress |= (address & 0x0800) >> 1;
+                break;
 
-        // TODO: handle mapper mirroring config
-        if (cart->hasVerticalMirroring())
-        {
-            ciramAddress |= address & 0x0400;
-        }
-        else
-        {
-            ciramAddress |= (address & 0x0800) >> 1;
+            case MIRROR_VERTICAL:
+                // V => CIRAM 10 = PPU 10
+                ciramAddress |= address & 0x0400;
+                break;
+
+            case SINGLE_SCREEN_UPPER:
+                ciramAddress |= 0x400;
+                break;
+
+                // SINGLE_SCREEN_LOWER is what we have already
         }
 
         vram[ciramAddress] = value;
