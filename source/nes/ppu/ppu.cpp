@@ -103,13 +103,14 @@ void PPU::tick()
     if (scanline != PRERENDER_LINE && cycle <= NES_SCREEN_WIDTH)
     {
         // TODO: Handle rendering disabled (background pallette hack)
+
         uint8 backgroundPixel = calculateBackgroundPixel();
         uint8 spritePixel = calculateSpritePixel();
 
         bool backgroundVisible = backgroundPixel & 0x03;
         bool spriteVisible = spritePixel & 0x03;
 
-        uint8 pixel = backgroundPixel;
+        uint8 pixel = 0;
         if (backgroundVisible && spriteVisible)
         {
             if (renderedSpriteIndex == 0 && spriteRenderers[renderedSpriteIndex].getX() != 0xFF && cycle != NES_SCREEN_WIDTH)
@@ -129,6 +130,10 @@ void PPU::tick()
         else if (spriteVisible)
         {
             pixel = spritePixel;
+        }
+        else if (backgroundVisible)
+        {
+            pixel = backgroundPixel;
         }
 
         backbuffer[outputOffset++] = bus->read(0x3F00 + pixel);

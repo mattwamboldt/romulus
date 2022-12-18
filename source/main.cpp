@@ -365,6 +365,8 @@ void renderNametable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left)
     uint32 x = left;
     uint32 y = top;
 
+    uint8 universalBackground = nes->ppuBus.read(0x3F00);
+
     for (uint16 page = 0; page < 4; ++page)
     {
         uint16 nameTableSelect = nametableAddress & 0x0C00;
@@ -429,8 +431,15 @@ void renderNametable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left)
                         patfield01 <<= 1;
                         patfield02 <<= 1;
 
-                        uint8 color = nes->ppuBus.read(attributeValue + paletteOffset);
-                        *pixel++ = palette[color];
+                        if (paletteOffset == 0)
+                        {
+                            *pixel++ = palette[universalBackground];
+                        }
+                        else
+                        {
+                            uint8 color = nes->ppuBus.read(attributeValue + paletteOffset);
+                            *pixel++ = palette[color];
+                        }
                     }
 
                     ++patternAddress;
