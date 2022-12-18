@@ -524,7 +524,7 @@ void Cartridge::mmc1Reset()
     // Going to default the ROM bank mode to be similar to UxROM for now
     // That means first bank fixed, second bank on the last ROM chip
     mmc1Control |= 0x0C;
-    mmc1PrgBank = prgRomSize - 1;
+    mmc1PrgBank = 0;
 
     // CHR config can stay on the zero induced default of 8kb for now
     mmc1Chr0 = 0;
