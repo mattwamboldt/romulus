@@ -150,6 +150,10 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
     {
         OutputDebugStringA("Mapper: 002 UxROM\n");
     }
+    else if (mapperNumber == 9)
+    {
+        OutputDebugStringA("Mapper: 009 MMC2\n");
+    }
     else
     {
         char message[256];
@@ -223,6 +227,15 @@ uint8 Cartridge::prgRead(uint16 address)
         return backingRom[address - 0x8000];
     }
 
+    if (mapperNumber == 9)
+    {
+        if (address < 0xA000)
+        {
+            return prgRomBank1[address - 0x8000];
+        }
+
+        return prgRomBank2[address - 0xA000];
+    }
 
     if (address < 0xC000)
     {
@@ -312,18 +325,87 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
     {
         prgRomBank1 = prgRom + kilobytes(16) * value;
     }
+    // MMC2
+    else if (mapperNumber == 9)
+    {
+        uint16 registerSelect = address & 0xF000;
+        if (registerSelect == 0xA000)
+        {
+            prgRomBank1 = prgRom + (kilobytes(8) * (value & 0x0F));
+        }
+        else if (registerSelect == 0xB000)
+        {
+            mmc2ChrRom0FD = chrRom + (kilobytes(4) * (value & 0x1F));
+            patternTable0 = mmc2ChrRom0FD;
+        }
+        else if (registerSelect == 0xC000)
+        {
+            mmc2ChrRom0FE = chrRom + (kilobytes(4) * (value & 0x1F));
+            patternTable0 = mmc2ChrRom0FE;
+        }
+        else if (registerSelect == 0xD000)
+        {
+            mmc2ChrRom1FD = chrRom + (kilobytes(4) * (value & 0x1F));
+            if (mmc2ChrLatch1 == 0xFD)
+            {
+                patternTable1 = mmc2ChrRom1FD;
+            }
+        }
+        else if (registerSelect == 0xE000)
+        {
+            mmc2ChrRom1FE = chrRom + (kilobytes(4) * (value & 0x1F));
+            if (mmc2ChrLatch1 == 0xFE)
+            {
+                patternTable1 = mmc2ChrRom1FE;
+            }
+        }
+        else if (registerSelect == 0xF000)
+        {
+            useVerticalMirroring = (value & BIT_0) == 0;
+        }
+    }
 
     return false;
 }
 
 uint8 Cartridge::chrRead(uint16 address)
 {
+    uint8 result = 0;
     if (address < 0x1000)
     {
-        return patternTable0[address];
+        result = patternTable0[address];
+    }
+    else
+    {
+        result = patternTable1[address - 0x1000];
     }
 
-    return patternTable1[address - 0x1000];
+    // Check has to happen after the read
+    if (mapperNumber == 9)
+    {
+        if (address == 0x0FD8)
+        {
+            mmc2ChrLatch0 = 0xFD;
+            patternTable0 = mmc2ChrRom0FD;
+        }
+        else if (address == 0x0FE8)
+        {
+            mmc2ChrLatch0 = 0xFE;
+            patternTable0 = mmc2ChrRom0FE;
+        }
+        else if (address >= 0x1FD8 && address <= 0x1FDF)
+        {
+            mmc2ChrLatch1 = 0xFD;
+            patternTable1 = mmc2ChrRom1FD;
+        }
+        else if (address >= 0x1FE8 && address <= 0x1FEF)
+        {
+            mmc2ChrLatch1 = 0xFE;
+            patternTable1 = mmc2ChrRom1FE;
+        }
+    }
+
+    return result;
 }
 
 bool Cartridge::chrWrite(uint16 address, uint8 value)
@@ -355,6 +437,20 @@ void Cartridge::reset()
     if (mapperNumber == 1)
     {
         mmc1Reset();
+    }
+    else if (mapperNumber == 9)
+    {
+        prgRomBank2 = prgRom + (kilobytes(16) * prgRomSize) - (kilobytes(8) * 3);
+
+        mmc2ChrLatch0 = 0xFE;
+        mmc2ChrLatch1 = 0xFE;
+
+        // Default these to use the same banks for now
+        mmc2ChrRom0FD = chrRom;
+        mmc2ChrRom1FD = chrRom + kilobytes(4);
+
+        mmc2ChrRom0FE = chrRom;
+        mmc2ChrRom1FE = chrRom + kilobytes(4);
     }
 }
 

@@ -59,6 +59,7 @@ private:
     uint8* prgRomBank1;
 
     // Points to the PRG bank mapped to 0xC000
+    // NOTE: Used for static section in MMC2
     uint8* prgRomBank2;
 
     // Number of CHR ROM chips (8KB each)
@@ -79,6 +80,8 @@ private:
     // Points to chrROM or chrRAM depending on the mapper
     uint8* chrBase;
 
+    bool ignoreNextWrite;
+
     uint8 mmc1ShiftRegister;
     uint8 mmc1Control;
     uint8 mmc1Chr0;
@@ -91,5 +94,11 @@ private:
     void mmc1RemapPrg();
     void mmc1RemapChr();
 
-    bool ignoreNextWrite;
+    uint8 mmc2ChrLatch0;
+    uint8* mmc2ChrRom0FE;
+    uint8* mmc2ChrRom0FD;
+
+    uint8 mmc2ChrLatch1;
+    uint8* mmc2ChrRom1FE;
+    uint8* mmc2ChrRom1FD;
 };
