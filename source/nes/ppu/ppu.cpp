@@ -1,5 +1,9 @@
 #include "ppu.h"
 
+// TODO: This functionality is currently causing bugs on certain carts so it's
+// not completely accurate yet. Disabling for now (may not even be worth it tbh)
+#define ENABLE_NMI_SUPRESSION false
+
 const uint32 PRERENDER_LINE = 261;
 const uint32 CYCLES_PER_SCANLINE = 340;
 
@@ -493,6 +497,7 @@ void PPU::setControl(uint8 value)
 {
     nmiEnabled = value & BIT_7;
 
+#if ENABLE_NMI_SUPRESSION
     if (nmiEnabled)
     {
         suppressNmi = false;
@@ -501,6 +506,7 @@ void PPU::setControl(uint8 value)
     {
         suppressNmi = true;
     }
+#endif
 
     // NOTE: Bit 6 is tied to ground on the NES. So its safe to ignore
     useTallSprites = value & BIT_5;
@@ -561,12 +567,14 @@ uint8 PPU::getStatus(bool readOnly)
     nmiRequested = false;
     isWriteLatchActive = false;
 
+#if ENABLE_NMI_SUPRESSION
     // Per the wiki NMI shouldn't happen if PPUSTATUS is read within 2 cycles of start of VBlank
     // The if check is to make sure we don't accidentally turn off suppression from another source
     if (!suppressNmi && scanline == 241)
     {
         suppressNmi = cycle == 1 || cycle == 2 || cycle == 3;
     }
+#endif
 
     return status;
 }
