@@ -36,6 +36,9 @@ public:
     // Time between each call to the playAddress in whole ms (ex 16666 for ~60Hz)
     uint16 playSpeed;
 
+    // Used to turn off side effects on read operations (Mainly mapper 9 at the moment)
+    bool isReadOnly;
+
 private:
     // Settings from the header
     bool useVerticalMirroring;

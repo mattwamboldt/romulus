@@ -22,7 +22,7 @@ public:
     void write(uint16 address, uint8 value);
     void setInput(NESGamePad pad, int number);
 
-    void setReadOnly(bool enable) { readOnly = enable; };
+    void setReadOnly(bool enable) { readOnly = enable; cart->isReadOnly = enable; };
 
     void tickDMA();
 

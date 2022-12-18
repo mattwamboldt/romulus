@@ -3,7 +3,7 @@
 
 #include "nes\nes.h"
 
-// #define SHOW_DEBUG_VIEWS 1
+#define SHOW_DEBUG_VIEWS 0
 
 // TODO: New main objective - get parity with the console app
 
@@ -687,7 +687,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     accelerators[1].cmd = MENU_CONSOLE_RESET;
 
     HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
-#ifdef SHOW_DEBUG_VIEWS
+#if SHOW_DEBUG_VIEWS
     resizeDIBSection(&globalBackBuffer, 800, 600);
 #else
     resizeDIBSection(&globalBackBuffer, 256, 240);
@@ -798,11 +798,13 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
         render(globalBackBuffer, &nes);
 
-#ifdef SHOW_DEBUG_VIEWS
+#if SHOW_DEBUG_VIEWS
         if (!nes.cartridge.isNSF && nes.isRunning)
         {
+            nes.ppuBus.setReadOnly(true);
             renderPatternTable(globalBackBuffer, &nes, 250, 0, 0);
             renderNametable(globalBackBuffer, &nes, 10, 266);
+            nes.ppuBus.setReadOnly(false);
         }
 #endif
 

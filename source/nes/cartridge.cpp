@@ -210,7 +210,10 @@ bool Cartridge::load(const char* file)
 
 uint8 Cartridge::prgRead(uint16 address)
 {
-    ignoreNextWrite = false;
+    if (!isReadOnly)
+    {
+        ignoreNextWrite = false;
+    }
 
     if (address < 0x6000)
     {
@@ -422,7 +425,7 @@ uint8 Cartridge::chrRead(uint16 address)
     }
 
     // Check has to happen after the read
-    if (mapperNumber == 9)
+    if (!isReadOnly && mapperNumber == 9)
     {
         if (address == 0x0FD8)
         {
@@ -465,6 +468,8 @@ bool Cartridge::chrWrite(uint16 address, uint8 value)
 
 void Cartridge::reset()
 {
+    isReadOnly = false;
+
     // NOTE: These default pointers seem to work for several mappers
  
     // 0x8000 on the first bank and 0xC000 mapped to the last one

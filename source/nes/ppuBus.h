@@ -11,6 +11,9 @@ public:
     uint8 read(uint16 address);
     void write(uint16 address, uint8 value);
 
+    // Ensures reads have no side effects (Used for logging and debug views)
+    void setReadOnly(bool enable) { cart->isReadOnly = enable; };
+
 private:
     PPU* ppu;
     Cartridge* cart;
