@@ -10,6 +10,12 @@ uint16 noiseTimerLengthLookup[16] =
     4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
 };
 
+void NoiseChannel::reset()
+{
+    isEnabled = false;
+    lengthCounter = 0;
+}
+
 void NoiseChannel::setEnabled(uint8 enabled)
 {
     isEnabled = enabled;

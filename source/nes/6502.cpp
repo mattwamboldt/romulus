@@ -23,6 +23,8 @@ void MOS6502::reset()
 {
     isHalted = false;
     isResetRequested = true;
+    stage = 0;
+    pc = 0;
 }
 
 bool MOS6502::isExecuting()

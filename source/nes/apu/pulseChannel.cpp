@@ -17,6 +17,12 @@ uint8 lengthCounterLookup[32] =
     12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 };
 
+void PulseChannel::reset()
+{
+    isEnabled = false;
+    lengthCounter = 0;
+}
+
 void PulseChannel::setEnabled(uint8 enable)
 {
     isEnabled = enable;

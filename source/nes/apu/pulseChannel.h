@@ -19,6 +19,8 @@ struct SweepUnit
 class PulseChannel
 {
 public:
+    void reset();
+
     void setEnabled(uint8 enable);
 
     void setDutyEnvelope(uint8 value);

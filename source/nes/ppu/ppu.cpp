@@ -35,9 +35,20 @@ void PPU::reset()
     outputOffset = 0;
 
     nmiRequested = false;
+    nmiEnabled = false;
     isSpriteOverflowFlagSet = false;
     isSpriteZeroHit = false;
     suppressNmi = false;
+
+    tempVramAddress = 0;
+    vramAddress = 0;
+    fineX = 0;
+    isCopyingSprite = false;
+    isWriteLatchActive = false;
+    
+    isOddFrame = false;
+    isBackgroundEnabled = false;
+    areSpritesEnabled = false;
 }
 
 // The key to understanding what hapens on a ppu update was a combo of these pages

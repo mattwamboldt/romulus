@@ -8,6 +8,13 @@ uint8 triangleSequence[32] =
     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
 };
 
+void TriangleChannel::reset()
+{
+    isEnabled = false;
+    lengthCounter = 0;
+    linearCounter = 0;
+}
+
 void TriangleChannel::setEnabled(uint8 enable)
 {
     isEnabled = enable;

@@ -1,4 +1,4 @@
-#include "nes.h"
+﻿#include "nes.h"
 #include "cpuTrace.h"
 #include <string.h>
 
@@ -57,6 +57,8 @@ void NES::reset()
     apu.reset();
     ppu.reset();
     isRunning = true;
+    clockDivider = 0;
+    currentCpuCycle = 0;
 }
 
 void NES::powerOff()

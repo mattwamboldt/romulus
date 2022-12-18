@@ -522,7 +522,7 @@ void Cartridge::mmc1Reset()
     }
 
     // Going to default the ROM bank mode to be similar to UxROM for now
-    // That means first bank fixed, second bank on the last ROM chip
+    // That means first bank movable, second bank fixed on the last ROM chip
     mmc1Control |= 0x0C;
     mmc1PrgBank = 0;
 

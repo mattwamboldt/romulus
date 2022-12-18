@@ -8,7 +8,17 @@ const bool DEBUG_DMC_MUTE = 0;
 
 void APU::reset()
 {
+    pulse1.reset();
+    pulse2.reset();
+    noise.reset();
+    triangle.reset();
     dmc.reset();
+
+    frameCounter = 0;
+    frameCounterResetRequested = false;
+    isFrameInteruptFlagSet = false;
+    isFiveStepMode = false;
+    isInterruptInhibited = false;
 }
 
 void APU::quarterClock()

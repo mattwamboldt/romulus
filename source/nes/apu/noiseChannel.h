@@ -4,6 +4,8 @@
 // https://www.nesdev.org/wiki/APU_Noise
 struct NoiseChannel
 {
+    void reset();
+
     void setEnabled(uint8 enabled);
 
     void setEnvelope(uint8 value);

@@ -4,6 +4,8 @@
 // https://www.nesdev.org/wiki/APU_Triangle
 struct TriangleChannel
 {
+    void reset();
+
     void setEnabled(uint8 enable);
     void setLinearCounter(uint8 value);
     void setTimerLo(uint8 value);
