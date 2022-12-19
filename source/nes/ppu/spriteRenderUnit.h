@@ -6,6 +6,8 @@ struct SpriteRenderUnit
     uint8 patternLoShift;
     uint8 patternHiShift;
 
+    uint8 oamIndex;
+
     bool isEnabled;
 
     void tick();

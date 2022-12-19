@@ -161,6 +161,9 @@ private:
     // Data for the 8 (or fewer) sprites to render on this scanline
     uint8 oamSecondary[32];
 
+    // NOTE: Needed to do sprite zero hit properly
+    uint8 selectedSpriteIndices[8];
+
     SpriteRenderUnit spriteRenderers[8];
 
     // This is a temp variable to keep track of which sprite had priority

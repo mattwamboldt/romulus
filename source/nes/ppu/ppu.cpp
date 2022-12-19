@@ -113,7 +113,9 @@ void PPU::tick()
         uint8 pixel = 0;
         if (backgroundVisible && spriteVisible)
         {
-            if (renderedSpriteIndex == 0 && spriteRenderers[renderedSpriteIndex].getX() != 0xFF && cycle != NES_SCREEN_WIDTH)
+            if (spriteRenderers[renderedSpriteIndex].oamIndex == 0
+                && spriteRenderers[renderedSpriteIndex].getX() != 0xFF
+                && cycle != NES_SCREEN_WIDTH)
             {
                 isSpriteZeroHit = true;
             }
@@ -203,6 +205,8 @@ void PPU::tick()
 
                     if (spriteTop < (NES_SCREEN_HEIGHT - 1) && scanline >= spriteTop && scanline < spriteBottom)
                     {
+                        selectedSpriteIndices[numSpritesFound] = numSpritesChecked;
+
                         ++secondaryOamAddress;
                         ++oamAddress;
                         isCopyingSprite = true;
@@ -257,6 +261,7 @@ void PPU::tick()
             if (i < numSpritesToRender)
             {
                 spriteRenderers[i].isEnabled = true;
+                spriteRenderers[i].oamIndex = selectedSpriteIndices[i];
 
                 uint8 yPosition = oamSecondary[i * 4];
                 uint16 tileIndex = oamSecondary[(i * 4) + 1];
@@ -727,11 +732,13 @@ uint8 PPU::calculateSpritePixel()
 {
     if (!areSpritesEnabled)
     {
+        renderedSpriteIndex = 8;
         return 0;
     }
 
     if (!showSpritesInLeftEdge && cycle <= 8)
     {
+        renderedSpriteIndex = 8;
         return 0;
     }
 
