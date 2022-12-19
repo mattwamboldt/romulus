@@ -653,7 +653,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     QueryPerformanceFrequency(&counterFrequency);
     cpuFreq = counterFrequency.QuadPart;
 
-    // TODO: Add a menu to take advantage of windows UI
     WNDCLASSA windowClass = {};
     windowClass.style = CS_HREDRAW|CS_VREDRAW;
     windowClass.lpfnWndProc = windowProc;
@@ -718,7 +717,8 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     resizeDIBSection(&globalBackBuffer, 256, 240);
 #endif
 
-    real32 framesPerSecond = 30.0f;
+    // TODO: Set this to 60. (Seems to run fine, but audio needs more delay to ensure there're enough simulated samples available)
+    real32 framesPerSecond = 60.0f;
     real32 secondsPerFrame = 1.0f / framesPerSecond;
 
     AudioData audio = {};

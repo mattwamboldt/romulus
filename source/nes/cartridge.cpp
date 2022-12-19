@@ -150,6 +150,19 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
     {
         OutputDebugStringA("Mapper: 002 UxROM\n");
     }
+    else if (mapperNumber == 3)
+    {
+        // TODO: Implement
+        OutputDebugStringA("Mapper: 003 CNROM (Incomplete)\n");
+    }
+    else if (mapperNumber == 4)
+    {
+        OutputDebugStringA("Mapper: 004 MMC3 (Incomplete)\n");
+    }
+    else if (mapperNumber == 7)
+    {
+        OutputDebugStringA("Mapper: 007 AxROM\n");
+    }
     else if (mapperNumber == 9)
     {
         OutputDebugStringA("Mapper: 009 MMC2\n");
@@ -490,6 +503,22 @@ void Cartridge::reset()
     {
         mmc1Reset();
     }
+    else if (mapperNumber == 3)
+    {
+        // TODO: Implement
+    }
+    else if (mapperNumber == 4)
+    {
+        // TODO: Implement
+    }
+    else if (mapperNumber == 7)
+    {
+        // Mapper 7 switches on 32 kb instead of 16
+        prgRomBank1 = prgRom;
+        prgRomBank2 = prgRomBank1 + kilobytes(16);
+
+        mirrorMode = SINGLE_SCREEN_LOWER;
+    }
     else if (mapperNumber == 9)
     {
         prgRomBank2 = prgRom + (kilobytes(16) * prgRomSize) - (kilobytes(8) * 3);
@@ -503,14 +532,6 @@ void Cartridge::reset()
 
         mmc2ChrRom0FE = chrRom;
         mmc2ChrRom1FE = chrRom + kilobytes(4);
-    }
-    else if (mapperNumber == 7)
-    {
-        // Mapper 7 switches on 32 kb instead of 16
-        prgRomBank1 = prgRom;
-        prgRomBank2 = prgRomBank1 + kilobytes(16);
-
-        mirrorMode = SINGLE_SCREEN_LOWER;
     }
 }
 

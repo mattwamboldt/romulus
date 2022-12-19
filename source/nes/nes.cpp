@@ -133,11 +133,14 @@ void NES::update(real32 secondsPerFrame)
             ++currentCpuCycle;
         }
 
+        // TODO: Over sample the audio and manually downsample to reduce aliasing artifacts
+        // TODO: Find a way to center the audio around 0 so it's not as quiet (High Pass Filter?)
+        // TODO: Add a master volume and per channel volume controls
         ++audioOutputCounter;
         if (audioOutputCounter >= cyclesPerSample)
         {
-            real32 output = apu.getOutput(); // Testing pulse only, values in range of 0.0-1.0 for now;
-            apuBuffer[writeHead++] = (int16)(output * 32768); // TODO: Do math
+            real32 output = apu.getOutput();
+            apuBuffer[writeHead++] = (int16)(output * 32768);
             if (writeHead >= 48000)
             {
                 writeHead = 0;
@@ -209,24 +212,43 @@ void NES::singleStep()
 
 void NES::outputAudio(int16* outputBuffer, int length)
 {
-    memset(outputBuffer, 0, length * sizeof(int16));
-    uint32 bytesAvailable = writeHead - playHead;
-    if (playHead > writeHead)
-    {
-        bytesAvailable = writeHead + (48000 - playHead);
-    }
+    // TODO: Consider a fade in/out so the system startup doesn't cause a click
+    // (May not be needed once we center the audio with filters)
 
-    if (isRunning && bytesAvailable > length * sizeof(int16))
+    if (isRunning) 
     {
-        int32 i = 0;
-        while (i < length)
+        uint32 bytesAvailable = writeHead - playHead;
+        if (playHead > writeHead)
         {
-            int16 value = apuBuffer[playHead++];
-            playHead %= 48000;
-            outputBuffer[i] = value;
-            outputBuffer[i + 1] = value;
-            i += 2;
+            bytesAvailable = writeHead + (48000 - playHead);
         }
+
+        if (bytesAvailable > length * sizeof(int16))
+        {
+            int32 i = 0;
+            while (i < length)
+            {
+                lastSample = apuBuffer[playHead++];
+                playHead %= 48000;
+                outputBuffer[i] = lastSample;
+                outputBuffer[i + 1] = lastSample;
+                i += 2;
+            }
+        }
+        else
+        {
+            int32 i = 0;
+            while (i < length)
+            {
+                outputBuffer[i] = lastSample;
+                outputBuffer[i + 1] = lastSample;
+                i += 2;
+            }
+        }
+    }
+    else
+    {
+        memset(outputBuffer, 0, length * sizeof(int16));
     }
 }
 

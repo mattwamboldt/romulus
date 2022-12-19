@@ -45,6 +45,8 @@ private:
     uint32 playHead;
     uint32 audioOutputCounter;
 
+    int16 lastSample;
+
     // Checked on subroutine return to see if nsf control is in the player side
     uint16 nsfSentinal;
     int32 totalPlayCycles;
