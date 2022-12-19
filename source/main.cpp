@@ -286,6 +286,7 @@ void drawPalettePixel(GDIBackBuffer buffer, uint32 x, uint32 y, uint8 index)
 
 void drawNesPalette(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left, uint16 baseAddress)
 {
+    // TODO: put a rect over the selected pallete and allow selecting it to swap in the pattern table view
     for (int paletteNum = 0; paletteNum < 16; paletteNum += 4)
     {
         for (int i = 0; i < 4; ++i)
@@ -300,8 +301,7 @@ void drawNesPalette(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left, uin
 
 void renderPatternTable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left, uint8 selectedPalette)
 {
-    // TODO: Render the palettes
-    // put a rect over the selected rect
+    // TODO: Have more involved settings for this as a dedicated view (possibly window)
     const uint16 paletteRamBase = 0x3F00;
     drawNesPalette(buffer, nes, top, left, paletteRamBase);
     top += 15;
@@ -476,6 +476,22 @@ void renderNametable(GDIBackBuffer buffer, NES* nes, uint32 top, uint32 left)
                 break;
         }
     }
+
+    // TODO: Locate temp address, since it contains the scroll position
+    // NOTE: this is highly unstable but It may help with some debugging
+
+    uint16 coarseX = nes->ppu.tempVramAddress & 0x001F;
+    x = left + (coarseX * 8) + nes->ppu.fineX;
+
+    uint16 coarseY = (nes->ppu.tempVramAddress & 0x03E0) >> 5;
+    uint16 fineY = (nes->ppu.tempVramAddress & 0x7000) >> 12;
+    y = top + (coarseY * 8) + fineY;
+
+
+    row = (uint8*)buffer.memory + (buffer.pitch * y);
+    pixel = ((uint32*)row) + x;
+
+    *pixel = 0x0000FFFF;
 }
 
 void render(GDIBackBuffer buffer, NES* nes)

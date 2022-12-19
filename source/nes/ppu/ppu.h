@@ -54,8 +54,27 @@ public:
 
     uint16 outputOffset;
 
-    // TODO: don't expose this, only doing for a debug view that should probably be using functions or be in the ppu itself
+    // TODO: don't expose anything below here, only doing for debug view that should probably be using functions or be in the ppu itself
     uint16 backgroundPatternBaseAddress;
+
+
+    // ======================
+    // Registers
+    // https://www.nesdev.org/wiki/PPU_scrolling#PPU_internal_registers
+    // ======================
+
+    // v: The current pointer of the ppu into vram
+    uint16 vramAddress;
+
+    // t: Address of the top left of the screen
+    uint16 tempVramAddress;
+
+    // TODO: Implement
+    // x: Fine X scroll (3 bits)
+    uint8 fineX;
+
+    // w: Single bit used to get two 8 bit values into t
+    bool isWriteLatchActive;
 
 private:
     IBus* bus;
@@ -95,23 +114,6 @@ private:
     bool shouldEmphasizeGreen; // TODO: Implement
     bool shouldEmphasizeBlue; // TODO: Implement
 
-    // ======================
-    // Registers
-    // https://www.nesdev.org/wiki/PPU_scrolling#PPU_internal_registers
-    // ======================
-
-    // v: The current pointer of the ppu into vram
-    uint16 vramAddress;
-
-    // t: Address of the top left of the screen
-    uint16 tempVramAddress;
-
-    // TODO: Implement
-    // x: Fine X scroll (3 bits)
-    uint8 fineX;
-
-    // w: Single bit used to get two 8 bit values into t
-    bool isWriteLatchActive;
 
     // =======================
     // Internal storage for background render
