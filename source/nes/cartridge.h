@@ -88,6 +88,7 @@ private:
 
     bool ignoreNextWrite;
 
+    // MMC1
     // TODO: MMC1, Handle CHR RAM variants like SNROM, SOROM, etc.
 
     uint8 mmc1ShiftRegister;
@@ -102,6 +103,8 @@ private:
     void mmc1RemapPrg();
     void mmc1RemapChr();
 
+    // MMC2
+
     uint8 mmc2ChrLatch0;
     uint8* mmc2ChrRom0FE;
     uint8* mmc2ChrRom0FD;
@@ -109,4 +112,41 @@ private:
     uint8 mmc2ChrLatch1;
     uint8* mmc2ChrRom1FE;
     uint8* mmc2ChrRom1FD;
+
+    // MMC3 stuff
+
+    uint8 mmc3BankSelect;
+
+    // PRG ROM Bank mode bit is set
+    // Means 0x8000 range is fixed, vs 0xC000 range when disabled
+    // TODO: This name is hot garbage
+    bool mmc3SwapPrgRomHigh;
+    bool mmc3Chr2KBanksAreHigh;
+
+    uint8 mmc3PrgRomBankMode;
+
+    bool mmc3PrgRamEnabled;
+
+    uint8 mmc3IrqEnabled;
+    uint8 mmc3IrqReloadValue;
+    bool mmc3ReloadIrqCounter;
+
+    bool mmc3IrqPending;
+    uint8 mmc3IrqCounter;
+
+    // There are 6 pointers that can be bank switched
+    // and the mode determines which ones to use where
+    uint8* mmc3ChrRomBanks[6];
+
+    // There are 4 8k chunks, the last is always fixed but all the rest
+    // can be swapped around in various ways. This is indexed by bits 13 and 14
+    uint8* mmc3PrgRomBanks[4];
+
+    // a temp variable used for the bank that isn't fixed second to last
+    uint8 mmc3PrgRomLowBank;
+
+    void mmc3Reset();
+    void mmc3RemapPrg();
+
+    void mmc3PrgWrite(uint16 address, uint8 value);
 };

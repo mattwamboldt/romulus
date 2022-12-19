@@ -242,7 +242,12 @@ uint8 Cartridge::prgRead(uint16 address)
         return backingRom[address - 0x8000];
     }
 
-    if (mapperNumber == 9)
+    if (mapperNumber == 4)
+    {
+        uint8* selectedBank = mmc3PrgRomBanks[(address & 0x6000) >> 13];
+        return selectedBank[address & 0x1FFF];
+    }
+    else if (mapperNumber == 9)
     {
         if (address < 0xA000)
         {
@@ -364,6 +369,10 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
         patternTable0 = chrRom + (kilobytes(8) * (value & 0x03));
         patternTable1 = patternTable0 + kilobytes(4);
     }
+    else if (mapperNumber == 4)
+    {
+        mmc3PrgWrite(address, value);
+    }
     // AxROM
     else if (mapperNumber == 7)
     {
@@ -432,6 +441,20 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
 
 uint8 Cartridge::chrRead(uint16 address)
 {
+    if (mapperNumber == 4)
+    {
+        // TODO: THIS IS GROSS. WHY DID I DO THIS?
+        // Answer: Cause its the dumb way that you know will work and you
+        // can clean it up later
+        if ((mmc3Chr2KBanksAreHigh && address >= 0x1000)
+            || (!mmc3Chr2KBanksAreHigh && address < 0x1000))
+        {
+            return mmc3ChrRomBanks[(address & 0x0800) >> 11][address & 0x07FF];
+        }
+        
+        return mmc3ChrRomBanks[(address & 0x0C00) >> 10][address & 0x03FF];
+    }
+
     uint8 result = 0;
     if (address < 0x1000)
     {
@@ -510,7 +533,7 @@ void Cartridge::reset()
     }
     else if (mapperNumber == 4)
     {
-        // TODO: Implement
+        mmc3Reset();
     }
     else if (mapperNumber == 7)
     {
@@ -597,5 +620,141 @@ void Cartridge::mmc1RemapChr()
     {
         patternTable0 = chrBase + (mmc1Chr0 * kilobytes(4));
         patternTable1 = chrBase + (mmc1Chr1 * kilobytes(4));
+    }
+}
+
+void Cartridge::mmc3Reset()
+{
+    // The default configuration puts:
+    // - 2 x 2k banks on nameTable 0
+    // - 4 x 1k banks on nameTable 1
+    // - 0x8000-0x9FFF swappable
+    // - 0xA000-0xBFFF swappable (default to bank 2 for now)
+    // - 0xC000-0xDFFF fixed to second to last bank
+    // - 0xE000-0xFFFF fixed to last bank
+
+    // 0xE000 can't be changed
+    // 0xA000 is always directly swappable
+    // Other two can change roles between swappable and fixed based on mode
+    // which name table is the 2k banks and which is the 4 k is set by mode
+
+    mmc3ChrRomBanks[0] = chrRom;
+    mmc3ChrRomBanks[1] = chrRom + kilobytes(2);
+    mmc3ChrRomBanks[2] = chrRom + kilobytes(4);
+    mmc3ChrRomBanks[3] = chrRom + kilobytes(5);
+    mmc3ChrRomBanks[4] = chrRom + kilobytes(6);
+    mmc3ChrRomBanks[5] = chrRom + kilobytes(7);
+
+    mmc3PrgRomBanks[1] = prgRom + kilobytes(8);
+    mmc3PrgRomBanks[3] = prgRom + (kilobytes(8) * (prgRomSize * 2 - 1));
+}
+
+void Cartridge::mmc3RemapPrg()
+{
+    if (mmc3SwapPrgRomHigh)
+    {
+        mmc3PrgRomBanks[0] = prgRom + (kilobytes(16) * (prgRomSize - 1));
+        mmc3PrgRomBanks[2] = prgRom + (kilobytes(8) * mmc3PrgRomLowBank);
+    }
+    else
+    {
+        mmc3PrgRomBanks[0] = prgRom + (kilobytes(8) * mmc3PrgRomLowBank);
+        mmc3PrgRomBanks[2] = prgRom + (kilobytes(16) * (prgRomSize - 1));
+    }
+}
+
+void Cartridge::mmc3PrgWrite(uint16 address, uint8 value)
+{
+    // Extract bits 13 and 14
+    uint16 registerSelect = (address & 0x6000) >> 13;
+    bool isEven = (address & BIT_0) == 0;
+
+    // 0x8000-0x9FFF
+    if (registerSelect == 0)
+    {
+        // Bank Select
+        if (isEven)
+        {
+            mmc3BankSelect = value & 0x07;
+            mmc3Chr2KBanksAreHigh = value & BIT_7;
+
+            if ((value & BIT_6) != mmc3SwapPrgRomHigh)
+            {
+                mmc3SwapPrgRomHigh = value & BIT_6;
+                mmc3RemapPrg();
+            }
+        }
+        // Bank Data
+        else
+        {
+            switch (mmc3BankSelect)
+            {
+                case 0:
+                case 1:
+                    mmc3ChrRomBanks[mmc3BankSelect] = chrRom + (kilobytes(1) * (value & 0xFE));
+                    break;
+
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    mmc3ChrRomBanks[mmc3BankSelect] = chrRom + (kilobytes(1) * value);
+                    break;
+
+                case 6:
+                    mmc3PrgRomLowBank = value & 0x3F;
+                    mmc3RemapPrg();
+                    break;
+
+                case 7:
+                    mmc3PrgRomBanks[1] = prgRom + (kilobytes(8) * (value & 0x3F));
+                    break;
+
+            }
+        }
+    }
+    // 0xA000-0xBFFF
+    else if (registerSelect == 1)
+    {
+        // Mirroring
+        if (isEven)
+        {
+            if (value & BIT_0)
+            {
+                mirrorMode = MIRROR_HORIZONTAL;
+            }
+            else
+            {
+                mirrorMode = MIRROR_VERTICAL;
+            }
+        }
+        // PRG RAM Protect
+        else
+        {
+            mmc3PrgRamEnabled = (value & BIT_7) > 0;
+        }
+    }
+    // 0xC000-0xDFFF
+    else if (registerSelect == 2)
+    {
+        // IRQ Latch
+        if (isEven)
+        {
+            mmc3IrqReloadValue = value;
+        }
+        // IRQ Reload
+        else
+        {
+            mmc3ReloadIrqCounter = true;
+        }
+    }
+    // 0xE000-0xFFFF
+    else
+    {
+        mmc3IrqEnabled = !isEven;
+        if (!mmc3IrqEnabled)
+        {
+            mmc3IrqPending = false;
+        }
     }
 }
