@@ -152,8 +152,7 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
     }
     else if (mapperNumber == 3)
     {
-        // TODO: Implement
-        OutputDebugStringA("Mapper: 003 CNROM (Incomplete)\n");
+        OutputDebugStringA("Mapper: 003 CNROM\n");
     }
     else if (mapperNumber == 4)
     {
@@ -359,6 +358,28 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
     {
         prgRomBank1 = prgRom + kilobytes(16) * value;
     }
+    else if (mapperNumber == 3)
+    {
+        // TODO: Theres a note on the wiki mentioning larger size variants, may be another mapper?
+        patternTable0 = chrRom + (kilobytes(8) * (value & 0x03));
+        patternTable1 = patternTable0 + kilobytes(4);
+    }
+    // AxROM
+    else if (mapperNumber == 7)
+    {
+        uint8 bank = value & 0x07;
+        prgRomBank1 = prgRom + (bank * kilobytes(32));
+        prgRomBank2 = prgRomBank1 + kilobytes(16);
+
+        if (value & BIT_4)
+        {
+            mirrorMode = SINGLE_SCREEN_UPPER;
+        }
+        else
+        {
+            mirrorMode = SINGLE_SCREEN_LOWER;
+        }
+    }
     // MMC2
     else if (mapperNumber == 9)
     {
@@ -403,22 +424,6 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
             {
                 mirrorMode = MIRROR_VERTICAL;
             }
-        }
-    }
-    // AxROM
-    else if (mapperNumber == 7)
-    {
-        uint8 bank = value & 0x07;
-        prgRomBank1 = prgRom + (bank * kilobytes(32));
-        prgRomBank2 = prgRomBank1 + kilobytes(16);
-
-        if (value & BIT_4)
-        {
-            mirrorMode = SINGLE_SCREEN_UPPER;
-        }
-        else
-        {
-            mirrorMode = SINGLE_SCREEN_LOWER;
         }
     }
 
@@ -502,10 +507,6 @@ void Cartridge::reset()
     if (mapperNumber == 1)
     {
         mmc1Reset();
-    }
-    else if (mapperNumber == 3)
-    {
-        // TODO: Implement
     }
     else if (mapperNumber == 4)
     {
