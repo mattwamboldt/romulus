@@ -452,7 +452,7 @@ uint8 Cartridge::chrRead(uint16 address)
             return mmc3ChrRomBanks[(address & 0x0800) >> 11][address & 0x07FF];
         }
         
-        return mmc3ChrRomBanks[(address & 0x0C00) >> 10][address & 0x03FF];
+        return mmc3ChrRomBanks[((address & 0x0C00) >> 10) + 2][address & 0x03FF];
     }
 
     uint8 result = 0;
