@@ -711,13 +711,13 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     accelerators[1].cmd = MENU_CONSOLE_RESET;
 
     HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
+
 #if SHOW_DEBUG_VIEWS
     resizeDIBSection(&globalBackBuffer, 800, 600);
 #else
     resizeDIBSection(&globalBackBuffer, 256, 240);
 #endif
 
-    // TODO: Set this to 60. (Seems to run fine, but audio needs more delay to ensure there're enough simulated samples available)
     real32 framesPerSecond = 60.0f;
     real32 secondsPerFrame = 1.0f / framesPerSecond;
 
@@ -740,9 +740,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
     uint32 frameCount = 0;
     bool soundIsValid = false;
-
-    //nes.loadRom("test/nestest/nestest.nes");
-    //nes.cpu.pc = nes.cpu.instAddr = 0xC000;
     
     while (isRunning)
     {

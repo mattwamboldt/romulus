@@ -44,7 +44,7 @@ public:
     uint32 scanline;
     uint32 pixel;
 
-    // Temp for now, will have a screen abstraction later
+    // TODO: Temp for now, will have a screen abstraction later
     // Stores the pallette data while it's being written
     uint8 screenBufferOne[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
     uint8 screenBufferTwo[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
@@ -94,7 +94,6 @@ private:
     // See https://www.nesdev.org/wiki/PPU_registers#The_PPUDATA_read_buffer_(post-fetch)
     uint8 ppuDataReadBuffer;
 
-    // TODO: Implement
     bool useTallSprites;
     uint8 spriteHeight;
 

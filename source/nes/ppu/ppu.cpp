@@ -674,6 +674,9 @@ void PPU::setData(uint8 value)
 {
     bus->write(vramAddress, value);
     vramAddress += vramAddressIncrement;
+
+    // See: The comment in getData
+    bus->read(vramAddress);
 }
 
 uint8 PPU::getData(bool readOnly)
@@ -691,6 +694,12 @@ uint8 PPU::getData(bool readOnly)
     uint8 result = ppuDataReadBuffer;
     ppuDataReadBuffer = bus->read(vramAddress);
     vramAddress += vramAddressIncrement;
+
+    // Do a dummy read to potentially tick mmc3 irq
+    // TODO: Proper way to do this would be to separate the read and write from
+    // setting the address on the bus. Would be more technically correct to how a real system
+    // works, but would be a large overhaul for what is probably an edge case.
+    bus->read(vramAddress);
 
     // pallete ram gets returned immediately
     if (vramAddress >= 0x3F00)
