@@ -1,5 +1,12 @@
 #pragma once
 
+// This header defines the API that the application needs from the platform and
+// that is made available to the platform. Try to minimize the amount of cross talk
+// where possible, though obviously that depends on the needs of both
+
+// NOTE TO SELF: Avoid using stl or standard headers on the generic side if possible.
+// Mainly because it pollutes intellisense with garbage so not that serious
+
 // Some common typedefs that I tend to use for uniformity
 typedef signed char int8;
 typedef short int16;
@@ -22,6 +29,7 @@ typedef double real64;
      (uint32)((uint8)(C) << 16) | (uint32)((uint8)(D) << 24))
 
 #ifndef FINAL
+// TODO: This may be compiler dependant, if it is look at more general ways to manually breakpoint
 #define assert(expression) if(!(expression)) { __debugbreak(); }
 #else
 #define assert(expression)
@@ -33,21 +41,6 @@ typedef double real64;
 #define gigabytes(value) (megabytes(value) * 1024)
 #define terabytes(value) (gigabytes(value) * 1024)
 
-// Lots of code is just passing around this kind of info so made a struct for it
-struct Buffer
-{
-    uint32 size;
-    void* memory;
-};
 
-typedef void(*WriteCallback)(uint16 adddress, uint8 value);
 
-// Got tried of having to memorize bit positions
-#define BIT_0 0x01
-#define BIT_1 0x02
-#define BIT_2 0x04
-#define BIT_3 0x08
-#define BIT_4 0x10
-#define BIT_5 0x20
-#define BIT_6 0x40
-#define BIT_7 0x80
+int doStuff(int x);

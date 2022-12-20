@@ -3,6 +3,8 @@
 
 #include "nes\nes.h"
 
+#include "../romulus/platform.h"
+
 #define SHOW_DEBUG_VIEWS 0
 
 // TODO: New main objective - get parity with the console app
@@ -700,8 +702,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
     SetMenu(window, menuBar);
 
-    ACCEL accelerators[2] = {};
+    // TODO: Implement the platform split
+    int value = doStuff(26);
 
+    ACCEL accelerators[2] = {};
     accelerators[0].key = 'O';
     accelerators[0].fVirt = FCONTROL | FVIRTKEY;
     accelerators[0].cmd = MENU_FILE_OPEN;
