@@ -500,13 +500,17 @@ uint8 Cartridge::chrRead(uint16 address)
 bool Cartridge::chrWrite(uint16 address, uint8 value)
 {
     mmc3SetAddress(address);
-    if (address < 0x1000)
+
+    if (chrBase == chrRam)
     {
-        patternTable0[address] = value;
-    }
-    else
-    {
-        patternTable1[address - 0x1000] = value;
+        if (address < 0x1000)
+        {
+            patternTable0[address] = value;
+        }
+        else
+        {
+            patternTable1[address - 0x1000] = value;
+        }
     }
 
     return true;
@@ -643,12 +647,12 @@ void Cartridge::mmc3Reset()
     // Other two can change roles between swappable and fixed based on mode
     // which name table is the 2k banks and which is the 4 k is set by mode
 
-    mmc3ChrRomBanks[0] = chrRom;
-    mmc3ChrRomBanks[1] = chrRom + kilobytes(2);
-    mmc3ChrRomBanks[2] = chrRom + kilobytes(4);
-    mmc3ChrRomBanks[3] = chrRom + kilobytes(5);
-    mmc3ChrRomBanks[4] = chrRom + kilobytes(6);
-    mmc3ChrRomBanks[5] = chrRom + kilobytes(7);
+    mmc3ChrRomBanks[0] = chrBase;
+    mmc3ChrRomBanks[1] = chrBase + kilobytes(2);
+    mmc3ChrRomBanks[2] = chrBase + kilobytes(4);
+    mmc3ChrRomBanks[3] = chrBase + kilobytes(5);
+    mmc3ChrRomBanks[4] = chrBase + kilobytes(6);
+    mmc3ChrRomBanks[5] = chrBase + kilobytes(7);
 
     mmc3PrgRomBanks[1] = prgRom + kilobytes(8);
     mmc3PrgRomBanks[3] = prgRom + (kilobytes(8) * (prgRomSize * 2 - 1));
@@ -697,14 +701,14 @@ void Cartridge::mmc3PrgWrite(uint16 address, uint8 value)
             {
                 case 0:
                 case 1:
-                    mmc3ChrRomBanks[mmc3BankSelect] = chrRom + (kilobytes(1) * (value & 0xFE));
+                    mmc3ChrRomBanks[mmc3BankSelect] = chrBase + (kilobytes(1) * (value & 0xFE));
                     break;
 
                 case 2:
                 case 3:
                 case 4:
                 case 5:
-                    mmc3ChrRomBanks[mmc3BankSelect] = chrRom + (kilobytes(1) * value);
+                    mmc3ChrRomBanks[mmc3BankSelect] = chrBase + (kilobytes(1) * value);
                     break;
 
                 case 6:
