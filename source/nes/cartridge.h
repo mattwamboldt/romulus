@@ -9,6 +9,8 @@ enum MirrorMode
     SINGLE_SCREEN_UPPER,
 };
 
+// TODO: Refactor everything to separate the mappers and get rid of the buses.
+// These concepts are effectively the same and the true unique stuff is in the mapper logic not the bus
 class Cartridge
 {
 public:
@@ -26,6 +28,11 @@ public:
     bool chrWrite(uint16 address, uint8 value);
 
     MirrorMode getMirroring() { return mirrorMode; }
+
+    bool isIrqPending() { return mapperNumber == 4 && mmc3IrqPending; }
+
+    // THIS IS A HACK to get mmc3 working
+    void tickCPU();
 
     int mapperNumber;
 
@@ -149,4 +156,12 @@ private:
     void mmc3RemapPrg();
 
     void mmc3PrgWrite(uint16 address, uint8 value);
+    void mmc3TickIrq();
+
+    // This approach is a hack, because restructuring this whole thing is not in my plans at the moment
+    bool isPatternTableHi;
+    bool wasPatternHi;
+    void mmc3SetAddress(uint16 address);
+
+    uint8 mmc3CpuM2Counter;
 };

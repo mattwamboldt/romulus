@@ -443,11 +443,15 @@ uint8 Cartridge::chrRead(uint16 address)
 {
     if (mapperNumber == 4)
     {
+        bool isPatternTableHi = address & 0x1000;
+        mmc3SetAddress(address);
+
         // TODO: THIS IS GROSS. WHY DID I DO THIS?
         // Answer: Cause its the dumb way that you know will work and you
         // can clean it up later
-        if ((mmc3Chr2KBanksAreHigh && address >= 0x1000)
-            || (!mmc3Chr2KBanksAreHigh && address < 0x1000))
+        // Don't direct compare! Since these are both masked out values it may not work?
+        if ((mmc3Chr2KBanksAreHigh && isPatternTableHi)
+            || (!mmc3Chr2KBanksAreHigh && !isPatternTableHi))
         {
             return mmc3ChrRomBanks[(address & 0x0800) >> 11][address & 0x07FF];
         }
@@ -495,6 +499,7 @@ uint8 Cartridge::chrRead(uint16 address)
 
 bool Cartridge::chrWrite(uint16 address, uint8 value)
 {
+    mmc3SetAddress(address);
     if (address < 0x1000)
     {
         patternTable0[address] = value;
@@ -756,5 +761,52 @@ void Cartridge::mmc3PrgWrite(uint16 address, uint8 value)
         {
             mmc3IrqPending = false;
         }
+    }
+}
+
+void Cartridge::mmc3TickIrq()
+{
+    if (mmc3ReloadIrqCounter)
+    {
+        mmc3IrqCounter = mmc3IrqReloadValue;
+        mmc3ReloadIrqCounter = false;
+    }
+    else if (mmc3IrqCounter == 0)
+    {
+        mmc3IrqCounter = mmc3IrqReloadValue;
+        mmc3ReloadIrqCounter = false;
+    }
+    else
+    {
+        --mmc3IrqCounter;
+    }
+
+    if (mmc3IrqCounter == 0 && mmc3IrqEnabled)
+    {
+        mmc3IrqPending = true;
+    }
+}
+
+void Cartridge::mmc3SetAddress(uint16 address)
+{
+    bool isPatternTableHi = address & 0x1000;
+    if (isPatternTableHi && !wasPatternHi && mmc3CpuM2Counter == 0)
+    {
+        mmc3TickIrq();
+        mmc3CpuM2Counter = 3;
+    }
+
+    wasPatternHi = isPatternTableHi;
+}
+
+void Cartridge::tickCPU()
+{
+    if (isPatternTableHi)
+    {
+        mmc3CpuM2Counter = 3;
+    }
+    else if (mmc3CpuM2Counter > 0)
+    {
+        --mmc3CpuM2Counter;
     }
 }

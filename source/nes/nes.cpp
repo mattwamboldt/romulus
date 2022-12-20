@@ -130,6 +130,8 @@ void NES::update(real32 secondsPerFrame)
                 apu.dmc.loadSample(cpuBus.read(apu.dmc.getCurrentAddress()));
             }
 
+            cartridge.tickCPU();
+
             ++currentCpuCycle;
         }
 
@@ -173,8 +175,10 @@ void NES::update(real32 secondsPerFrame)
         else
         {
             // Gather up all the potenial interrupt sources to assert the right status in the cpu
-            // TODO: Only have the apu for now, other sources will come later
-            cpu.setIRQ(apu.isFrameInteruptFlagSet || apu.dmc.isInterruptFlagSet);
+            cpu.setIRQ(apu.isFrameInteruptFlagSet
+                || apu.dmc.isInterruptFlagSet
+                || cartridge.isIrqPending());
+
             if (ppu.isNMISuppressed())
             {
                 cpu.forceClearNMI();

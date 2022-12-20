@@ -666,6 +666,7 @@ void PPU::setAddress(uint8 value)
         tempVramAddress |= value;
 
         vramAddress = tempVramAddress;
+        bus->read(vramAddress);
     }
 
     isWriteLatchActive = !isWriteLatchActive;
