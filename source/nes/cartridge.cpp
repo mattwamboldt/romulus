@@ -652,6 +652,7 @@ void Cartridge::mmc3Reset()
 
     mmc3PrgRomBanks[1] = prgRom + kilobytes(8);
     mmc3PrgRomBanks[3] = prgRom + (kilobytes(8) * (prgRomSize * 2 - 1));
+    mmc3RemapPrg();
 }
 
 void Cartridge::mmc3RemapPrg()
