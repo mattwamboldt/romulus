@@ -1,5 +1,5 @@
 #pragma once
-#include "common.h"
+#include "romulus.h"
 
 // The envelope unit outputs either a constant volume or a decreasing sawtooth wave
 // See https://www.nesdev.org/wiki/APU_Envelope

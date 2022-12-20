@@ -44,6 +44,8 @@ typedef double real64;
 #define gigabytes(value) (megabytes(value) * 1024)
 #define terabytes(value) (gigabytes(value) * 1024)
 
+// Platform agnostic data structures
+
 struct ScreenBuffer
 {
     int width;
@@ -52,4 +54,51 @@ struct ScreenBuffer
     void* memory;
 };
 
-int doStuff(int x);
+// This is modelled on the 360 controller for now, just to have a consistent
+// definition of what bottom face button means, etc.
+struct GamePad
+{
+    uint32 deviceId;
+    bool isConnected;
+
+    bool upPressed;
+    bool downPressed;
+    bool leftPressed;
+    bool rightPressed;
+
+    bool aPressed;
+    bool bPressed;
+    bool xPressed;
+    bool yPressed;
+
+    bool startPressed;
+    bool selectPressed;
+};
+
+struct InputState
+{
+    GamePad controllers[2];
+};
+
+// Functions that the emulator exposes to the platform side
+
+// Simulates forward by the given amount and renders whatever the end result was
+void updateAndRender(real32 secondsElapsed, InputState* input, ScreenBuffer screen);
+// Copies the amount of audio requested from the currently playing sources
+void outputAudio(int16* buffer, int numSamples);
+
+// Menu Commands and the like
+// 
+// TODO: Providing these directly for now to finish the separation but may be worth having a
+// command queue/event mechanism so the api doesn't bloat too much
+
+// Detects the file type, loads the appropriate emulator, and starts it
+// TODO: May want a facility to not start immediately
+void loadROM(const char* filePath);
+
+// Triggers the equivalent of hitting the reset button on the given console
+// TODO: Decide what to do if that doesn't exist. Maybe just a hard reboot to the loaded rom
+void consoleReset();
+
+// Shuts down the running console and does any last minute battery saves
+void consoleShutdown();

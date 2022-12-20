@@ -263,8 +263,21 @@ void NES::outputAudio(int16* outputBuffer, int length)
     }
 }
 
-void NES::setGamepadState(NESGamePad pad, int number)
+void NES::setGamepadState(GamePad controller, int number)
 {
+    NESGamePad pad = {};
+    if (controller.isConnected)
+    {
+        pad.up = controller.upPressed;
+        pad.down = controller.downPressed;
+        pad.left = controller.leftPressed;
+        pad.right = controller.rightPressed;
+        pad.a = controller.aPressed;
+        pad.b = controller.bPressed;
+        pad.start = controller.startPressed;
+        pad.select = controller.selectPressed;
+    }
+
     cpuBus.setInput(pad, number);
 }
 

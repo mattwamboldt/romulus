@@ -1,5 +1,5 @@
 #pragma once
-#include "common.h"
+#include "romulus.h"
 
 // https://www.nesdev.org/wiki/APU_DMC
 class DeltaModulationChannel

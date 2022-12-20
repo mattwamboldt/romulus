@@ -1,22 +1,7 @@
 #include <windows.h>
 #include <xinput.h>
 
-#include "nes\nes.h"
-
 #include "../romulus/platform.h"
-
-// TODO: New main objective - get parity with the console app
-
-/* Current objective: Ability to run nestest visually
-- Add text rendering
-- Recreate debug views
-- Add pattern table renderer, including ability to show and switch palettes
-- Add a nametable render view that overlays a box based on current scroll position
-  - This will help with making sure the lookups are correct and establish some util functions
-- Do a performance pass once the general rendering is complete to make sure bit operations are good
-- Otherwise:
-    - reevaluate this priority list
-*/
 
 // TODO: Better error handling/logging. For now using OutputDebugStringA everywhere
 
@@ -284,8 +269,6 @@ void paintToWindow(HDC deviceContext, GDIBackBuffer buffer, int windowWidth, int
         DIB_RGB_COLORS, SRCCOPY);
 }
 
-static NES nes;
-
 enum MenuItemId
 {
     MENU_FILE_OPEN = 1,
@@ -333,7 +316,7 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 if (GetOpenFileNameA(&openFileDesc))
                 {
-                    nes.loadRom(filename);
+                    loadROM(filename);
                 }
             }
             else if (command == MENU_FILE_EXIT)
@@ -342,7 +325,7 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             else if (command == MENU_CONSOLE_RESET)
             {
-                nes.reset();
+                consoleReset();
             }
         }
         break;
@@ -427,9 +410,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
     SetMenu(window, menuBar);
 
-    // TODO: Implement the platform split
-    int value = doStuff(26);
-
     ACCEL accelerators[2] = {};
     accelerators[0].key = 'O';
     accelerators[0].fVirt = FCONTROL | FVIRTKEY;
@@ -488,58 +468,29 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
             }
         }
 
-        /*
-        if (input == 'd')
-        {
-            // debug.nextpage();
-        }
-
-        if (input == 'a')
-        {
-            // debug.prevpage();
-        }
-
-        if (input == 'c')
-        {
-            //debug.toggleAsciiMode();
-        }
-
-        if (input == 'p')
-        {
-            nes.toggleSingleStep();
-        }
-
-        if (input == ' ')
-        {
-            nes.singleStep();
-        }
-        */
+        InputState input = {};
 
         for (DWORD i = 0; i < 2; ++i)
         {
+            GamePad* gamePad = input.controllers + i;
+
             XINPUT_STATE controllerState;
             if (XInputGetState(i, &controllerState) == ERROR_SUCCESS)
             {
                 // connected
                 // TODO: handle packet number
+                gamePad->isConnected = true;
+                gamePad->deviceId = i;
+
                 XINPUT_GAMEPAD pad = controllerState.Gamepad;
-                NESGamePad nesPad = {};
-                nesPad.up = (pad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0;
-                nesPad.down = (pad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0;
-                nesPad.left = (pad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != 0;
-                nesPad.right = (pad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != 0;
-                nesPad.start = (pad.wButtons & XINPUT_GAMEPAD_START) != 0;
-                nesPad.select = (pad.wButtons & XINPUT_GAMEPAD_BACK) != 0;
-                nesPad.b = (pad.wButtons & XINPUT_GAMEPAD_A) != 0;
-                nesPad.a = (pad.wButtons & XINPUT_GAMEPAD_B) != 0;
-                if (nes.isRunning)
-                {
-                    nes.setGamepadState(nesPad, i);
-                }
-            }
-            else
-            {
-                // not connected
+                gamePad->upPressed = (pad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0;
+                gamePad->downPressed = (pad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0;
+                gamePad->leftPressed = (pad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != 0;
+                gamePad->rightPressed = (pad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != 0;
+                gamePad->startPressed = (pad.wButtons & XINPUT_GAMEPAD_START) != 0;
+                gamePad->selectPressed = (pad.wButtons & XINPUT_GAMEPAD_BACK) != 0;
+                gamePad->aPressed = (pad.wButtons & XINPUT_GAMEPAD_A) != 0;
+                gamePad->bPressed = (pad.wButtons & XINPUT_GAMEPAD_B) != 0;
             }
         }
 
@@ -551,8 +502,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         screen.memory = globalBackBuffer.memory;
         screen.pitch = globalBackBuffer.pitch;
 
-        nes.update(secondsPerFrame);
-        nes.render(screen);
+        updateAndRender(secondsPerFrame, &input, screen);
 
         // TODO: FPS Counter
         // TODO: Memory/debugging view
@@ -590,8 +540,9 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
             }
 
             // Mix down application audio into a buffer
-            // FIXME: This is off somehow causing write exceptions, we're asking for sample count, but code is writing sample * channel
-            nes.outputAudio(samples, bytesToWrite / audio.bytesPerSample);
+            // TODO: Pass in a generic audio spec/"device" so we can control things like sample rate
+            // and such from the platform side
+            outputAudio(samples, bytesToWrite / audio.bytesPerSample);
 
             FillDirectSoundBuffer(&audio, byteToLock, bytesToWrite, samples);
         }
@@ -637,10 +588,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         displayTime = getClockTime();
     }
 
-    if (nes.isRunning)
-    {
-        nes.powerOff();
-    }
-
+    consoleShutdown();
     return 0;
 }

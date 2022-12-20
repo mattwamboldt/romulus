@@ -1,5 +1,5 @@
 #pragma once
-#include "common.h"
+#include "romulus.h"
 #include "envelope.h"
 #include "pulseChannel.h"
 #include "triangleChannel.h"

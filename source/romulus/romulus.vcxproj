@@ -19,11 +19,44 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="nes\6502.h" />
+    <ClInclude Include="nes\apu\apu.h" />
+    <ClInclude Include="nes\apu\deltaModulationChannel.h" />
+    <ClInclude Include="nes\apu\envelope.h" />
+    <ClInclude Include="nes\apu\noiseChannel.h" />
+    <ClInclude Include="nes\apu\pulseChannel.h" />
+    <ClInclude Include="nes\apu\triangleChannel.h" />
+    <ClInclude Include="nes\bus.h" />
+    <ClInclude Include="nes\cartridge.h" />
+    <ClInclude Include="nes\constants.h" />
+    <ClInclude Include="nes\cpuBus.h" />
+    <ClInclude Include="nes\cpuTrace.h" />
+    <ClInclude Include="nes\gamepad.h" />
+    <ClInclude Include="nes\nes.h" />
+    <ClInclude Include="nes\ppuBus.h" />
+    <ClInclude Include="nes\ppu\ppu.h" />
+    <ClInclude Include="nes\ppu\spriteRenderUnit.h" />
     <ClInclude Include="platform.h" />
     <ClInclude Include="romulus.h" />
+    <ClInclude Include="wavefile.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="nes\6502.cpp" />
+    <ClCompile Include="nes\apu\apu.cpp" />
+    <ClCompile Include="nes\apu\deltaModulationChannel.cpp" />
+    <ClCompile Include="nes\apu\envelope.cpp" />
+    <ClCompile Include="nes\apu\noiseChannel.cpp" />
+    <ClCompile Include="nes\apu\pulseChannel.cpp" />
+    <ClCompile Include="nes\apu\triangleChannel.cpp" />
+    <ClCompile Include="nes\cartridge.cpp" />
+    <ClCompile Include="nes\cpuBus.cpp" />
+    <ClCompile Include="nes\cpuTrace.cpp" />
+    <ClCompile Include="nes\nes.cpp" />
+    <ClCompile Include="nes\ppuBus.cpp" />
+    <ClCompile Include="nes\ppu\ppu.cpp" />
+    <ClCompile Include="nes\ppu\spriteRenderUnit.cpp" />
     <ClCompile Include="romulus.cpp" />
+    <ClCompile Include="wavefile.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -107,14 +140,15 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;ROMULUS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsManaged>false</CompileAsManaged>
       <SupportJustMyCode>false</SupportJustMyCode>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -124,14 +158,15 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;ROMULUS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsManaged>false</CompileAsManaged>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -143,14 +178,15 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;ROMULUS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsManaged>false</CompileAsManaged>
       <SupportJustMyCode>false</SupportJustMyCode>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -160,14 +196,15 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;ROMULUS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsManaged>false</CompileAsManaged>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
