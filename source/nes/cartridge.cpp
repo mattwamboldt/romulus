@@ -712,12 +712,12 @@ void Cartridge::mmc3PrgWrite(uint16 address, uint8 value)
                     break;
 
                 case 6:
-                    mmc3PrgRomLowBank = value & 0x3F;
+                    mmc3PrgRomLowBank = value & ((prgRomSize * 2) - 1);
                     mmc3RemapPrg();
                     break;
 
                 case 7:
-                    mmc3PrgRomBanks[1] = prgRom + (kilobytes(8) * (value & 0x3F));
+                    mmc3PrgRomBanks[1] = prgRom + (kilobytes(8) * (value & ((prgRomSize * 2) - 1)));
                     break;
 
             }
