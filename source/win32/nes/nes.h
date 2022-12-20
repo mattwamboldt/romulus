@@ -27,8 +27,13 @@ public: // making public for now, will wrap this as needed later
     void singleStep();
 
     void toggleSingleStep() { singleStepMode = !singleStepMode; }
-    void outputAudio(int16* outputBuffer, int length);
     void setGamepadState(NESGamePad pad, int number);
+    void render(ScreenBuffer buffer);
+    void outputAudio(int16* outputBuffer, int length);
+
+    // Debug views
+    void renderNametable(ScreenBuffer buffer, uint32 top, uint32 left);
+    void renderPatternTable(ScreenBuffer buffer, uint32 top, uint32 left, uint8 selectedPalette);
 
 private:
     bool wasVBlankActive;
@@ -51,4 +56,6 @@ private:
     uint16 nsfSentinal;
     int32 totalPlayCycles;
     int32 cyclesToNextPlay;
+
+    void drawPalette(ScreenBuffer buffer, uint32 top, uint32 left, uint16 baseAddress);
 };

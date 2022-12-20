@@ -1,5 +1,8 @@
 #pragma once
 
+// TODO: controls for various things that will become settings later
+#define SHOW_DEBUG_VIEWS 0
+
 // This header defines the API that the application needs from the platform and
 // that is made available to the platform. Try to minimize the amount of cross talk
 // where possible, though obviously that depends on the needs of both
@@ -41,6 +44,12 @@ typedef double real64;
 #define gigabytes(value) (megabytes(value) * 1024)
 #define terabytes(value) (gigabytes(value) * 1024)
 
-
+struct ScreenBuffer
+{
+    int width;
+    int height;
+    int pitch;
+    void* memory;
+};
 
 int doStuff(int x);
