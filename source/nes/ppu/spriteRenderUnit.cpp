@@ -41,6 +41,7 @@ void SpriteRenderUnit::reset()
     patternHiShift = 0;
     currentPixel = 0;
     oamIndex = 0;
+    patternTableAddress = 0;
 }
 
 void SpriteRenderUnit::setX(uint8 value)

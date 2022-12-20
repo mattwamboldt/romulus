@@ -253,6 +253,7 @@ void PPU::tick()
     {
         // NOTE: Avoid the temptation to do this in the middle of the visible frame
         numSpritesToRender = numSpritesFound;
+        numSpritesFetched = 0;
         oamAddress = 0;
 
         for (int i = 0; i < 8; ++i)
@@ -262,44 +263,37 @@ void PPU::tick()
             {
                 spriteRenderers[i].isEnabled = true;
                 spriteRenderers[i].oamIndex = selectedSpriteIndices[i];
-
-                uint8 yPosition = oamSecondary[i * 4];
-                uint16 tileIndex = oamSecondary[(i * 4) + 1];
-                spriteRenderers[i].setAttribute(oamSecondary[(i * 4) + 2]);
-                spriteRenderers[i].setX(oamSecondary[(i * 4) + 3]);
-
-                // Calculate the shift values
-                uint16 patternTableAddress = 0;
-
-                // TODO: Test vertical flip (Hasn't been hit in debugger yet)
-                uint16 fineY = scanline - yPosition;
-                if (spriteRenderers[i].isVerticallyFlipped())
-                {
-                    fineY = (spriteHeight - 1) - fineY;
-                }
-
-                uint16 spriteBank = spritePatternBaseAddress;
-
-                if (useTallSprites)
-                {
-                    // On tall sprites the last bit is the bank select and the rest is the tile index
-                    spriteBank = (tileIndex & BIT_0) << 12;
-                    tileIndex &= 0xFFFE;
-
-                    // The bottom half the tile is to the right (BIT 0 of the normal style index)
-                    if (fineY >= 8)
-                    {
-                        fineY -= 8;
-                        ++tileIndex;
-                    }
-                }
-
-                uint16 tileOffset = tileIndex << 4;
-                patternTableAddress = fineY | tileOffset | spriteBank;
-                spriteRenderers[i].patternLoShift = bus->read(patternTableAddress);
-                patternTableAddress |= BIT_3;
-                spriteRenderers[i].patternHiShift = bus->read(patternTableAddress);
             }
+
+            uint8 yPosition = oamSecondary[i * 4];
+            uint16 tileIndex = oamSecondary[(i * 4) + 1];
+            spriteRenderers[i].setAttribute(oamSecondary[(i * 4) + 2]);
+            spriteRenderers[i].setX(oamSecondary[(i * 4) + 3]);
+
+            uint16 fineY = scanline - yPosition;
+            if (spriteRenderers[i].isVerticallyFlipped())
+            {
+                fineY = (spriteHeight - 1) - fineY;
+            }
+
+            uint16 spriteBank = spritePatternBaseAddress;
+
+            if (useTallSprites)
+            {
+                // On tall sprites the last bit is the bank select and the rest is the tile index
+                spriteBank = (tileIndex & BIT_0) << 12;
+                tileIndex &= 0xFFFE;
+
+                // The bottom half the tile is to the right (BIT 0 of the normal style index)
+                if (fineY >= 8)
+                {
+                    fineY -= 8;
+                    ++tileIndex;
+                }
+            }
+
+            uint16 tileOffset = tileIndex << 4;
+            spriteRenderers[i].patternTableAddress = fineY | tileOffset | spriteBank;
         }
     }
 
@@ -339,7 +333,8 @@ void PPU::tick()
         {
             if (isSpritePhase)
             {
-                
+                uint16 addressLo = spriteRenderers[numSpritesFetched].patternTableAddress;
+                spriteRenderers[numSpritesFetched].patternLoShift = bus->read(addressLo);
             }
             else
             {
@@ -363,6 +358,9 @@ void PPU::tick()
         {
             if (isSpritePhase)
             {
+                uint16 addressHi = spriteRenderers[numSpritesFetched].patternTableAddress | BIT_3;
+                spriteRenderers[numSpritesFetched].patternHiShift = bus->read(addressHi);
+                ++numSpritesFetched;
             }
             else
             {

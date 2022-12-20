@@ -176,8 +176,8 @@ private:
     uint8 numSpritesChecked;
 
     uint8 numSpritesFound;
-    uint8 numSpritesLoaded;
     uint8 numSpritesToRender;
+    uint8 numSpritesFetched;
 
     // =====================
     // Internal Utility Functions

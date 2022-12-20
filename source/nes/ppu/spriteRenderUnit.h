@@ -5,6 +5,7 @@ struct SpriteRenderUnit
 {
     uint8 patternLoShift;
     uint8 patternHiShift;
+    uint16 patternTableAddress;
 
     uint8 oamIndex;
 
