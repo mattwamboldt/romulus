@@ -21,6 +21,7 @@ public:
     uint8 read(uint16 address);
     void write(uint16 address, uint8 value);
     void setInput(NESGamePad pad, int number);
+    uint8 zapperOutput;
 
     void setReadOnly(bool enable) { readOnly = enable; cart->isReadOnly = enable; };
 
@@ -45,6 +46,7 @@ private:
     // https://www.nesdev.org/wiki/Standard_controller
     bool inputStrobeActive;
     ControllerState controllers[2];
+
 
     uint8 ppuOpenBusValue;
 

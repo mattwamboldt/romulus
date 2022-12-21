@@ -62,7 +62,7 @@ uint8 CPUBus::read(uint16 address)
             case OAMDMA:  return ppuOpenBusValue;
             case SND_CHN: return apu->getStatus(readOnly);
             case JOY1:    return readOnly ? 0 : readGamepad(0);
-            case JOY2:    return readOnly ? 0 : readGamepad(1);
+            case JOY2:    return readOnly ? 0 : zapperOutput; // hard wiring to zapper for now
             default: return 0;
         }
     }

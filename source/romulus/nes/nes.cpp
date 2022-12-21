@@ -277,7 +277,7 @@ void NES::processInput(InputState* input)
 
     // TODO: Come up with some kind of mechanism for custom input mapping that doesn't suck
     // TODO: Handle keyboard
-    // TODO: Handle Mouse for Zapper
+
     for (int i = 0; i < 2; ++i)
     {
         NESGamePad pad = {};
@@ -296,6 +296,35 @@ void NES::processInput(InputState* input)
 
         cpuBus.setInput(pad, i);
     }
+
+    // For now hard wiring Zapper to port 2 and gamepad to port 1
+    
+    cpuBus.zapperOutput = 0x08;
+    // Find the pixel at the current position and see it it's output value
+
+    if (input->mouse.xPosition >= 0  && input->mouse.xPosition < NES_SCREEN_WIDTH
+        && input->mouse.yPosition >= 0 && input->mouse.yPosition < NES_SCREEN_HEIGHT)
+    {
+        uint8 paletteIndex = ppu.backbuffer[input->mouse.xPosition + (input->mouse.yPosition * NES_SCREEN_WIDTH)];
+        //TODO: Looking at nintendulator it does a scan of the area around the mouse position so maybe that helps
+        if (palette[paletteIndex])
+        {
+            cpuBus.zapperOutput = 0;
+        }
+    }
+
+    // the transition is what matters, but only having one frame for the "half pull" may be too short for the game detection
+    // From the wiki "..means that it will take approximately 100ms to change to "released" after the trigger has been half-pulled"
+
+    // TODO: I think this may need to be a situation where I store the mouse data in
+    // the bus and do the evaluation mid simulation on read, rather than between frames
+    // It seems like this approach is too late to be valid
+    if (input->mouse.leftPressed)
+    {
+        cpuBus.zapperOutput |= 0x10;
+    }
+
+    wasMousePressed = input->mouse.leftPressed;
 }
 
 // Rendering functions that belong on the app side

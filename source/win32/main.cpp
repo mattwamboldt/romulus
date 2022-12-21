@@ -404,10 +404,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     cpuFreq = counterFrequency.QuadPart;
 
     WNDCLASSA windowClass = {};
-    windowClass.style = CS_HREDRAW|CS_VREDRAW;
+    windowClass.style = CS_HREDRAW | CS_VREDRAW;
     windowClass.lpfnWndProc = windowProc;
     windowClass.hInstance = instance;
-    windowClass.hIcon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
+    windowClass.hIcon = LoadIconA(instance, MAKEINTRESOURCE(IDI_ICON1));
     windowClass.lpszClassName = "ROMulusWndClass";
     windowClass.hCursor = LoadCursorA(instance, IDC_ARROW);
 
@@ -423,7 +423,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         0,
         windowClass.lpszClassName,
         "ROMulus",
-        WS_OVERLAPPEDWINDOW|WS_VISIBLE,
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
         CW_USEDEFAULT, CW_USEDEFAULT,
         800, 600,
         0, 0, instance, 0
