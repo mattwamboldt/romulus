@@ -22,7 +22,7 @@ public: // making public for now, will wrap this as needed later
     void reset();
     void powerOff();
 
-    void loadRom(const char* path);
+    bool loadRom(const char* path);
     void update(real32 secondsPerFrame);
     void singleStep();
 

@@ -20,9 +20,12 @@ NES::NES()
     traceEnabled = false;
 }
 
-void NES::loadRom(const char * path)
+bool NES::loadRom(const char * path)
 {
-    cartridge.load(path);
+    if (!cartridge.load(path))
+    {
+        return false;
+    }
 
     if (isRunning)
     {
@@ -42,6 +45,8 @@ void NES::loadRom(const char * path)
         nsfSentinal = cpu.stack;
         cpu.jumpSubroutine(cartridge.initAddress);
     }
+
+    return true;
 }
 
 void NES::powerOn()

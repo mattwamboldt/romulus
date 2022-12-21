@@ -56,9 +56,9 @@ void updateAndRender(real32 secondsElapsed, InputState* input, ScreenBuffer scre
     // DEBUG_renderMouse(input, screen);
 }
 
-void loadROM(const char* filePath)
+bool loadROM(const char* filePath)
 {
-    nes.loadRom(filePath);
+    return nes.loadRom(filePath);
 }
 
 void consoleReset()

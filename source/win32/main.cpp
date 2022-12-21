@@ -317,7 +317,46 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 if (GetOpenFileNameA(&openFileDesc))
                 {
-                    loadROM(filename);
+                    char windowTitle[64];
+                    char* titleWriter = windowTitle;
+
+                    for (int i = 0; i < sizeof("ROMulus"); ++i)
+                    {
+                        *titleWriter++ = "ROMulus"[i];
+                    }
+
+                    if (loadROM(filename))
+                    {
+                        char* start = filename;
+                        char* iter = filename;
+                        char* ext = filename;
+                        while (*iter)
+                        {
+                            if (*iter == '\\')
+                            {
+                                start = iter + 1;
+                            }
+                            else if (*iter == '.')
+                            {
+                                ext = iter;
+                            }
+
+                            ++iter;
+                        }
+
+                        --titleWriter;
+                        *titleWriter++ = ':';
+                        *titleWriter++ = ' ';
+
+                        while (start != ext && (titleWriter - windowTitle) < 62)
+                        {
+                            *titleWriter++ = *start++;
+                        }
+
+                        *titleWriter = '\0';
+                    }
+
+                    SetWindowTextA(window, windowTitle);
                 }
             }
             else if (command == MENU_FILE_EXIT)
