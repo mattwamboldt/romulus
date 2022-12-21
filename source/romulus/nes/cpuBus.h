@@ -13,6 +13,9 @@ struct ControllerState
     uint8 shiftCount;
 };
 
+// TODO: Pull DMA into a new CPU that wraps the apu features and the dma controller, like it is on the nes
+// TODO: Pull Input handling out into its own module and let this and the ppubus be subsumed into the cartridge / mapper stuff
+
 class CPUBus : public IBus
 {
 public:
@@ -20,8 +23,8 @@ public:
 
     uint8 read(uint16 address);
     void write(uint16 address, uint8 value);
-    void setInput(NESGamePad pad, int number);
-    uint8 zapperOutput;
+    void setGamepad(NESGamePad pad, int number);
+    void setMouse(Mouse mouse);
 
     void setReadOnly(bool enable) { readOnly = enable; cart->isReadOnly = enable; };
 
@@ -33,8 +36,13 @@ public:
     uint16 dmaCycleCount;
     uint8 dmaReadValue;
 
+    // Used to track how long the "half pull" state should be active
+    real32 zapperCounterMs;
+
 private:
     uint8 readGamepad(int number);
+    bool zapperDetectsLight();
+    uint8 readZapper();
     void strobeInput(int number);
 
     PPU* ppu;
@@ -46,7 +54,7 @@ private:
     // https://www.nesdev.org/wiki/Standard_controller
     bool inputStrobeActive;
     ControllerState controllers[2];
-
+    Mouse mouse;
 
     uint8 ppuOpenBusValue;
 

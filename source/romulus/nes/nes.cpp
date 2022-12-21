@@ -1,13 +1,7 @@
 ﻿#include "nes.h"
 #include "cpuTrace.h"
 #include <string.h>
-
-uint32 palette[] = {
-    0x00545454, 0x00001E74, 0x00081090, 0x00300088, 0x00440064, 0x005C0030, 0x00540400, 0x003C1800, 0x00202A00, 0x00083A00, 0x00004000, 0x00003C00, 0x0000323C, 0x00000000, 0x00000000, 0x00000000,
-    0x00989698, 0x00084CC4, 0x003032EC, 0x005C1EE4, 0x008814B0, 0x00A01464, 0x00982220, 0x00783C00, 0x00545A00, 0x00287200, 0x00087C00, 0x00007640, 0x00006678, 0x00000000, 0x00000000, 0x00000000,
-    0x00ECEEEC, 0x004C9AEC, 0x00787CEC, 0x00B062EC, 0x00E454EC, 0x00EC58B4, 0x00EC6A64, 0x00D48820, 0x00A0AA00, 0x0074C400, 0x004CD020, 0x0038CC6C, 0x0038B4CC, 0x003C3C3C, 0x00000000, 0x00000000,
-    0x00ECEEEC, 0x00A8CCEC, 0x00BCBCEC, 0x00D4B2EC, 0x00ECAEEC, 0x00ECAED4, 0x00ECB4B0, 0x00E4C490, 0x00CCD278, 0x00B4DE78, 0x00A8E290, 0x0098E2B4, 0x00A0D6E4, 0x00A0A2A0, 0x00000000, 0x00000000
-};
+#include "constants.h"
 
 const uint32 masterClockHz = 21477272;
 
@@ -201,6 +195,12 @@ void NES::update(real32 secondsPerFrame)
             }
         }
     }
+
+    // Could also do this constantly if needed
+    if (cpuBus.zapperCounterMs > 0)
+    {
+        cpuBus.zapperCounterMs -= secondsPerFrame;
+    }
 }
 
 void NES::cpuStep()
@@ -294,37 +294,10 @@ void NES::processInput(InputState* input)
             pad.select = controller.selectPressed;
         }
 
-        cpuBus.setInput(pad, i);
+        cpuBus.setGamepad(pad, i);
     }
 
-    // For now hard wiring Zapper to port 2 and gamepad to port 1
-    
-    cpuBus.zapperOutput = 0x08;
-    // Find the pixel at the current position and see it it's output value
-
-    if (input->mouse.xPosition >= 0  && input->mouse.xPosition < NES_SCREEN_WIDTH
-        && input->mouse.yPosition >= 0 && input->mouse.yPosition < NES_SCREEN_HEIGHT)
-    {
-        uint8 paletteIndex = ppu.backbuffer[input->mouse.xPosition + (input->mouse.yPosition * NES_SCREEN_WIDTH)];
-        //TODO: Looking at nintendulator it does a scan of the area around the mouse position so maybe that helps
-        if (palette[paletteIndex])
-        {
-            cpuBus.zapperOutput = 0;
-        }
-    }
-
-    // the transition is what matters, but only having one frame for the "half pull" may be too short for the game detection
-    // From the wiki "..means that it will take approximately 100ms to change to "released" after the trigger has been half-pulled"
-
-    // TODO: I think this may need to be a situation where I store the mouse data in
-    // the bus and do the evaluation mid simulation on read, rather than between frames
-    // It seems like this approach is too late to be valid
-    if (input->mouse.leftPressed)
-    {
-        cpuBus.zapperOutput |= 0x10;
-    }
-
-    wasMousePressed = input->mouse.leftPressed;
+    cpuBus.setMouse(input->mouse);
 }
 
 // Rendering functions that belong on the app side

@@ -71,6 +71,10 @@ void PPU::tick()
         {
             nmiRequested = !suppressNmi;
 
+            // TODO: Might have to swap these on the prerender line to avoid breaking
+            // zapper detection in the last few scanlines. Or that would have to detect we're in vblank
+            // and use the frontbuffer instead. Needs testing.
+            
             // Swap outputs
             uint8* temp = frontBuffer;
             frontBuffer = backbuffer;
