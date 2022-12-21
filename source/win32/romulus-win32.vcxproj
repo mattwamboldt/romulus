@@ -26,6 +26,15 @@
       <Project>{6017f2a7-26ba-41fc-a128-eecc6193482f}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resources\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\app.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\logo.ico" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{0AF27A61-392A-41BD-8FF5-1B91DC2AC74E}</ProjectGuid>

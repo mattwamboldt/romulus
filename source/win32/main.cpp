@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <xinput.h>
+#include <resources/resource.h>
 
 #include "../romulus/platform.h"
 
@@ -367,7 +368,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     windowClass.style = CS_HREDRAW|CS_VREDRAW;
     windowClass.lpfnWndProc = windowProc;
     windowClass.hInstance = instance;
-    windowClass.hIcon = LoadIcon((HINSTANCE)NULL, IDI_APPLICATION);
+    windowClass.hIcon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
     windowClass.lpszClassName = "ROMulusWndClass";
     windowClass.hCursor = LoadCursorA(instance, IDC_ARROW);
 
