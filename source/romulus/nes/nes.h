@@ -27,7 +27,7 @@ public: // making public for now, will wrap this as needed later
     void singleStep();
 
     void toggleSingleStep() { singleStepMode = !singleStepMode; }
-    void setGamepadState(GamePad pad, int number);
+    void processInput(InputState* input);
     void render(ScreenBuffer buffer);
     void outputAudio(int16* outputBuffer, int length);
 

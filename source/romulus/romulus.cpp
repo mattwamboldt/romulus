@@ -49,17 +49,7 @@ void updateAndRender(real32 secondsElapsed, InputState* input, ScreenBuffer scre
 {
     // TODO: Handle Mouse for any custom UI that might be useful later
 
-    if (nes.isRunning)
-    {
-        // TODO: Come up with some kind of mechanism for custom input mapping that doesn't suck
-        // TODO: Handle keyboard
-        // TODO: Handle Mouse for Zapper
-        for (int i = 0; i < 2; ++i)
-        {
-            nes.setGamepadState(input->controllers[i], i);
-        }
-    }
-
+    nes.processInput(input);
     nes.update(secondsElapsed);
     nes.render(screen);
 

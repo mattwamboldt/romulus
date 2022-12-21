@@ -263,22 +263,34 @@ void NES::outputAudio(int16* outputBuffer, int length)
     }
 }
 
-void NES::setGamepadState(GamePad controller, int number)
+void NES::processInput(InputState* input)
 {
-    NESGamePad pad = {};
-    if (controller.isConnected)
+    if (!isRunning)
     {
-        pad.up = controller.upPressed;
-        pad.down = controller.downPressed;
-        pad.left = controller.leftPressed;
-        pad.right = controller.rightPressed;
-        pad.a = controller.aPressed;
-        pad.b = controller.bPressed;
-        pad.start = controller.startPressed;
-        pad.select = controller.selectPressed;
+        return;
     }
 
-    cpuBus.setInput(pad, number);
+    // TODO: Come up with some kind of mechanism for custom input mapping that doesn't suck
+    // TODO: Handle keyboard
+    // TODO: Handle Mouse for Zapper
+    for (int i = 0; i < 2; ++i)
+    {
+        NESGamePad pad = {};
+        GamePad controller = input->controllers[i];
+        if (controller.isConnected)
+        {
+            pad.up = controller.upPressed;
+            pad.down = controller.downPressed;
+            pad.left = controller.leftPressed;
+            pad.right = controller.rightPressed;
+            pad.a = controller.aPressed;
+            pad.b = controller.bPressed;
+            pad.start = controller.startPressed;
+            pad.select = controller.selectPressed;
+        }
+
+        cpuBus.setInput(pad, i);
+    }
 }
 
 // Rendering functions that belong on the app side
