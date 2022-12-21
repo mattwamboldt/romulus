@@ -75,8 +75,19 @@ struct GamePad
     bool selectPressed;
 };
 
+struct Mouse
+{
+    // Relative to the upper left of the screen so can be negative
+    int32 xPosition;
+    int32 yPosition;
+
+    bool leftPressed;
+    bool rightPressed;
+};
+
 struct InputState
 {
+    Mouse mouse;
     GamePad controllers[2];
 };
 
