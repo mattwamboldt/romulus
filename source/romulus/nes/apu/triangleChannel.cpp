@@ -54,7 +54,9 @@ void TriangleChannel::tick()
 {
     if (timerCurrentTick == 0)
     {
-        if (lengthCounter > 0 && linearCounter > 0)
+        // TODO: This timeLength check silences the channel when the frequency is too high
+        // If I ever put in proper downsampling, this can be taken out for a more "authentic" sound
+        if (timerLength > 2 && (lengthCounter > 0 && linearCounter > 0))
         {
             ++sequenceIndex;
             if (sequenceIndex >= 32)
