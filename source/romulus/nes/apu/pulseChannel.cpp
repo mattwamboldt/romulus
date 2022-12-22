@@ -106,6 +106,7 @@ void PulseChannel::tickSweep()
     if (sweep.dividerValue == 0 || sweep.isReloadFlagSet)
     {
         sweep.dividerValue = sweep.dividerPeriod;
+        sweep.isReloadFlagSet = false;
     }
     else
     {

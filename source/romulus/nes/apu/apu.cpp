@@ -113,7 +113,7 @@ uint8 APU::getStatus(bool readOnly)
     if (noise.lengthCounter > 0)    result |= 0x08;
     if (dmc.getBytesRemaining())    result |= 0x10;
     if (isFrameInteruptFlagSet)     result |= 0x40;
-    if (dmc.isInterruptFlagSet)      result |= 0x80;
+    if (dmc.isInterruptFlagSet)     result |= 0x80;
 
     if (!readOnly)
     {
