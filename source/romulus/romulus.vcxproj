@@ -31,7 +31,7 @@
     <ClInclude Include="nes\constants.h" />
     <ClInclude Include="nes\cpuBus.h" />
     <ClInclude Include="nes\cpuTrace.h" />
-    <ClInclude Include="nes\gamepad.h" />
+    <ClInclude Include="nes\input\controller.h" />
     <ClInclude Include="nes\input\zapper.h" />
     <ClInclude Include="nes\nes.h" />
     <ClInclude Include="nes\ppuBus.h" />
@@ -52,6 +52,7 @@
     <ClCompile Include="nes\cartridge.cpp" />
     <ClCompile Include="nes\cpuBus.cpp" />
     <ClCompile Include="nes\cpuTrace.cpp" />
+    <ClCompile Include="nes\input\controller.cpp" />
     <ClCompile Include="nes\input\zapper.cpp" />
     <ClCompile Include="nes\nes.cpp" />
     <ClCompile Include="nes\ppuBus.cpp" />

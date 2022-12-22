@@ -61,7 +61,7 @@ uint8 CPUBus::read(uint16 address)
             // TODO: Handle Open Bus
             case OAMDMA:  return ppuOpenBusValue;
             case SND_CHN: return apu->getStatus(readOnly);
-            case JOY1:    return readOnly ? 0 : readGamepad(0);
+            case JOY1:    return readOnly ? 0 : controllers[0].read(); // TODO: open bus is special as input only ses the bottom 2-5 bits
             case JOY2:    return readOnly ? 0 : zapper.read(ppu); // hard wiring to zapper for now
             default: return 0;
         }
@@ -127,13 +127,7 @@ void CPUBus::write(uint16 address, uint8 value)
             }
             break;
             case SND_CHN: apu->writeControl(value); break;
-            case JOY1:
-            {
-                inputStrobeActive = (value & 0x01);
-                strobeInput(0);
-                strobeInput(1);
-            }
-            break;
+            case JOY1: controllers[0].write(value); break;
             case JOY2: apu->writeFrameCounterControl(value); break;
             default: return;
         }
@@ -145,58 +139,9 @@ void CPUBus::write(uint16 address, uint8 value)
     }
 }
 
-void CPUBus::setGamepad(NESGamePad pad, int number)
+void CPUBus::setGamepad(GamePad pad, int number)
 {
-    controllers[number].input = pad;
-}
-
-void CPUBus::strobeInput(int number)
-{
-    uint8 currentState = 0;
-    ControllerState* controller = controllers + number;
-
-    // NOTE: DO NOT DO THIS NORMALLY, BAD
-    if (controller->input.a) currentState |= 0x01;
-    if (controller->input.b) currentState |= 0x02;
-    if (controller->input.select) currentState |= 0x04;
-    if (controller->input.start) currentState |= 0x08;
-    if (controller->input.up) currentState |= 0x10;
-    if (controller->input.down) currentState |= 0x20;
-    if (controller->input.left) currentState |= 0x40;
-    if (controller->input.right) currentState |= 0x80;
-
-    controller->shiftCount = 0;
-    controller->shiftRegister = currentState;
-}
-
-uint8 CPUBus::readGamepad(int number)
-{
-    // Notes about input on the NES
-    // You write to 4016 to tell connected devices to update state
-    // Then you turn it off so they are primed and ready
-    // After that you read the state ONE BIT AT A TIME!
-    // 
-    // For controllers thats a sequence of buttons on or off, and if
-    // you don't turn off strobe you always get the same one
-    // Thats because it loads it all into a "shift register", which
-    // shifts one bit out on each read.
-
-    ControllerState* controller = controllers + number;
-
-    if (inputStrobeActive)
-    {
-        strobeInput(number);
-    }
-
-    if (controller->shiftCount >= 8)
-    {
-        return 0;
-    }
-
-    uint8 result = controller->shiftRegister & 0x01;
-    controller->shiftRegister >>= 1;
-    ++controller->shiftCount;
-    return result;
+    controllers[number].update(pad);
 }
 
 void CPUBus::setMouse(Mouse mouse, real32 elapsedMs)

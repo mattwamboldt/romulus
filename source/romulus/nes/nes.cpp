@@ -274,21 +274,7 @@ void NES::processInput(InputState* input)
 
     for (int i = 0; i < 2; ++i)
     {
-        NESGamePad pad = {};
-        GamePad controller = input->controllers[i];
-        if (controller.isConnected)
-        {
-            pad.up = controller.upPressed;
-            pad.down = controller.downPressed;
-            pad.left = controller.leftPressed;
-            pad.right = controller.rightPressed;
-            pad.a = controller.aPressed;
-            pad.b = controller.bPressed;
-            pad.start = controller.startPressed;
-            pad.select = controller.selectPressed;
-        }
-
-        cpuBus.setGamepad(pad, i);
+        cpuBus.setGamepad(input->controllers[i], i);
     }
 
     cpuBus.setMouse(input->mouse, input->elapsedMs);

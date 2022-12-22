@@ -42,9 +42,6 @@
     <ClInclude Include="nes\cpuTrace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="nes\gamepad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="nes\nes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -76,6 +73,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nes\input\zapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nes\input\controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -129,6 +129,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nes\input\zapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nes\input\controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
