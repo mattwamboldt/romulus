@@ -270,6 +270,38 @@ void paintToWindow(HDC deviceContext, GDIBackBuffer buffer, int windowWidth, int
         DIB_RGB_COLORS, SRCCOPY);
 }
 
+static WINDOWPLACEMENT windowPosition;
+
+void toggleFullscreen(HWND window)
+{
+    // Taken from Handmade hero, which took it from Raymod Chen
+    // https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
+
+    DWORD style = GetWindowLongA(window, GWL_STYLE);
+    if (style & WS_OVERLAPPEDWINDOW)
+    {
+        MONITORINFO monitorInfo = { sizeof(monitorInfo) };
+        if (GetWindowPlacement(window, &windowPosition) &&
+            GetMonitorInfoA(MonitorFromWindow(window, MONITOR_DEFAULTTOPRIMARY), &monitorInfo))
+        {
+            SetWindowLongA(window, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
+            SetWindowPos(window, HWND_TOP,
+                monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
+                monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+                monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+                SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+        }
+    }
+    else
+    {
+        SetWindowLongA(window, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
+        SetWindowPlacement(window, &windowPosition);
+        SetWindowPos(window, 0, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+            SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+}
+
 LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -359,6 +391,11 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
             else if (command == MENU_CONSOLE_RESET)
             {
                 consoleReset();
+            }
+            else if (command == MENU_VIDEO_FULLSCREEN)
+            {
+                toggleFullscreen(window);
+                // TODO: Also add hide/show menus for when we go fullscreen
             }
         }
         break;
@@ -547,8 +584,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         // This approach runs in the main thread, but some systems use a callback that has no
         // concept of the "game" loop. They just keep asking for the next block when they need more.
         // Main thread is fine where we're doing so much synth but there may be a better way.
-        LARGE_INTEGER preAudioTime = getClockTime();
-        real32 preAudioElapsedSeconds = getSecondsElapsed(displayTime, preAudioTime);
 
         DWORD playCursor = 0;
         DWORD writeCursor = 0;

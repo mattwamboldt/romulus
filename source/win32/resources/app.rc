@@ -72,6 +72,10 @@ BEGIN
     BEGIN
         MENUITEM "&Reset\tCtrl+R",              MENU_CONSOLE_RESET
     END
+    POPUP "&Graphics"
+    BEGIN
+        MENUITEM "Fullscreen\tAlt+Enter",       MENU_CONSOLE_RESET
+    END
 END
 
 
@@ -84,6 +88,7 @@ IDR_ACCELERATOR_MAIN ACCELERATORS
 BEGIN
     "O",            MENU_FILE_OPEN,         VIRTKEY, CONTROL, NOINVERT
     "R",            MENU_CONSOLE_RESET,     VIRTKEY, CONTROL, NOINVERT
+    VK_RETURN,      MENU_VIDEO_FULLSCREEN,  VIRTKEY, ALT, NOINVERT
 END
 
 #endif    // English (United States) resources
