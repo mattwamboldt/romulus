@@ -54,6 +54,38 @@ END
 // remains consistent on all systems.
 IDI_ICON1               ICON                    "logo.ico"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_MAIN MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open ROM...\tCtrl+O",        MENU_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               MENU_FILE_EXIT
+    END
+    POPUP "&Console"
+    BEGIN
+        MENUITEM "&Reset\tCtrl+R",              MENU_CONSOLE_RESET
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR_MAIN ACCELERATORS
+BEGIN
+    "O",            MENU_FILE_OPEN,         VIRTKEY, CONTROL, NOINVERT
+    "R",            MENU_CONSOLE_RESET,     VIRTKEY, CONTROL, NOINVERT
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

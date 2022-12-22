@@ -270,13 +270,6 @@ void paintToWindow(HDC deviceContext, GDIBackBuffer buffer, int windowWidth, int
         DIB_RGB_COLORS, SRCCOPY);
 }
 
-enum MenuItemId
-{
-    MENU_FILE_OPEN = 1,
-    MENU_FILE_EXIT,
-    MENU_CONSOLE_RESET,
-};
-
 LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -434,32 +427,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         return 0;
     }
 
-    // These can be moved into resource files closer to ship, I just wanted a better
-    // understanding of how this worked. It also avoids some potential registry shenanigans you have to do
-    // if accelerators need to change often during dev, or so I've read.
-    HMENU menuBar = CreateMenu();
+    HMENU mainMenu = LoadMenuA(instance, MAKEINTRESOURCE(IDR_MENU_MAIN));
+    SetMenu(window, mainMenu);
 
-    HMENU fileMenu = CreateMenu();
-    AppendMenuA(fileMenu, MF_STRING, MENU_FILE_OPEN, "&Open ROM...\tCtrl+O");
-    AppendMenuA(fileMenu, MF_STRING, MENU_FILE_EXIT, "E&xit\tAlt+F4");
-    AppendMenuA(menuBar, MF_POPUP, (UINT_PTR)fileMenu, "&File");
-
-    HMENU consoleMenu = CreateMenu();
-    AppendMenuA(consoleMenu, MF_STRING, MENU_CONSOLE_RESET, "&Reset\tCtrl+R");
-    AppendMenuA(menuBar, MF_POPUP, (UINT_PTR)consoleMenu, "&Console");
-
-    SetMenu(window, menuBar);
-
-    ACCEL accelerators[2] = {};
-    accelerators[0].key = 'O';
-    accelerators[0].fVirt = FCONTROL | FVIRTKEY;
-    accelerators[0].cmd = MENU_FILE_OPEN;
-
-    accelerators[1].key = 'R';
-    accelerators[1].fVirt = FCONTROL | FVIRTKEY;
-    accelerators[1].cmd = MENU_CONSOLE_RESET;
-
-    HACCEL acceleratorTable = CreateAcceleratorTableA(accelerators, 2);
+    HACCEL acceleratorTable = LoadAcceleratorsA(instance, MAKEINTRESOURCE(IDR_ACCELERATOR_MAIN));
 
 #if SHOW_DEBUG_VIEWS
     resizeDIBSection(&globalBackBuffer, 800, 600);
