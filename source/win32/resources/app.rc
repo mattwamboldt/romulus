@@ -74,6 +74,7 @@ BEGIN
     END
     POPUP "&Graphics"
     BEGIN
+        MENUITEM "Hide Menu\tEscape",           MENU_VIDEO_HIDEMENU
         MENUITEM "Fullscreen\tAlt+Enter",       MENU_CONSOLE_RESET
     END
 END
@@ -86,9 +87,10 @@ END
 
 IDR_ACCELERATOR_MAIN ACCELERATORS
 BEGIN
-    "O",            MENU_FILE_OPEN,         VIRTKEY, CONTROL, NOINVERT
     "R",            MENU_CONSOLE_RESET,     VIRTKEY, CONTROL, NOINVERT
+    "O",            MENU_FILE_OPEN,         VIRTKEY, CONTROL, NOINVERT
     VK_RETURN,      MENU_VIDEO_FULLSCREEN,  VIRTKEY, ALT, NOINVERT
+    VK_ESCAPE,      MENU_VIDEO_HIDEMENU,    VIRTKEY, NOINVERT
 END
 
 
@@ -114,7 +116,6 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", ""
             VALUE "FileDescription", "ROMulus Emulator"
             VALUE "FileVersion", "0.2.1.0"
             VALUE "InternalName", "ROMulus.exe"

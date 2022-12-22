@@ -270,6 +270,7 @@ void paintToWindow(HDC deviceContext, GDIBackBuffer buffer, int windowWidth, int
         DIB_RGB_COLORS, SRCCOPY);
 }
 
+static HMENU mainMenu;
 static WINDOWPLACEMENT windowPosition;
 
 void toggleFullscreen(HWND window)
@@ -290,6 +291,7 @@ void toggleFullscreen(HWND window)
                 monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
                 monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+            SetMenu(window, 0);
         }
     }
     else
@@ -299,8 +301,10 @@ void toggleFullscreen(HWND window)
         SetWindowPos(window, 0, 0, 0, 0, 0,
             SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
             SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+        SetMenu(window, mainMenu);
     }
 }
+
 
 LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -397,6 +401,18 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
                 toggleFullscreen(window);
                 // TODO: Also add hide/show menus for when we go fullscreen
             }
+            else if (command == MENU_VIDEO_HIDEMENU)
+            {
+                HMENU currentMenu = GetMenu(window);
+                if (currentMenu)
+                {
+                    SetMenu(window, 0);
+                }
+                else
+                {
+                    SetMenu(window, mainMenu);;
+                }
+            }
         }
         break;
 
@@ -464,7 +480,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         return 0;
     }
 
-    HMENU mainMenu = LoadMenuA(instance, MAKEINTRESOURCE(IDR_MENU_MAIN));
+    mainMenu = LoadMenuA(instance, MAKEINTRESOURCE(IDR_MENU_MAIN));
     SetMenu(window, mainMenu);
 
     HACCEL acceleratorTable = LoadAcceleratorsA(instance, MAKEINTRESOURCE(IDR_ACCELERATOR_MAIN));
