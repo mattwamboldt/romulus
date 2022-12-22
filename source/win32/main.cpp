@@ -490,6 +490,8 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     uint32 frameCount = 0;
     bool soundIsValid = false;
     
+    InputState input = {};
+    
     while (isRunning)
     {
         // Handle Input
@@ -508,7 +510,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
             }
         }
 
-        InputState input = {};
+        input.elapsedMs = secondsPerFrame;
 
         for (DWORD i = 0; i < 2; ++i)
         {
@@ -531,6 +533,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
                 gamePad->selectPressed = (pad.wButtons & XINPUT_GAMEPAD_BACK) != 0;
                 gamePad->aPressed = (pad.wButtons & XINPUT_GAMEPAD_A) != 0;
                 gamePad->bPressed = (pad.wButtons & XINPUT_GAMEPAD_B) != 0;
+            }
+            else
+            {
+                gamePad->isConnected = false;
             }
         }
 
@@ -560,7 +566,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         screen.memory = globalBackBuffer.memory;
         screen.pitch = globalBackBuffer.pitch;
 
-        updateAndRender(secondsPerFrame, &input, screen);
+        updateAndRender(&input, screen);
 
         // TODO: FPS Counter
         // TODO: Memory/debugging view

@@ -45,12 +45,12 @@ void DEBUG_renderMouse(InputState* input, ScreenBuffer screen)
     }
 }
 
-void updateAndRender(real32 secondsElapsed, InputState* input, ScreenBuffer screen)
+void updateAndRender(InputState* input, ScreenBuffer screen)
 {
     // TODO: Handle Mouse for any custom UI that might be useful later
 
     nes.processInput(input);
-    nes.update(secondsElapsed);
+    nes.update(input->elapsedMs);
     nes.render(screen);
 
     // DEBUG_renderMouse(input, screen);

@@ -195,12 +195,6 @@ void NES::update(real32 secondsPerFrame)
             }
         }
     }
-
-    // Could also do this constantly if needed
-    if (cpuBus.zapperCounterMs > 0)
-    {
-        cpuBus.zapperCounterMs -= secondsPerFrame;
-    }
 }
 
 void NES::cpuStep()
@@ -297,7 +291,7 @@ void NES::processInput(InputState* input)
         cpuBus.setGamepad(pad, i);
     }
 
-    cpuBus.setMouse(input->mouse);
+    cpuBus.setMouse(input->mouse, input->elapsedMs);
 }
 
 // Rendering functions that belong on the app side

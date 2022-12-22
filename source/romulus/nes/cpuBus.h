@@ -4,6 +4,7 @@
 #include "apu/apu.h"
 #include "cartridge.h"
 #include "gamepad.h"
+#include <nes/input/zapper.h>
 
 struct ControllerState
 {
@@ -24,7 +25,7 @@ public:
     uint8 read(uint16 address);
     void write(uint16 address, uint8 value);
     void setGamepad(NESGamePad pad, int number);
-    void setMouse(Mouse mouse);
+    void setMouse(Mouse mouse, real32 elapsedMs);
 
     void setReadOnly(bool enable) { readOnly = enable; cart->isReadOnly = enable; };
 
@@ -36,13 +37,8 @@ public:
     uint16 dmaCycleCount;
     uint8 dmaReadValue;
 
-    // Used to track how long the "half pull" state should be active
-    real32 zapperCounterMs;
-
 private:
     uint8 readGamepad(int number);
-    bool zapperDetectsLight();
-    uint8 readZapper();
     void strobeInput(int number);
 
     PPU* ppu;
@@ -54,7 +50,7 @@ private:
     // https://www.nesdev.org/wiki/Standard_controller
     bool inputStrobeActive;
     ControllerState controllers[2];
-    Mouse mouse;
+    Zapper zapper;
 
     uint8 ppuOpenBusValue;
 

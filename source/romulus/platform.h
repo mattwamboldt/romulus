@@ -93,6 +93,7 @@ struct Mouse
 
 struct InputState
 {
+    real32 elapsedMs;
     Mouse mouse;
     GamePad controllers[2];
 };
@@ -100,7 +101,7 @@ struct InputState
 // Functions that the emulator exposes to the platform side
 
 // Simulates forward by the given amount and renders whatever the end result was
-void updateAndRender(real32 secondsElapsed, InputState* input, ScreenBuffer screen);
+void updateAndRender(InputState* input, ScreenBuffer screen);
 // Copies the amount of audio requested from the currently playing sources
 void outputAudio(int16* buffer, int numSamples);
 

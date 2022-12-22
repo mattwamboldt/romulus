@@ -75,6 +75,9 @@
     <ClInclude Include="wavefile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="nes\input\zapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="romulus.cpp">
@@ -123,6 +126,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wavefile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nes\input\zapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
