@@ -16,10 +16,8 @@ struct StandardController
     // Gets the next bit from the serial port (ie lowest bit of the strobe state)
     uint8 read();
     
-    // Activates and deactivates strobe (all other bits are ignored)
-    // TODO: Made a gaffe in the refactor, strobe is wired to both ports so it sits a level up
-    // Will be fixed in the next round with the general input handling / mapping layer
-    void write(uint8 value);
+    // Sets and ticks strobe accordingly
+    void setStrobe(bool active);
 
     // Writes the current controller state out to the bits in the register
     // TODO: Figure out how to handle mappings (Either through this class or a generic "fake" gamepad device above this)

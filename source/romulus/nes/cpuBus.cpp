@@ -5,11 +5,12 @@
 // https://www.nesdev.org/wiki/CPU_memory_map
 // https://www.nesdev.org/wiki/2A03
 
-void CPUBus::connect(PPU* ppu, APU* apu, Cartridge* cart)
+void CPUBus::connect(PPU* ppu, APU* apu, Cartridge* cart, InputBus* input)
 {
     this->ppu = ppu;
     this->apu = apu;
     this->cart = cart;
+    inputBus = input;
 }
 
 uint8 CPUBus::read(uint16 address)
@@ -61,8 +62,8 @@ uint8 CPUBus::read(uint16 address)
             // TODO: Handle Open Bus
             case OAMDMA:  return ppuOpenBusValue;
             case SND_CHN: return apu->getStatus(readOnly);
-            case JOY1:    return readOnly ? 0 : controllers[0].read(); // TODO: open bus is special as input only ses the bottom 2-5 bits
-            case JOY2:    return readOnly ? 0 : zapper.read(ppu); // hard wiring to zapper for now
+            case JOY1:    return readOnly ? 0 : inputBus->read(0); // TODO: open bus is special as input only ses the bottom 2-5 bits
+            case JOY2:    return readOnly ? 0 : inputBus->read(1);
             default: return 0;
         }
     }
@@ -127,7 +128,7 @@ void CPUBus::write(uint16 address, uint8 value)
             }
             break;
             case SND_CHN: apu->writeControl(value); break;
-            case JOY1: controllers[0].write(value); break;
+            case JOY1: inputBus->write(value); break;
             case JOY2: apu->writeFrameCounterControl(value); break;
             default: return;
         }
@@ -137,16 +138,6 @@ void CPUBus::write(uint16 address, uint8 value)
         // Cartridge space (logic depends on the mapper)
         cart->prgWrite(address, value);
     }
-}
-
-void CPUBus::setGamepad(GamePad pad, int number)
-{
-    controllers[number].update(pad);
-}
-
-void CPUBus::setMouse(Mouse mouse, real32 elapsedMs)
-{
-    zapper.update(mouse, elapsedMs);
 }
 
 void CPUBus::tickDMA()

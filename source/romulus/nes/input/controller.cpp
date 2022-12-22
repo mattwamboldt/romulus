@@ -30,9 +30,9 @@ uint8 StandardController::read()
     return result;
 }
 
-void StandardController::write(uint8 value)
+void StandardController::setStrobe(bool active)
 {
-    strobeActive = (value & 0x01);
+    strobeActive = active;
     if (strobeActive)
     {
         strobeState = currentState;

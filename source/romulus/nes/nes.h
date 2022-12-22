@@ -14,6 +14,7 @@ public: // making public for now, will wrap this as needed later
     APU apu = {};
     CPUBus cpuBus = {};
     Cartridge cartridge = {};
+    InputBus inputBus = {};
     bool isRunning;
 
     NES();

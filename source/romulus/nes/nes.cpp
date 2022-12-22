@@ -9,8 +9,10 @@ NES::NES()
 {
     cpu.connect(&cpuBus);
     ppu.connect(&ppuBus);
-    cpuBus.connect(&ppu, &apu, &cartridge);
+    cpuBus.connect(&ppu, &apu, &cartridge, &inputBus);
     ppuBus.connect(&ppu, &cartridge);
+    inputBus.init(&ppu);
+
     traceEnabled = false;
 }
 
@@ -269,15 +271,7 @@ void NES::processInput(InputState* input)
         return;
     }
 
-    // TODO: Come up with some kind of mechanism for custom input mapping that doesn't suck
-    // TODO: Handle keyboard
-
-    for (int i = 0; i < 2; ++i)
-    {
-        cpuBus.setGamepad(input->controllers[i], i);
-    }
-
-    cpuBus.setMouse(input->mouse, input->elapsedMs);
+    inputBus.update(input);
 }
 
 // Rendering functions that belong on the app side
