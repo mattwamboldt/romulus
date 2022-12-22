@@ -57,7 +57,5 @@ private:
     int32 totalPlayCycles;
     int32 cyclesToNextPlay;
 
-    bool wasMousePressed;
-
     void drawPalette(ScreenBuffer buffer, uint32 top, uint32 left, uint16 baseAddress);
 };

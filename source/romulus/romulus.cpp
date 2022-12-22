@@ -15,7 +15,7 @@ void DEBUG_renderMouse(InputState* input, ScreenBuffer screen)
         && input->mouse.xPosition < screen.width && input->mouse.yPosition < screen.height)
     {
         uint8* row = (uint8*)screen.memory + (screen.pitch * input->mouse.yPosition);
-        for (uint32 yOffset = 0; yOffset < 5; ++yOffset)
+        for (int32 yOffset = 0; yOffset < 5; ++yOffset)
         {
             if (input->mouse.yPosition + yOffset >= screen.height)
             {
@@ -23,14 +23,14 @@ void DEBUG_renderMouse(InputState* input, ScreenBuffer screen)
             }
 
             uint32* pixel = (uint32*)row + input->mouse.xPosition;
-            for (uint32 xOffset = 0; xOffset < 5; ++xOffset)
+            for (int32 xOffset = 0; xOffset < 5; ++xOffset)
             {
                 if (input->mouse.xPosition + xOffset >= screen.width)
                 {
                     break;
                 }
 
-                if (input->mouse.leftPressed)
+                if (input->mouse.left.isPressed)
                 {
                     *pixel++ = 0xFF00FF00;
                 }

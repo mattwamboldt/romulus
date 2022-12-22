@@ -75,14 +75,20 @@ struct GamePad
     bool selectPressed;
 };
 
+struct Button
+{
+    bool isPressed;
+    bool wasPressed;
+};
+
 struct Mouse
 {
     // Relative to the upper left of the screen so can be negative
     int32 xPosition;
     int32 yPosition;
 
-    bool leftPressed;
-    bool rightPressed;
+    Button left;
+    Button right;
 };
 
 struct InputState

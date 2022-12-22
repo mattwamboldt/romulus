@@ -547,8 +547,10 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         ScreenToClient(window, &mousePosition);
         input.mouse.xPosition = (real32)mousePosition.x * ((real32)globalBackBuffer.width / (real32)clientRect.right);
         input.mouse.yPosition = (real32)mousePosition.y * ((real32)globalBackBuffer.height / (real32)clientRect.bottom);
-        input.mouse.leftPressed = (GetKeyState(VK_LBUTTON) & (1 << 15)) != 0;
-        input.mouse.rightPressed = (GetKeyState(VK_RBUTTON) & (1 << 15)) != 0;
+        input.mouse.left.wasPressed = input.mouse.left.isPressed;
+        input.mouse.left.isPressed = (GetKeyState(VK_LBUTTON) & (1 << 15)) != 0;
+        input.mouse.right.wasPressed = input.mouse.left.isPressed;
+        input.mouse.right.isPressed = (GetKeyState(VK_RBUTTON) & (1 << 15)) != 0;
 
         // TODO: This constant frame time update means that we can't miss, or the whole thing will spiral, audio will get wonky, etc.
         // Run the sim frame and render

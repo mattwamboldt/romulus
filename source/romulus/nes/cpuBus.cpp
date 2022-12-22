@@ -201,7 +201,7 @@ uint8 CPUBus::readGamepad(int number)
 
 void CPUBus::setMouse(Mouse newMouse)
 {
-    if (!this->mouse.leftPressed && newMouse.leftPressed)
+    if (!newMouse.left.wasPressed && newMouse.left.isPressed)
     {
         // TODO: May have to put prevention in for clicking within the existing timer
         // But who could realistically click faster than 80ms?

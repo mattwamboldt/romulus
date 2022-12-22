@@ -327,9 +327,9 @@ void drawPalettePixel(ScreenBuffer buffer, uint32 x, uint32 y, uint8 index)
 void NES::drawPalette(ScreenBuffer buffer, uint32 top, uint32 left, uint16 baseAddress)
 {
     // TODO: put a rect over the selected pallete and allow selecting it to swap in the pattern table view
-    for (int paletteNum = 0; paletteNum < 16; paletteNum += 4)
+    for (uint16 paletteNum = 0; paletteNum < 16; paletteNum += 4)
     {
-        for (int i = 0; i < 4; ++i)
+        for (uint16 i = 0; i < 4; ++i)
         {
             uint8 paletteIndex = ppuBus.read(baseAddress + paletteNum + i);
             drawRect(buffer, left + (i * 10), top, 10, 10, palette[paletteIndex]);
@@ -349,10 +349,6 @@ void NES::renderPatternTable(ScreenBuffer buffer, uint32 top, uint32 left, uint8
     top += 15;
 
     uint16 patternAddress = 0x0000;
-
-    uint8* row = (uint8*)buffer.memory + (buffer.pitch * top);
-    uint32* pixel = ((uint32*)row) + left;
-
     uint32 x = left;
     uint32 y = top;
 
@@ -399,8 +395,6 @@ void NES::renderPatternTable(ScreenBuffer buffer, uint32 top, uint32 left, uint8
 void NES::renderNametable(ScreenBuffer buffer, uint32 top, uint32 left)
 {
     uint16 nametableAddress = 0x2000;
-    uint8* row = (uint8*)buffer.memory + (buffer.pitch * top);
-    uint32* pixel = ((uint32*)row) + left;
 
     uint32 x = left;
     uint32 y = top;
@@ -527,9 +521,8 @@ void NES::renderNametable(ScreenBuffer buffer, uint32 top, uint32 left)
     uint16 fineY = (ppu.tempVramAddress & 0x7000) >> 12;
     y = top + (coarseY * 8) + fineY;
 
-
-    row = (uint8*)buffer.memory + (buffer.pitch * y);
-    pixel = ((uint32*)row) + x;
+    uint8* row = (uint8*)buffer.memory + (buffer.pitch * y);
+    uint32* pixel = ((uint32*)row) + x;
 
     *pixel = 0x0000FFFF;
 }

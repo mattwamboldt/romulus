@@ -37,7 +37,7 @@ private:
     uint8 outputLevel;
 
     uint16 currentAddress;
-    uint32 bytesRemaining;
+    uint16 bytesRemaining;
     uint8 sampleBuffer;
     bool sampleBufferFilled;
 

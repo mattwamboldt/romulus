@@ -67,7 +67,6 @@ void write(int16* buffer, uint32 length)
 // Update the appropriate sizes and close the file handle
 void finalizeStream()
 {
-	int32 fileSize = ftell(fileHandle);
 	fseek(fileHandle, 0, SEEK_SET);
 	header.chunkSize = 36 + header.dataChunkSize;
 	fwrite(&header, sizeof(WaveHeader), 1, fileHandle);
