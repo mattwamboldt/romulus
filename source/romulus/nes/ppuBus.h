@@ -6,7 +6,7 @@
 class PPUBus : public IBus
 {
 public:
-    void connect(PPU* ppu, Cartridge* cart);
+    void connect(Cartridge* cart);
 
     uint8 read(uint16 address);
     void write(uint16 address, uint8 value);
@@ -15,7 +15,6 @@ public:
     void setReadOnly(bool enable) { cart->isReadOnly = enable; };
 
 private:
-    PPU* ppu;
     Cartridge* cart;
 
     uint8 vram[2 * 1024] = {};

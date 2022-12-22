@@ -10,7 +10,7 @@ NES::NES()
     cpu.connect(&cpuBus);
     ppu.connect(&ppuBus);
     cpuBus.connect(&ppu, &apu, &cartridge, &inputBus);
-    ppuBus.connect(&ppu, &cartridge);
+    ppuBus.connect(&cartridge);
     inputBus.init(&ppu);
 
     traceEnabled = false;

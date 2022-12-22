@@ -1,6 +1,6 @@
 #include "ppuBus.h"
 
-void PPUBus::connect(PPU* ppu, Cartridge* cart)
+void PPUBus::connect(Cartridge* cart)
 {
     this->cart = cart;
 }
