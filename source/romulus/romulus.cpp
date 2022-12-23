@@ -54,6 +54,8 @@ void updateAndRender(InputState* input, ScreenBuffer screen)
     nes.render(screen);
 
     // DEBUG_renderMouse(input, screen);
+    // TODO: FPS Counter
+    // TODO: Memory/debugging view
 }
 
 bool loadROM(const char* filePath)

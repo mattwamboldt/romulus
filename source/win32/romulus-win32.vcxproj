@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="input\xinput.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sound\directsound.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\romulus\romulus.vcxproj">
@@ -27,7 +29,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="input\xinput.h" />
     <ClInclude Include="resources\resource.h" />
+    <ClInclude Include="sound\directsound.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\app.rc" />
