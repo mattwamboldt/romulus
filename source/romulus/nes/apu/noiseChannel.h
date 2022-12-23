@@ -1,5 +1,6 @@
 #pragma once
 #include "envelope.h"
+#include "lengthCounter.h"
 
 // https://www.nesdev.org/wiki/APU_Noise
 struct NoiseChannel
@@ -13,14 +14,12 @@ struct NoiseChannel
     void setLengthCounter(uint8 value);
 
     void tick();
-    void tickLengthCounter();
 
     uint8 getOutput();
 
     uint8 isEnabled;
 
-    uint8 lengthCounter;
-    bool isLengthCounterHalted;
+    LengthCounter lengthCounter;
 
     uint16 timerLength;
     uint16 timerCurrentTick;

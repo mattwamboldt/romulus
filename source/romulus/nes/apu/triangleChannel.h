@@ -1,5 +1,6 @@
 #pragma once
 #include "romulus.h"
+#include "lengthCounter.h"
 
 // https://www.nesdev.org/wiki/APU_Triangle
 struct TriangleChannel
@@ -12,14 +13,13 @@ struct TriangleChannel
     void setTimerHi(uint8 value);
 
     void tick();
-    void tickLengthCounter();
     void tickLinearCounter();
 
     uint8 getOutput();
     
     uint8 isEnabled;
 
-    uint8 lengthCounter;
+    LengthCounter lengthCounter;
 
     // Also the lengthCounter halt per the wiki
     bool isControlFlagSet;

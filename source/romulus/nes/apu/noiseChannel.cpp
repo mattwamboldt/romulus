@@ -2,8 +2,6 @@
 
 // TODO: Repeating myself a bunch once all the channels are working I'll do a refactor pass
 
-extern uint8 lengthCounterLookup[32];
-
 // TODO: This has separate tables for ntsc and pal, just doing ntsc for now
 uint16 noiseTimerLengthLookup[16] =
 {
@@ -13,7 +11,7 @@ uint16 noiseTimerLengthLookup[16] =
 void NoiseChannel::reset()
 {
     isEnabled = false;
-    lengthCounter = 0;
+    lengthCounter.clear();
 }
 
 void NoiseChannel::setEnabled(uint8 enabled)
@@ -21,14 +19,14 @@ void NoiseChannel::setEnabled(uint8 enabled)
     isEnabled = enabled;
     if (!isEnabled)
     {
-        lengthCounter = 0;
+        lengthCounter.clear();
     }
 }
 
 void NoiseChannel::setEnvelope(uint8 value)
 {
     envelope.setControl(value);
-    isLengthCounterHalted = value & 0x20;
+    lengthCounter.isHalted = value & 0x20;
 }
 
 void NoiseChannel::setPeriod(uint8 value)
@@ -42,8 +40,7 @@ void NoiseChannel::setLengthCounter(uint8 value)
 {
     if (isEnabled)
     {
-        uint8 lengthCounterLoad = value >> 3;
-        lengthCounter = lengthCounterLookup[lengthCounterLoad];
+        lengthCounter.setValue(value);
     }
 
     envelope.restart();
@@ -77,14 +74,6 @@ void NoiseChannel::tick()
     }
 }
 
-void NoiseChannel::tickLengthCounter()
-{
-    if (lengthCounter != 0 && !isLengthCounterHalted)
-    {
-        --lengthCounter;
-    }
-}
-
 uint8 NoiseChannel::getOutput()
 {
     if (!isEnabled)
@@ -97,11 +86,10 @@ uint8 NoiseChannel::getOutput()
         return 0;
     }
 
-    // NOTE: This may be wrong, theres mention of the channel being silenced on becoming 0 rather than if zero
-    if (lengthCounter == 0)
+    if (lengthCounter.active())
     {
-        return 0;
+        return envelope.getOutput();
     }
 
-    return envelope.getOutput();
+    return 0;
 }

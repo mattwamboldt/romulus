@@ -9,18 +9,10 @@ uint8 dutySequenceTables[4][8] =
     {1, 1, 1, 1, 1, 1, 0, 0}
 };
 
-uint8 lengthCounterLookup[32] =
-{
-    // 0x00 - 0x0F
-    10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
-    // 0x10 - 0x1F
-    12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
-};
-
 void PulseChannel::reset()
 {
     isEnabled = false;
-    lengthCounter = 0;
+    lengthCounter.clear();
 }
 
 void PulseChannel::setEnabled(uint8 enable)
@@ -28,7 +20,7 @@ void PulseChannel::setEnabled(uint8 enable)
     isEnabled = enable;
     if (!isEnabled)
     {
-        lengthCounter = 0;
+        lengthCounter.clear();
     }
 }
 
@@ -36,7 +28,7 @@ void PulseChannel::setDutyEnvelope(uint8 value)
 {
     dutyCycle = value >> 6;
     envelope.setControl(value);
-    isLengthCounterHalted = value & 0b00100000;
+    lengthCounter.isHalted = value & 0b00100000;
 }
 
 void PulseChannel::setSweep(uint8 value)
@@ -62,8 +54,7 @@ void PulseChannel::setTimerHi(uint8 value)
 
     if (isEnabled)
     {
-        uint8 lengthCounterLoad = value >> 3;
-        lengthCounter = lengthCounterLookup[lengthCounterLoad];
+        lengthCounter.setValue(value);
     }
 
     dutySequenceIndex = 0;
@@ -87,14 +78,11 @@ bool PulseChannel::isSweepMuting()
     return (timerLength + (timerLength >> sweep.shiftCount)) > 0x07FF;
 }
 
-void PulseChannel::tickSweep()
+void PulseChannel::tickSweep(uint16 index)
 {
     // Doing this in here for now since it happens at the same rate
     // may refactor later
-    if (lengthCounter != 0 && !isLengthCounterHalted)
-    {
-        --lengthCounter;
-    }
+    lengthCounter.tick();
 
     // Minor thing missed in the wiki was that the shift count should be non zero
     if (sweep.dividerValue == 0 && sweep.isEnabled && !isSweepMuting() && sweep.shiftCount != 0)
@@ -103,7 +91,7 @@ void PulseChannel::tickSweep()
         if (sweep.isNegateFlagSet)
         {
             timerLength -= changeAmount;
-            // TODO: Pulse 2 needs and extra -1 because math
+            timerLength -= index;
         }
         else
         {
@@ -162,8 +150,7 @@ uint8 PulseChannel::getOutput()
         return 0;
     }
 
-    // NOTE: This may be wrong, theres mention of the channel being silenced on becoming 0 rather than if zero
-    if (lengthCounter == 0)
+    if (!lengthCounter.active())
     {
         return 0;
     }

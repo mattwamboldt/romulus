@@ -1,6 +1,7 @@
 #pragma once
 
 #include "envelope.h"
+#include "lengthCounter.h"
 
 struct SweepUnit
 {
@@ -30,7 +31,7 @@ public:
     void setTimerHi(uint8 value);
 
     void tick();
-    void tickSweep();
+    void tickSweep(uint16 index);
 
     uint8 getOutput();
 
@@ -41,10 +42,7 @@ public:
     uint8 dutyCycle;
     uint8 dutySequenceIndex;
 
-    // Determines how long the wave will continue
-    // Stops when clocked and set to zero, not when it becomes zero
-    uint8 lengthCounter;
-    bool isLengthCounterHalted;
+    LengthCounter lengthCounter;
 
     // Clocks the duty cycle sequencer
     uint16 timerLength;

@@ -35,10 +35,10 @@ void APU::halfClock()
     quarterClock();
 
     // Tick the length counters and sweep units
-    pulse1.tickSweep();
-    pulse2.tickSweep();
-    triangle.tickLengthCounter();
-    noise.tickLengthCounter();
+    pulse1.tickSweep(0);
+    pulse2.tickSweep(1);
+    triangle.lengthCounter.tick();
+    noise.lengthCounter.tick();
 }
 
 void APU::tick(uint32 cpuCycleCount)
@@ -107,13 +107,13 @@ void APU::tick(uint32 cpuCycleCount)
 uint8 APU::getStatus(bool readOnly)
 {
     uint8 result = 0;
-    if (pulse1.lengthCounter > 0)   result |= 0x01;
-    if (pulse2.lengthCounter > 0)   result |= 0x02;
-    if (triangle.lengthCounter > 0) result |= 0x04;
-    if (noise.lengthCounter > 0)    result |= 0x08;
-    if (dmc.getBytesRemaining())    result |= 0x10;
-    if (isFrameInteruptFlagSet)     result |= 0x40;
-    if (dmc.isInterruptFlagSet)     result |= 0x80;
+    if (pulse1.lengthCounter.active())   result |= BIT_0;
+    if (pulse2.lengthCounter.active())   result |= BIT_1;
+    if (triangle.lengthCounter.active()) result |= BIT_2;
+    if (noise.lengthCounter.active())    result |= BIT_3;
+    if (dmc.getBytesRemaining())         result |= BIT_4;
+    if (isFrameInteruptFlagSet)          result |= BIT_6;
+    if (dmc.isInterruptFlagSet)          result |= BIT_7;
 
     if (!readOnly)
     {
@@ -127,18 +127,18 @@ uint8 APU::getStatus(bool readOnly)
 
 void APU::writeControl(uint8 value)
 {
-    pulse1.setEnabled(value & 0b00000001);
-    pulse2.setEnabled(value & 0b00000010);
-    triangle.setEnabled(value & 0b00000100);
-    noise.setEnabled(value & 0b00001000);
-    dmc.setEnabled(value & 0b00010000);
+    pulse1.setEnabled(value & BIT_0);
+    pulse2.setEnabled(value & BIT_1);
+    triangle.setEnabled(value & BIT_2);
+    noise.setEnabled(value & BIT_3);
+    dmc.setEnabled(value & BIT_4);
 }
 
 void APU::writeFrameCounterControl(uint8 value)
 {
-    isFiveStepMode = (value & 0x80) > 0;
-    
-    isInterruptInhibited = (value & 0x40) > 0;
+    isFiveStepMode = (value & BIT_7) > 0;
+    isInterruptInhibited = (value & BIT_6) > 0;
+
     if (isInterruptInhibited)
     {
         isFrameInteruptFlagSet = false;

@@ -23,6 +23,7 @@
     <ClInclude Include="nes\apu\apu.h" />
     <ClInclude Include="nes\apu\deltaModulationChannel.h" />
     <ClInclude Include="nes\apu\envelope.h" />
+    <ClInclude Include="nes\apu\lengthCounter.h" />
     <ClInclude Include="nes\apu\noiseChannel.h" />
     <ClInclude Include="nes\apu\pulseChannel.h" />
     <ClInclude Include="nes\apu\triangleChannel.h" />
@@ -47,6 +48,7 @@
     <ClCompile Include="nes\apu\apu.cpp" />
     <ClCompile Include="nes\apu\deltaModulationChannel.cpp" />
     <ClCompile Include="nes\apu\envelope.cpp" />
+    <ClCompile Include="nes\apu\lengthCounter.cpp" />
     <ClCompile Include="nes\apu\noiseChannel.cpp" />
     <ClCompile Include="nes\apu\pulseChannel.cpp" />
     <ClCompile Include="nes\apu\triangleChannel.cpp" />

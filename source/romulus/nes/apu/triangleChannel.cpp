@@ -1,7 +1,5 @@
 #include "triangleChannel.h"
 
-extern uint8 lengthCounterLookup[32];
-
 uint8 triangleSequence[32] =
 {
     15, 14, 13, 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0,
@@ -11,7 +9,7 @@ uint8 triangleSequence[32] =
 void TriangleChannel::reset()
 {
     isEnabled = false;
-    lengthCounter = 0;
+    lengthCounter.clear();
     linearCounter = 0;
 }
 
@@ -20,13 +18,13 @@ void TriangleChannel::setEnabled(uint8 enable)
     isEnabled = enable;
     if (!isEnabled)
     {
-        lengthCounter = 0;
+        lengthCounter.clear();
     }
 }
 
 void TriangleChannel::setLinearCounter(uint8 value)
 {
-    isControlFlagSet = (value & 0x80) > 0;
+    lengthCounter.isHalted = isControlFlagSet = (value & 0x80) > 0;
     linearReloadValue = value & 0x7F;
 }
 
@@ -43,8 +41,7 @@ void TriangleChannel::setTimerHi(uint8 value)
 
     if (isEnabled)
     {
-        uint8 lengthCounterLoad = value >> 3;
-        lengthCounter = lengthCounterLookup[lengthCounterLoad];
+        lengthCounter.setValue(value);
     }
 
     isLinearReloadFlagSet = true;
@@ -56,7 +53,7 @@ void TriangleChannel::tick()
     {
         // TODO: This timeLength check silences the channel when the frequency is too high
         // If I ever put in proper downsampling, this can be taken out for a more "authentic" sound
-        if (timerLength > 2 && (lengthCounter > 0 && linearCounter > 0))
+        if (timerLength > 2 && (lengthCounter.active() && linearCounter > 0))
         {
             ++sequenceIndex;
             if (sequenceIndex >= 32)
@@ -70,14 +67,6 @@ void TriangleChannel::tick()
     else
     {
         --timerCurrentTick;
-    }
-}
-
-void TriangleChannel::tickLengthCounter()
-{
-    if (lengthCounter != 0 && !isControlFlagSet)
-    {
-        --lengthCounter;
     }
 }
 

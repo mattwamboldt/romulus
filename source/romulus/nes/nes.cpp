@@ -159,7 +159,10 @@ void NES::update(real32 secondsPerFrame)
         }
 
         ++clockDivider;
-        clockDivider %= 12;
+        if (clockDivider >= 12)
+        {
+            clockDivider = 0;
+        }
 
         if (cartridge.isNSF)
         {
