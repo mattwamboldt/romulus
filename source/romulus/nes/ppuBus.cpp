@@ -47,14 +47,19 @@ uint8 PPUBus::read(uint16 address)
 
     // palettes http://wiki.nesdev.com/w/index.php/PPU_palettes
     address &= 0x001F;
+
+    uint8 value = 0;
     switch (address)
     {
-        case 0x10: return paletteRam[0x00];
-        case 0x14: return paletteRam[0x04];
-        case 0x18: return paletteRam[0x08];
-        case 0x1C: return paletteRam[0x0C];
-        default: return paletteRam[address];
+        case 0x10: value = paletteRam[0x00];
+        case 0x14: value = paletteRam[0x04];
+        case 0x18: value = paletteRam[0x08];
+        case 0x1C: value = paletteRam[0x0C];
+        default: value = paletteRam[address];
     }
+
+    // For some reason this gets set to above the range in certain carts. Maybe its another bug but... yeah
+    return value & 0x3F;
 }
 
 void PPUBus::write(uint16 address, uint8 value)
