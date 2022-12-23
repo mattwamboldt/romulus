@@ -35,6 +35,7 @@ private:
     uint8 ram[2 * 1024];
 
     uint8 ppuOpenBusValue;
+    uint8 cpuOpenBusValue;
 
     // Debug implementation detail, for logging
     bool readOnly;

@@ -45,8 +45,9 @@ void StandardController::update(GamePad gamepad)
     currentState = 0;
 
     // NOTE: DO NOT DO THIS NORMALLY, BAD
-    if (gamepad.aPressed) currentState |= 0x01;
-    if (gamepad.bPressed) currentState |= 0x02;
+    // TODO: Proper mapping (You'll note a and b are swapped, cause xbox controller
+    if (gamepad.bPressed) currentState |= 0x01;
+    if (gamepad.aPressed) currentState |= 0x02;
     if (gamepad.selectPressed) currentState |= 0x04;
     if (gamepad.startPressed) currentState |= 0x08;
     if (gamepad.upPressed) currentState |= 0x10;

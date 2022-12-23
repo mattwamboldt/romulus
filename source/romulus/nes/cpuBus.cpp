@@ -18,7 +18,8 @@ uint8 CPUBus::read(uint16 address)
     if (address < 0x2000)
     {
         // map to the internal 2kb ram
-        return ram[address & 0x07FF];
+        cpuOpenBusValue = ram[address & 0x07FF];
+        return cpuOpenBusValue;
     }
 
     // PPU Registers (Only bottom 3 bits matter)
@@ -55,18 +56,39 @@ uint8 CPUBus::read(uint16 address)
     // See http://wiki.nesdev.com/w/index.php/2A03
     if (address < 0x4020)
     {
+        if (readOnly)
+        {
+            return 0xFF;
+        }
+
         switch (address)
         {
             // TODO: Handle Open Bus
             case OAMDMA:  return ppuOpenBusValue;
-            case SND_CHN: return apu->getStatus(readOnly);
-            case JOY1:    return readOnly ? 0 : inputBus->read(0); // TODO: open bus is special as input only ses the bottom 2-5 bits
-            case JOY2:    return readOnly ? 0 : inputBus->read(1);
-            default: return 0;
+            case SND_CHN:
+            {
+                cpuOpenBusValue = apu->getStatus(readOnly);
+                return cpuOpenBusValue;
+            }
+            case JOY1:
+            {
+                cpuOpenBusValue &= 0xE0;
+                cpuOpenBusValue |= inputBus->read(0) & 0x1F;
+                return cpuOpenBusValue;
+            }
+            case JOY2:
+            {
+                cpuOpenBusValue &= 0xE0;
+                cpuOpenBusValue |= inputBus->read(1) & 0x1F;
+                return cpuOpenBusValue;
+            }
+            default:
+                return cpuOpenBusValue;
         }
     }
 
-    return cart->prgRead(address);
+    cpuOpenBusValue = cart->prgRead(address);
+    return cpuOpenBusValue;
 }
 
 void CPUBus::write(uint16 address, uint8 value)
