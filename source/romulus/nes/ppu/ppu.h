@@ -14,7 +14,6 @@ public:
     PPU();
     void connect(IBus* bus) { this->bus = bus; }
 
-    // TODO: Fully implement
     void reset();
     void tick();
 
@@ -44,7 +43,6 @@ public:
     uint32 scanline;
     uint32 pixel;
 
-    // TODO: Temp for now, will have a screen abstraction later
     // Stores the pallette data while it's being written
     uint8 screenBufferOne[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
     uint8 screenBufferTwo[NES_SCREEN_WIDTH * NES_SCREEN_HEIGHT];
@@ -69,7 +67,6 @@ public:
     // t: Address of the top left of the screen
     uint16 tempVramAddress;
 
-    // TODO: Implement
     // x: Fine X scroll (3 bits)
     uint8 fineX;
 
@@ -149,7 +146,6 @@ private:
     // ======================
     // Internal Storage for the Sprites
     // See https://www.nesdev.org/wiki/PPU_sprite_evaluation
-    // TODO: Implement
     // ======================
 
     uint8 oamAddress;

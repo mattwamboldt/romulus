@@ -95,12 +95,6 @@ void NES::update(real32 secondsPerFrame)
         cpuStep();
     }
 
-    // TODO: calculate this rate properly and preserve extra cycles in a variable to run later
-    // cpu and ppu per needed timings, cpu and apu every 12, ppu every 4
-
-    // TODO: There s a note on the wiki that mentions having a hard coded clock rate
-    // "Emulator authors may wish to emulate the NTSC NES/Famicom CPU at 21441960 Hz ((341�262-0.5)�4�60) to ensure a synchronised/stable 60 frames per second."
-    // I don't understand how this works, so for now, I'll just calculate it
     uint32 masterCycles = (uint32)(secondsPerFrame * masterClockHz);
     uint32 cyclesPerSample = (uint32)(masterCycles / (secondsPerFrame * 48000));
     for (uint32 i = 0; i < masterCycles; ++i)

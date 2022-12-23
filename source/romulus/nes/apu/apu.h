@@ -42,8 +42,6 @@ public:
     bool isFrameInteruptFlagSet;
 
     // https://www.nesdev.org/wiki/APU_Frame_Counter
-    // TODO: They mention half frames which makes me think its actually clocked by the cpu
-    // And just doesn't run the sequencer on every one. Will need to find out
     uint16 frameCounter;
 
     bool isFiveStepMode;

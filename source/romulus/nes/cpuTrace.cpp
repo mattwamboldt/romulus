@@ -253,13 +253,13 @@ int formatRegistersFCEU(char* dest, MOS6502* cpu)
 
 void formatRegistersNesTest(char* dest, MOS6502* cpu, PPU* ppu, uint32 cpuCycle)
 {
-    // TODO: Add PPU and Cycles
     memcpy(dest, "A:00 X:00 Y:00 P:00 SP:00 PPU:   ,    CYC:", 42);
 
     formatByte(dest + 2, cpu->accumulator);
     formatByte(dest + 7, cpu->x);
     formatByte(dest + 12, cpu->y);
-    // NOTE: This only displays as 1 in the log but isn't set in the register itself. see https://www.nesdev.org/wiki/Status_flags#The_B_flag
+    // NOTE: This only displays as 1 in the log but isn't set in the register itself.
+    // See https://www.nesdev.org/wiki/Status_flags#The_B_flag
     formatByte(dest + 17, (cpu->status | 0b00100000));
     formatByte(dest + 23, cpu->stack);
 

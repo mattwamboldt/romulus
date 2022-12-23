@@ -12,8 +12,6 @@
 // of how these systems work. Using DSound before on another project was fairly straightforward so
 // this will be an evolution of that code.
 
-// TODO: Handle window events to pause the dsound buffer and emulator execution when dragging the window
-
 #include <dsound.h>
 
 // TODO: Will pull this into a separate file/class maybe, later
@@ -415,7 +413,6 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
             else if (command == MENU_VIDEO_FULLSCREEN)
             {
                 toggleFullscreen(window);
-                // TODO: Also add hide/show menus for when we go fullscreen
             }
             else if (command == MENU_VIDEO_HIDEMENU)
             {
@@ -605,7 +602,6 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         input.mouse.right.wasPressed = input.mouse.left.isPressed;
         input.mouse.right.isPressed = (GetKeyState(VK_RBUTTON) & (1 << 15)) != 0;
 
-        // TODO: This constant frame time update means that we can't miss, or the whole thing will spiral, audio will get wonky, etc.
         // Run the sim frame and render
         ScreenBuffer screen = {};
         screen.width = globalBackBuffer.width;
