@@ -70,22 +70,6 @@ void PulseChannel::setTimerHi(uint8 value)
     envelope.restart();
 }
 
-uint16 PulseChannel::getSweepTargetPeriod()
-{
-    uint16 targetPeriod = timerLength;
-    uint16 changeAmount = timerLength >> sweep.shiftCount;
-    if (sweep.isNegateFlagSet)
-    {
-        targetPeriod = timerLength - changeAmount;
-    }
-    else
-    {
-        targetPeriod = timerLength + changeAmount;
-    }
-
-    return targetPeriod;
-}
-
 bool PulseChannel::isSweepMuting()
 {
     if (timerLength < 8)
@@ -93,16 +77,41 @@ bool PulseChannel::isSweepMuting()
         return true;
     }
 
-    return getSweepTargetPeriod() > 0x07FF;
+    // Don't check for negative in case a wraparound or some weird edge case causes it to go sideways
+    // a zero lero length timer just means a super high frequency
+    if (sweep.isNegateFlagSet)
+    {
+        return false;
+    }
+
+    return (timerLength + (timerLength >> sweep.shiftCount)) > 0x07FF;
 }
 
 void PulseChannel::tickSweep()
 {
-    if (sweep.dividerValue == 0 && sweep.isEnabled && !isSweepMuting())
+    // Doing this in here for now since it happens at the same rate
+    // may refactor later
+    if (lengthCounter != 0 && !isLengthCounterHalted)
     {
-        timerLength = getSweepTargetPeriod();
+        --lengthCounter;
     }
 
+    // Minor thing missed in the wiki was that the shift count should be non zero
+    if (sweep.dividerValue == 0 && sweep.isEnabled && !isSweepMuting() && sweep.shiftCount != 0)
+    {
+        uint16 changeAmount = timerLength >> sweep.shiftCount;
+        if (sweep.isNegateFlagSet)
+        {
+            timerLength -= changeAmount;
+            // TODO: Pulse 2 needs and extra -1 because math
+        }
+        else
+        {
+            timerLength += changeAmount;
+        }
+    }
+
+    // TODO: it's very unclear if this stuff should still be happening in all the previous if condition's scenarios
     if (sweep.dividerValue == 0 || sweep.isReloadFlagSet)
     {
         sweep.dividerValue = sweep.dividerPeriod;
@@ -111,13 +120,6 @@ void PulseChannel::tickSweep()
     else
     {
         --sweep.dividerValue;
-    }
-
-    // Doing this in here for now since it happens at the same rate
-    // may refactor later
-    if (lengthCounter != 0 && !isLengthCounterHalted)
-    {
-        --lengthCounter;
     }
 }
 

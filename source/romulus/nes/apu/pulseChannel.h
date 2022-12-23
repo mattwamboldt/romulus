@@ -35,7 +35,6 @@ public:
     uint8 getOutput();
 
     bool isSweepMuting();
-    uint16 getSweepTargetPeriod();
 
     uint8 isEnabled;
 
