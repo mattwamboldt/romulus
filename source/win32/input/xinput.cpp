@@ -45,6 +45,23 @@ void LoadXInput()
     }
 }
 
+// NOTE: Shouldn't shift around, but keep this in sync with GamePad::Buttons
+WORD xinputToGenericButtonMap[GamePad::NUM_BUTTONS] =
+{
+    XINPUT_GAMEPAD_DPAD_UP,
+    XINPUT_GAMEPAD_DPAD_DOWN,
+    XINPUT_GAMEPAD_DPAD_LEFT,
+    XINPUT_GAMEPAD_DPAD_RIGHT,
+    XINPUT_GAMEPAD_START,
+    XINPUT_GAMEPAD_BACK,
+    XINPUT_GAMEPAD_A,
+    XINPUT_GAMEPAD_B,
+    XINPUT_GAMEPAD_X,
+    XINPUT_GAMEPAD_Y,
+    XINPUT_GAMEPAD_LEFT_SHOULDER,
+    XINPUT_GAMEPAD_RIGHT_SHOULDER
+};
+
 void UpdateXInputState(InputState* inputState)
 {
     for (DWORD i = 0; i < 2; ++i)
@@ -56,18 +73,16 @@ void UpdateXInputState(InputState* inputState)
         {
             // connected
             // TODO: handle packet number
-            gamePad->isConnected = true;
             gamePad->deviceId = i;
+            gamePad->isConnected = true;
 
             XINPUT_GAMEPAD pad = controllerState.Gamepad;
-            gamePad->upPressed = (pad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0;
-            gamePad->downPressed = (pad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0;
-            gamePad->leftPressed = (pad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != 0;
-            gamePad->rightPressed = (pad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != 0;
-            gamePad->startPressed = (pad.wButtons & XINPUT_GAMEPAD_START) != 0;
-            gamePad->selectPressed = (pad.wButtons & XINPUT_GAMEPAD_BACK) != 0;
-            gamePad->aPressed = (pad.wButtons & XINPUT_GAMEPAD_A) != 0;
-            gamePad->bPressed = (pad.wButtons & XINPUT_GAMEPAD_B) != 0;
+
+            for (int b = 0; b < GamePad::NUM_BUTTONS; ++b)
+            {
+                gamePad->buttons[b].wasPressed = gamePad->buttons[b].isPressed;
+                gamePad->buttons[b].isPressed = (pad.wButtons & xinputToGenericButtonMap[b]) != 0;
+            }
         }
         else
         {

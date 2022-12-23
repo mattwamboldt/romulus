@@ -5,17 +5,23 @@
 void InputBus::init(PPU* ppu)
 {
     this->ppu = ppu;
+    // For now hard wiring port 0 to the controller and 1 to the zapper
+    ports[0] = STANDARD_CONTROLLER;
+    ports[1] = ZAPPER;
 }
 
 uint8 InputBus::read(int portNumber)
 {
-    // For now hard wiring port 0 to the controller and 1 to the zapper
-    if (portNumber == 0)
+    switch (ports[portNumber])
     {
-        return controllers[0].read();
+        case STANDARD_CONTROLLER:
+            return controllers[portNumber].read();
+
+        case ZAPPER:
+            return zapper.read(ppu);
     }
 
-    return zapper.read(ppu);
+    return 0;
 }
 
 void InputBus::write(uint8 value)

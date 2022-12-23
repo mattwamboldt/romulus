@@ -4,6 +4,18 @@
 // Reference https://www.nesdev.org/wiki/Standard_controller
 struct StandardController
 {
+    enum Buttons
+    {
+        A,
+        B,
+        SELECT,
+        START,
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT
+    };
+
     // The bit pattern as of the last update
     uint8 currentState;
     // The bit pattern as of the last "strobe"

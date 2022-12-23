@@ -2,6 +2,13 @@
 #include "controller.h"
 #include "zapper.h"
 
+enum NESDeviceType
+{
+    DISCONNECTED = 0,
+    STANDARD_CONTROLLER,
+    ZAPPER,
+};
+
 class InputBus
 {
 public:
@@ -14,6 +21,8 @@ public:
     void write(uint8 value);
 
     void update(InputState* rawInput);
+
+    NESDeviceType ports[2];
 
 private:
     PPU* ppu;

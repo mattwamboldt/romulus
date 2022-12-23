@@ -46,23 +46,23 @@ void StandardController::update(GamePad gamepad)
 
     // NOTE: DO NOT DO THIS NORMALLY, BAD
     // TODO: Proper mapping (You'll note a and b are swapped, cause xbox controller
-    if (gamepad.bPressed) currentState |= 0x01;
-    if (gamepad.aPressed) currentState |= 0x02;
-    if (gamepad.selectPressed) currentState |= 0x04;
-    if (gamepad.startPressed) currentState |= 0x08;
-    if (gamepad.upPressed) currentState |= 0x10;
-    if (gamepad.downPressed) currentState |= 0x20;
-    if (gamepad.leftPressed) currentState |= 0x40;
-    if (gamepad.rightPressed) currentState |= 0x80;
+    if (gamepad.b.isPressed) currentState |= 0x01;
+    if (gamepad.a.isPressed) currentState |= 0x02;
+    if (gamepad.select.isPressed) currentState |= 0x04;
+    if (gamepad.start.isPressed) currentState |= 0x08;
+    if (gamepad.up.isPressed) currentState |= 0x10;
+    if (gamepad.down.isPressed) currentState |= 0x20;
+    if (gamepad.left.isPressed) currentState |= 0x40;
+    if (gamepad.right.isPressed) currentState |= 0x80;
 
     // Noticed this as a setting on other emulators and realized I forgot to block this
     // Probably never caught it cause I use a gamepad but trivial to do on keyboard
-    if (gamepad.upPressed && gamepad.downPressed)
+    if (gamepad.up.isPressed && gamepad.down.isPressed)
     {
         currentState &= 0xCF;
     }
 
-    if (gamepad.leftPressed && gamepad.rightPressed)
+    if (gamepad.left.isPressed && gamepad.right.isPressed)
     {
         currentState &= 0x3F;
     }

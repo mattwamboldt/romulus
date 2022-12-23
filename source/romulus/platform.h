@@ -54,31 +54,60 @@ struct ScreenBuffer
     void* memory;
 };
 
-// This is modelled on the 360 controller for now, just to have a consistent
-// definition of what bottom face button means, etc.
-struct GamePad
-{
-    uint32 deviceId;
-    bool isConnected;
-
-    bool upPressed;
-    bool downPressed;
-    bool leftPressed;
-    bool rightPressed;
-
-    bool aPressed;
-    bool bPressed;
-    bool xPressed;
-    bool yPressed;
-
-    bool startPressed;
-    bool selectPressed;
-};
-
 struct Button
 {
     bool isPressed;
     bool wasPressed;
+};
+
+// Modelling this on the Playstation controller, because it has the least ambiguity
+// Could be 360 cause thats all we support at the moment, but the code will be easier
+// to read without A = A but A is the bottom on this platform, but right on this one
+struct GamePad
+{
+    enum Buttons
+    {
+        UP = 0,
+        DOWN,
+        LEFT,
+        RIGHT,
+        START,
+        SELECT,
+        CROSS,
+        CIRCLE,
+        SQUARE,
+        TRIANGLE,
+        LEFT_SHOULDER,
+        RIGHT_SHOULDER,
+
+        NUM_BUTTONS
+    };
+
+    uint32 deviceId;
+    bool isConnected;
+
+    // TODO: Using crazy union stuff for now to step stone to full mapping
+    union
+    {
+        Button buttons[NUM_BUTTONS];
+
+        // TODO: Delete, making this match to get compiling again
+        struct
+        {
+            Button up;
+            Button down;
+            Button left;
+            Button right;
+            Button start;
+            Button select;
+            Button a;
+            Button b;
+            Button x;
+            Button y;
+            Button leftShoulder;
+            Button rightShoulder;
+        };
+    };
 };
 
 struct Mouse
