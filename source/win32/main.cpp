@@ -305,6 +305,14 @@ void toggleFullscreen(HWND window)
     }
 }
 
+// NOTE: Handles the window messages that signal DefWndProc will block
+// From: https://en.sfml-dev.org/forums/index.php?topic=2459.0
+//
+// Mentions these as pairs to detect (on/off), we only need the on:
+// - WM_ENTERMENUMOVE / WM_EXITMENUMOVE
+// - WM_NCLBUTTONDOWN / WM_CAPTURECHANGED
+// - WM_ENTERSIZEMOVE / WM_EXITSIZEMOVE
+bool windowLoopStalled = false;
 
 LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -323,6 +331,14 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
             EndPaint(window, &paint);
         }
         break;
+
+        case WM_NCLBUTTONDOWN:
+        case WM_ENTERSIZEMOVE:
+        case WM_ENTERMENULOOP:
+            // Make sure we don't get janky audio by detecting the pending stall
+            windowLoopStalled = true;
+            directSoundOutputBuffer->Stop();
+            return DefWindowProcA(window, msg, wParam, lParam);
 
         case WM_COMMAND:
         {
@@ -532,6 +548,13 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
                 TranslateMessage(&msg);
                 DispatchMessageA(&msg);
             }
+        }
+
+        if (windowLoopStalled)
+        {
+            frameTime = getClockTime();
+            directSoundOutputBuffer->Play(0, 0, DSBPLAY_LOOPING);
+            windowLoopStalled = false;
         }
 
         input.elapsedMs = secondsPerFrame;
