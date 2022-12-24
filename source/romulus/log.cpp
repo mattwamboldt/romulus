@@ -15,33 +15,50 @@ const char* logLevelNames[] =
     "FATAL"
 };
 
-void logRaw(LogLevel level, const char* message)
+char* formatLevelName(LogLevel level, char* buffer)
 {
-    char levelText[16] = {};
-    char* cursor = levelText;
-    *cursor++ = '[';
+    *buffer++ = '[';
 
     const char* levelName = logLevelNames[level];
     while (*levelName)
     {
-        *cursor++ = *levelName++;
+        *buffer++ = *levelName++;
     }
 
-    *cursor++ = ']';
-    *cursor++ = ' ';
+    *buffer++ = ']';
+    *buffer++ = ' ';
+    return buffer;
+}
+
+void logRaw(LogLevel level, const char* message)
+{
+    if (level < minimumLogLevel || level >= LOG_NUM_LEVELS)
+    {
+        return;
+    }
+
+    char levelText[16] = {};
+    char* cursor = formatLevelName(level, levelText);
+    *cursor = 0;
 
     // TODO: Make this go to different output streams
-
     OutputDebugStringA(levelText);
     OutputDebugStringA(message);
 }
 
 void logl(LogLevel level, const char* message, va_list args)
 {
+    if (level < minimumLogLevel || level >= LOG_NUM_LEVELS)
+    {
+        return;
+    }
+
     static char logLine[MAX_LOG_LINE] = {};
-    
-    vsprintf(logLine, message, args);
-    logRaw(level, logLine);
+    char* cursor = formatLevelName(level, logLine);
+    int remainingLength = MAX_LOG_LINE - (cursor - logLine);
+    int bytesWritten = vsnprintf(cursor, remainingLength, message, args);
+    // TODO: Considering validating this printed the full amount and pronting an error
+    OutputDebugStringA(logLine);
 }
 
 void log(LogLevel level, const char* message, ...)
