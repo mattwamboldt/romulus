@@ -325,9 +325,13 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     uint32 frameCount = 0;
     
     InputState input = {};
+    KeyboardEvent keyboardEvents[256];
+    input.keyboardEvents = keyboardEvents;
     
     while (isRunning)
     {
+        input.numKeyboardEvents = 0;
+
         // Handle Input
         MSG msg;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
@@ -339,8 +343,22 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
 
             if (!TranslateAcceleratorA(window, acceleratorTable, &msg))
             {
-                TranslateMessage(&msg);
-                DispatchMessageA(&msg);
+                if (msg.message == WM_KEYDOWN || msg.message == WM_KEYUP)
+                {
+                    bool wasDown = (msg.lParam & 0x40000000) != 0;
+                    bool isDown = (msg.lParam & 0x80000000) == 0;
+                    if (isDown != wasDown)
+                    {
+                        KeyboardEvent* keyEvent = input.keyboardEvents + input.numKeyboardEvents++;
+                        keyEvent->isPress = !wasDown;
+                        keyEvent->keycode = (uint8)msg.wParam;
+                    }
+                }
+                else
+                {
+                    TranslateMessage(&msg);
+                    DispatchMessageA(&msg);
+                }
             }
         }
 

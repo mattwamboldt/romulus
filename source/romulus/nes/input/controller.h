@@ -26,9 +26,9 @@ struct StandardController
     // Reloads the curent state on every read while active
     bool strobeActive;
 
-    GamePad::Buttons buttonMap[NUM_BUTTONS] = {};
-
-    void initMapping();
+    // Going to constrain mappings to one device per input, no keyboard/controller split nonsense
+    int8 sourceDeviceId;
+    uint8 buttonMap[NUM_BUTTONS] = {};
 
     // Gets the next bit from the serial port (ie lowest bit of the strobe state)
     uint8 read();
@@ -39,4 +39,6 @@ struct StandardController
     // Writes the current controller state out to the bits in the register
     // TODO: Figure out how to handle mappings (Either through this class or a generic "fake" gamepad device above this)
     void update(GamePad gamepad);
+
+    void setButton(uint8 index, bool active);
 };

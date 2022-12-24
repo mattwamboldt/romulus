@@ -40,18 +40,6 @@ void StandardController::setStrobe(bool active)
     }
 }
 
-void StandardController::initMapping()
-{
-    buttonMap[A] = GamePad::B;
-    buttonMap[B] = GamePad::A;
-    buttonMap[SELECT] = GamePad::SELECT;
-    buttonMap[START] = GamePad::START;
-    buttonMap[UP] = GamePad::UP;
-    buttonMap[DOWN] = GamePad::DOWN;
-    buttonMap[LEFT] = GamePad::LEFT;
-    buttonMap[RIGHT] = GamePad::RIGHT;
-}
-
 void StandardController::update(GamePad gamepad)
 {
     currentState = 0;
@@ -77,5 +65,18 @@ void StandardController::update(GamePad gamepad)
     if ((currentState & 0xC0) == 0xC0)
     {
         currentState &= 0x3F;
+    }
+}
+
+void StandardController::setButton(uint8 index, bool active)
+{
+    uint8 desiredBit = 1 << index;
+    if (active)
+    {
+        currentState |= desiredBit;
+    }
+    else
+    {
+        currentState &= ~desiredBit;
     }
 }

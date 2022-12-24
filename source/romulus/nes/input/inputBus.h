@@ -9,6 +9,12 @@ enum NESDeviceType
     ZAPPER,
 };
 
+struct Port
+{
+    NESDeviceType device;
+    int8 index;
+};
+
 class InputBus
 {
 public:
@@ -22,8 +28,10 @@ public:
 
     void update(InputState* rawInput);
 
-    NESDeviceType ports[2];
+    Port ports[2];
 
 private:
     PPU* ppu;
+
+    GamePad keyboardVirtualGamepad;
 };

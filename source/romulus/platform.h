@@ -116,11 +116,22 @@ struct Mouse
     Button right;
 };
 
+struct KeyboardEvent
+{
+    uint8 keycode;
+    uint8 isPress;
+};
+
 struct InputState
 {
     real32 elapsedMs;
     Mouse mouse;
     GamePad controllers[2];
+
+    // For now handling the keyboard using code from another project that translated
+    // the os event stream into events in the engine, rather than having a full state
+    int32 numKeyboardEvents;
+    KeyboardEvent* keyboardEvents;
 };
 
 // Functions that the emulator exposes to the platform side
