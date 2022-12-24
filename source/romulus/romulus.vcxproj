@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="log.h" />
     <ClInclude Include="nes\6502.h" />
     <ClInclude Include="nes\apu\apu.h" />
     <ClInclude Include="nes\apu\deltaModulationChannel.h" />
@@ -44,6 +45,7 @@
     <ClInclude Include="wavefile.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="nes\6502.cpp" />
     <ClCompile Include="nes\apu\apu.cpp" />
     <ClCompile Include="nes\apu\deltaModulationChannel.cpp" />

@@ -1,7 +1,7 @@
 #include "cartridge.h"
 #include <stdio.h>
 #include <string.h>
-#include <windows.h>
+#include "log.h"
 
 // PRG = cartridge side connected to the cpu
 // CHR = cartridge side connected to the ppu
@@ -100,7 +100,7 @@ bool Cartridge::loadINES(const char* filepath, uint8* buffer, uint32 length)
     if (versionSignature == 0x08)
     {
         // Try to parse as 2.0 or reject it
-        OutputDebugStringA("Need to handle NES 2.0\n");
+        logError("Need to handle NES 2.0\n");
         return false;
     }
     else if (versionSignature == 0x04)
@@ -115,10 +115,7 @@ bool Cartridge::loadINES(const char* filepath, uint8* buffer, uint32 length)
         {
             if (header->rawBytes[i])
             {
-                OutputDebugStringA("Failed to parse modern iNES:\n");
-                char message[256];
-                sprintf(message, " - Mapper number %d\n", mapperNumber & 0x0F);
-                OutputDebugStringA(message);
+                logWarn("Failed to parse modern iNES:\n - Mapper number %d\n", mapperNumber & 0x0F);
                 mapperNumber &= 0x0F;
                 break;
             }
@@ -129,7 +126,7 @@ bool Cartridge::loadINES(const char* filepath, uint8* buffer, uint32 length)
         // if its 0x0C then it's ancient or trash and needs special handling
         // So for now its trash
         // TODO: Output an error of some kind
-        OutputDebugStringA("0.7 or archaic\n");
+        logWarn("iNES 0.7 or archaic\n");
         mapperNumber &= 0x0F;
     }
 
@@ -140,37 +137,35 @@ bool Cartridge::loadINES(const char* filepath, uint8* buffer, uint32 length)
 
     if (mapperNumber == 0)
     {
-        OutputDebugStringA("Mapper: 000 NROM\n");
+        logInfo("Mapper: 000 NROM\n");
     }
     else if (mapperNumber == 1)
     {
-        OutputDebugStringA("Mapper: 001 MMC1\n");
+        logInfo("Mapper: 001 MMC1\n");
     }
     else if (mapperNumber == 2)
     {
-        OutputDebugStringA("Mapper: 002 UxROM\n");
+        logInfo("Mapper: 002 UxROM\n");
     }
     else if (mapperNumber == 3)
     {
-        OutputDebugStringA("Mapper: 003 CNROM\n");
+        logInfo("Mapper: 003 CNROM\n");
     }
     else if (mapperNumber == 4)
     {
-        OutputDebugStringA("Mapper: 004 MMC3 (Incomplete)\n");
+        logInfo("Mapper: 004 MMC3 (Incomplete)\n");
     }
     else if (mapperNumber == 7)
     {
-        OutputDebugStringA("Mapper: 007 AxROM\n");
+        logInfo("Mapper: 007 AxROM\n");
     }
     else if (mapperNumber == 9)
     {
-        OutputDebugStringA("Mapper: 009 MMC2\n");
+        logInfo("Mapper: 009 MMC2\n");
     }
     else
     {
-        char message[256];
-        sprintf(message, "Load Failed: Unhandled Mapper (%d)\n", mapperNumber);
-        OutputDebugStringA(message);
+        logError("Load Failed: Unhandled Mapper (%d)\n", mapperNumber);
     }
 
     prgRom = (uint8*)buffer;

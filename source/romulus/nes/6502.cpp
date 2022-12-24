@@ -1,8 +1,5 @@
+#include "log.h"
 #include "6502.h"
-
-// TEMP
-#include "windows.h"
-#include <stdio.h>
 
 const uint16 NMI_VECTOR = 0xFFFA;
 const uint16 RESET_VECTOR = 0xFFFC;
@@ -1392,11 +1389,8 @@ void MOS6502::pushPCH()
 
 void MOS6502::KillUnimplemented(const char* message)
 {
-    char output[256];
     Operation operation = operations[inst];
-    sprintf(
-        output,
-        "[CPU] %s: 0x%04X 0x%02X %s (%s, %d)\n",
+    logError("[CPU] %s: 0x%04X 0x%02X %s (%s, %d)\n",
         message,
         instAddr,
         inst,
@@ -1404,7 +1398,6 @@ void MOS6502::KillUnimplemented(const char* message)
         addressModeNames[operation.addressMode],
         stage);
 
-    OutputDebugStringA(output);
     isHalted = true;
     assert(false);
 }
