@@ -1,19 +1,20 @@
 #pragma once
-#include "platform.h"
+#include "romulus.h"
 
 // Reference https://www.nesdev.org/wiki/Standard_controller
 struct StandardController
 {
     enum Buttons
     {
-        A,
+        A = 0,
         B,
         SELECT,
         START,
         UP,
         DOWN,
         LEFT,
-        RIGHT
+        RIGHT,
+        NUM_BUTTONS
     };
 
     // The bit pattern as of the last update
@@ -24,6 +25,10 @@ struct StandardController
     uint8 shiftCount;
     // Reloads the curent state on every read while active
     bool strobeActive;
+
+    GamePad::Buttons buttonMap[NUM_BUTTONS] = {};
+
+    void initMapping();
 
     // Gets the next bit from the serial port (ie lowest bit of the strobe state)
     uint8 read();

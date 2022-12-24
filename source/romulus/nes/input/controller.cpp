@@ -40,29 +40,41 @@ void StandardController::setStrobe(bool active)
     }
 }
 
+void StandardController::initMapping()
+{
+    buttonMap[A] = GamePad::B;
+    buttonMap[B] = GamePad::A;
+    buttonMap[SELECT] = GamePad::SELECT;
+    buttonMap[START] = GamePad::START;
+    buttonMap[UP] = GamePad::UP;
+    buttonMap[DOWN] = GamePad::DOWN;
+    buttonMap[LEFT] = GamePad::LEFT;
+    buttonMap[RIGHT] = GamePad::RIGHT;
+}
+
 void StandardController::update(GamePad gamepad)
 {
     currentState = 0;
 
-    // NOTE: DO NOT DO THIS NORMALLY, BAD
-    // TODO: Proper mapping (You'll note a and b are swapped, cause xbox controller
-    if (gamepad.b.isPressed) currentState |= 0x01;
-    if (gamepad.a.isPressed) currentState |= 0x02;
-    if (gamepad.select.isPressed) currentState |= 0x04;
-    if (gamepad.start.isPressed) currentState |= 0x08;
-    if (gamepad.up.isPressed) currentState |= 0x10;
-    if (gamepad.down.isPressed) currentState |= 0x20;
-    if (gamepad.left.isPressed) currentState |= 0x40;
-    if (gamepad.right.isPressed) currentState |= 0x80;
+    uint8 currentBit = BIT_0;
+    for (int i = 0; i < NUM_BUTTONS; ++i)
+    {
+        if (gamepad.buttons[buttonMap[i]].isPressed)
+        {
+            currentState |= currentBit;
+        }
 
-    // Noticed this as a setting on other emulators and realized I forgot to block this
-    // Probably never caught it cause I use a gamepad but trivial to do on keyboard
-    if (gamepad.up.isPressed && gamepad.down.isPressed)
+        currentBit <<= 1;
+    }
+
+    // Prevent simultaneous Up and Down
+    if ((currentState & 0x30) == 0x30)
     {
         currentState &= 0xCF;
     }
 
-    if (gamepad.left.isPressed && gamepad.right.isPressed)
+    // Prevent simultaneous Left and Right
+    if ((currentState & 0xC0) == 0xC0)
     {
         currentState &= 0x3F;
     }

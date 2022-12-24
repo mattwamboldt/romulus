@@ -8,6 +8,8 @@ void InputBus::init(PPU* ppu)
     // For now hard wiring port 0 to the controller and 1 to the zapper
     ports[0] = STANDARD_CONTROLLER;
     ports[1] = ZAPPER;
+    controllers[0].initMapping();
+    controllers[1].initMapping();
 }
 
 uint8 InputBus::read(int portNumber)

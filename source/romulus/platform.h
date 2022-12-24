@@ -60,9 +60,7 @@ struct Button
     bool wasPressed;
 };
 
-// Modelling this on the Playstation controller, because it has the least ambiguity
-// Could be 360 cause thats all we support at the moment, but the code will be easier
-// to read without A = A but A is the bottom on this platform, but right on this one
+// Modelled on the 360 controller cause its easier to reference
 struct GamePad
 {
     enum Buttons
@@ -73,10 +71,10 @@ struct GamePad
         RIGHT,
         START,
         SELECT,
-        CROSS,
-        CIRCLE,
-        SQUARE,
-        TRIANGLE,
+        A,
+        B,
+        X,
+        Y,
         LEFT_SHOULDER,
         RIGHT_SHOULDER,
 
@@ -86,12 +84,10 @@ struct GamePad
     uint32 deviceId;
     bool isConnected;
 
-    // TODO: Using crazy union stuff for now to step stone to full mapping
+    // NOTE: Keeping this for now cause cool union stuff is cool
     union
     {
         Button buttons[NUM_BUTTONS];
-
-        // TODO: Delete, making this match to get compiling again
         struct
         {
             Button up;
