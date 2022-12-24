@@ -64,6 +64,11 @@ bool loadROM(const char* filePath)
     return nes.loadRom(filePath);
 }
 
+void unloadROM()
+{
+    nes.unloadRom();
+}
+
 void consoleReset()
 {
     nes.reset();

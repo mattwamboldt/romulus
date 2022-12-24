@@ -194,6 +194,7 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 
                     if (loadROM(filename))
                     {
+                        EnableMenuItem(mainMenu, MENU_FILE_CLOSE, MF_BYCOMMAND | MF_ENABLED);
                         char* start = filename;
                         char* iter = filename;
                         char* ext = filename;
@@ -225,6 +226,12 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 
                     SetWindowTextA(window, windowTitle);
                 }
+            }
+            else if (command == MENU_FILE_CLOSE)
+            {
+                unloadROM();
+                SetWindowTextA(window, "ROMulus");
+                EnableMenuItem(mainMenu, MENU_FILE_CLOSE, MF_BYCOMMAND | MF_GRAYED);
             }
             else if (command == MENU_FILE_EXIT)
             {

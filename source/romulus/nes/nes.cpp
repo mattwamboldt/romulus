@@ -45,6 +45,12 @@ bool NES::loadRom(const char * path)
     return true;
 }
 
+void NES::unloadRom()
+{
+    powerOff();
+    cartridge.unload();
+}
+
 void NES::powerOn()
 {
     cpu.start();
@@ -71,6 +77,7 @@ void NES::reset()
 
 void NES::powerOff()
 {
+    cartridge.unload();
     cpu.stop();
     isRunning = false;
 

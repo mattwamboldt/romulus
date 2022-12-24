@@ -15,8 +15,10 @@ class Cartridge
 {
 public:
     bool load(const char* file);
+    void unload();
+
     bool loadNSF(uint8* buffer, uint32 length);
-    bool loadINES(uint8* buffer, uint32 length);
+    bool loadINES(const char* filepath, uint8* buffer, uint32 length);
 
     // Resets variables and banks to their default positions for the loaded rom
     void reset();
@@ -47,6 +49,9 @@ public:
     bool isReadOnly;
 
 private:
+    uint8* fileMemory;
+    char saveFilePath[512];
+
     // Settings from the header
     bool useVerticalMirroring;
     bool hasPerisitantMemory;

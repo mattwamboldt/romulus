@@ -149,6 +149,7 @@ void outputAudio(int16* buffer, int numSamples);
 // Detects the file type, loads the appropriate emulator, and starts it
 // TODO: May want a facility to not start immediately
 bool loadROM(const char* filePath);
+void unloadROM();
 
 // Triggers the equivalent of hitting the reset button on the given console
 // TODO: Decide what to do if that doesn't exist. Maybe just a hard reboot to the loaded rom

@@ -1,6 +1,8 @@
 #pragma once
 #include "bus.h"
 
+// TODO: If this becomes a bottleneck, consider converting some instructions into intrisics or taking more advantage of asm in some way
+
 // References
 // https://www.nesdev.org/obelisk-6502-guide/reference.html
 enum OpCode

@@ -69,7 +69,7 @@ union INESHeader
     uint8 rawBytes[15];
 };
 
-bool Cartridge::loadINES(uint8* buffer, uint32 length)
+bool Cartridge::loadINES(const char* filepath, uint8* buffer, uint32 length)
 {
     INESHeader* header = (INESHeader*)buffer;
     buffer += sizeof(INESHeader);
@@ -169,7 +169,7 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
     else
     {
         char message[256];
-        sprintf(message, "Unhandled Mapper number %d\n", mapperNumber);
+        sprintf(message, "Load Failed: Unhandled Mapper (%d)\n", mapperNumber);
         OutputDebugStringA(message);
     }
 
@@ -189,6 +189,38 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
         chrBase = chrRam;
     }
 
+    if (hasPerisitantMemory)
+    {
+        // Check for the existance of a sav file
+        char* ptr = saveFilePath;
+        char* ext = saveFilePath;
+        while (*filepath)
+        {
+            if (*filepath == '.')
+            {
+                ext = ptr;
+            }
+
+            *ptr++ = *filepath++;
+        }
+
+        *ext++ = '.';
+        *ext++ = 's';
+        *ext++ = 'a';
+        *ext++ = 'v';
+        *ext++ = '\0';
+
+        // TODO: Cart can have more or less ram that is bank switched in depending on the mapper
+        // Curently it's just a full 8k array backing the whole address range
+        // whether it would have been available or not
+        FILE* savFile = fopen(saveFilePath, "rb");
+        if (savFile)
+        {
+            fread(cartRam, sizeof(uint8), 0x2000, savFile);
+            fclose(savFile);
+        }
+    }
+
     reset();
 
     return true;
@@ -196,28 +228,77 @@ bool Cartridge::loadINES(uint8* buffer, uint32 length)
 
 bool Cartridge::load(const char* file)
 {
+    // TODO: Change this to separate out the act of reading and determining file type etc
+    // from loading into the respective "emulator", so we can handle more than one
+    if (fileMemory)
+    {
+        unload();
+    }
+
     FILE* testFile = fopen(file, "rb");
+    if (!testFile)
+    {
+        return false;
+    }
+
     fseek(testFile, 0, SEEK_END);
     size_t fileSize = ftell(testFile);
     rewind(testFile);
 
-    // TODO: for now newing up and ignoring so we can reuse by just pointing into it
-    // a couple kbs while testing wont hurt much, but this can't ship. its an obvious leak
-    uint8* contents = new uint8[fileSize];
-    size_t bytesRead = fread(contents, sizeof(uint8), fileSize, testFile);
+    // TODO: Change the allocation strategy to use a large fixed buffer with custom suballocators, like what a game engine would do
+    // It just makes adding debugging and leak tracking code easier, you can put in sentinals, overallocate, know what pointers go where, etc.
+    fileMemory = new uint8[fileSize];
+    size_t bytesRead = fread(fileMemory, sizeof(uint8), fileSize, testFile);
     fclose(testFile);
 
     bool isLoaded = false;
-    if (*((uint32*)contents) == 0x4d53454e)
+    if (*((uint32*)fileMemory) == 0x4d53454e)
     {
-        isLoaded = loadNSF(contents, (uint32)fileSize);
+        isLoaded = loadNSF(fileMemory, (uint32)fileSize);
     }
-    else if (*((uint32*)contents) == 0x1a53454e)
+    else if (*((uint32*)fileMemory) == 0x1a53454e)
     {
-        isLoaded = loadINES(contents, (uint32)fileSize);
+        isLoaded = loadINES(file, fileMemory, (uint32)fileSize);
     }
 
     return isLoaded;
+}
+
+void Cartridge::unload()
+{
+    if (hasPerisitantMemory)
+    {
+        // TODO: Cart can have more or less ram that is bank switched in depending on the mapper
+        // Curently it's just a full 8k array backing the whole address range
+        // whether it would have been available or not
+        FILE* savFile = fopen(saveFilePath, "wb");
+        if (savFile)
+        {
+            fwrite(cartRam, sizeof(uint8), 0x2000, savFile);
+            fclose(savFile);
+        }
+    }
+
+    // TODO: Wipe RAM to a default power cycled state
+
+    prgRomSize = 0;
+    chrRomSize = 0;
+    mapperNumber = 0;
+
+    prgRom = 0;
+    chrRom = 0;
+    chrBase = 0;
+
+    useVerticalMirroring = 0;
+    hasPerisitantMemory = 0;
+    hasFullVram = 0;
+    saveFilePath[0] = '\0';
+
+    if (fileMemory)
+    {
+        delete fileMemory;
+        fileMemory = 0;
+    }
 }
 
 uint8 Cartridge::prgRead(uint16 address)
@@ -283,7 +364,8 @@ bool Cartridge::prgWrite(uint16 address, uint8 value)
     // is intercepted and shoved off to another set of chips that
     // can change the configuration of the mapper.
 
-    // MMC1 
+    // MMC1
+    // TODO: Handle variants based on chip sizes https://www.nesdev.org/wiki/MMC1#iNES_Mapper_001
     if (mapperNumber == 1)
     {
         if (ignoreNextWrite)

@@ -7,10 +7,10 @@
 #define IDR_ACCELERATOR_MAIN            103
 #define MENU_FILE_OPEN                  40001
 #define MENU_FILE_EXIT                  40002
-#define MENU_CONSOLE_RESET              40003
-#define MENU_VIDEO_HIDEMENU             40004
-#define MENU_VIDEO_FULLSCREEN           40005
-#define ID_FILE_CLOSE                   40006
+#define MENU_FILE_CLOSE                 40003
+#define MENU_CONSOLE_RESET              40004
+#define MENU_VIDEO_HIDEMENU             40005
+#define MENU_VIDEO_FULLSCREEN           40006
 #define ID_INPUT_CONTROLLER1            40007
 #define ID_CONTROLLER1_KEYBOARD         40008
 #define ID_CONTROLLER1_GAMEPAD          40009

@@ -24,6 +24,8 @@ public: // making public for now, will wrap this as needed later
     void powerOff();
 
     bool loadRom(const char* path);
+    void unloadRom();
+
     void update(real32 secondsPerFrame);
     void singleStep();
 
