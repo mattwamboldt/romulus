@@ -8,7 +8,7 @@ void InputBus::init(PPU* ppu)
 
     // For now hard wiring port 0 to the controller and 1 to the zapper
     ports[0].device = STANDARD_CONTROLLER;
-    ports[0].index = 1;
+    ports[0].index = 0;
     ports[1].device = ZAPPER;
 
     // TODO: This is a garbage mapping scheme... Should probably be driven from the source devices.
@@ -27,8 +27,8 @@ void InputBus::init(PPU* ppu)
 
     // Standard Keyboard Mapping (Using windows VK codes for now, Once this is abstracted we'll get it loaded from the platform at launch)
     controllers[1].sourceDeviceId = -1;
-    controllers[1].buttonMap[StandardController::A] = 'Z';
-    controllers[1].buttonMap[StandardController::B] = 'X';
+    controllers[1].buttonMap[StandardController::A] = 'X';
+    controllers[1].buttonMap[StandardController::B] = 'Z';
     controllers[1].buttonMap[StandardController::SELECT] = 0x20;
     controllers[1].buttonMap[StandardController::START] = 0x0D;
     controllers[1].buttonMap[StandardController::UP] = 0x26;

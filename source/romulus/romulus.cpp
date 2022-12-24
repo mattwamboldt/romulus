@@ -1,5 +1,6 @@
 #include "romulus.h"
 #include "nes/nes.h"
+#include "nes/input/inputBus.h"
 
 // TODO: Allocate this properly
 static NES nes;
@@ -78,5 +79,41 @@ void consoleShutdown()
     if (nes.isRunning)
     {
         nes.powerOff();
+    }
+}
+
+InputType getMapping(int port)
+{
+    Port p = nes.inputBus.ports[port];
+    if (p.device == ZAPPER)
+    {
+        return InputType::SOURCE_ZAPPER;
+    }
+
+    if (nes.inputBus.controllers[p.index].sourceDeviceId < 0)
+    {
+        return InputType::SOURCE_KEYBOARD;
+    }
+
+    return InputType::SOURCE_GAMEPAD;
+}
+
+void setMapping(int port, InputType type)
+{
+    if (type == SOURCE_ZAPPER)
+    {
+        nes.inputBus.ports[port].device = ZAPPER;
+    }
+    else
+    {
+        nes.inputBus.ports[port].device = STANDARD_CONTROLLER;
+        if (type == SOURCE_KEYBOARD)
+        {
+            nes.inputBus.ports[port].index = 1;
+        }
+        else
+        {
+            nes.inputBus.ports[port].index = 0;
+        }
     }
 }

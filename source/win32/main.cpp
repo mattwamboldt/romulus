@@ -101,6 +101,32 @@ void toggleFullscreen(HWND window)
     }
 }
 
+uint32 settingToMenuItem[] =
+{
+    ID_CONTROLLER1_KEYBOARD,
+    ID_CONTROLLER1_GAMEPAD,
+    ID_CONTROLLER1_ZAPPER,
+    ID_CONTROLLER2_KEYBOARD,
+    ID_CONTROLLER2_GAMEPAD,
+    ID_CONTROLLER2_ZAPPER
+};
+
+void RecalculateSettings()
+{
+    CheckMenuItem(mainMenu, ID_CONTROLLER1_KEYBOARD, MF_BYCOMMAND | MF_UNCHECKED);
+    CheckMenuItem(mainMenu, ID_CONTROLLER1_GAMEPAD, MF_BYCOMMAND | MF_UNCHECKED);
+    CheckMenuItem(mainMenu, ID_CONTROLLER1_ZAPPER, MF_BYCOMMAND | MF_UNCHECKED);
+    CheckMenuItem(mainMenu, ID_CONTROLLER2_KEYBOARD, MF_BYCOMMAND | MF_UNCHECKED);
+    CheckMenuItem(mainMenu, ID_CONTROLLER2_GAMEPAD, MF_BYCOMMAND | MF_UNCHECKED);
+    CheckMenuItem(mainMenu, ID_CONTROLLER2_ZAPPER, MF_BYCOMMAND | MF_UNCHECKED);
+
+    uint8 controller1 = getMapping(0);
+    CheckMenuItem(mainMenu, settingToMenuItem[controller1], MF_BYCOMMAND | MF_CHECKED);
+
+    uint8 controller2 = getMapping(1) + 3;
+    CheckMenuItem(mainMenu, settingToMenuItem[controller2], MF_BYCOMMAND | MF_CHECKED);
+}
+
 // NOTE: Handles the window messages that signal DefWndProc will block
 // From: https://en.sfml-dev.org/forums/index.php?topic=2459.0
 //
@@ -224,6 +250,72 @@ LRESULT windowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
                     SetMenu(window, mainMenu);;
                 }
             }
+            else if (command == ID_CONTROLLER1_KEYBOARD)
+            {
+                setMapping(0, SOURCE_KEYBOARD);
+
+                if (getMapping(1) == SOURCE_KEYBOARD)
+                {
+                    setMapping(1, SOURCE_GAMEPAD);
+                }
+
+                RecalculateSettings();
+            }
+            else if (command == ID_CONTROLLER1_GAMEPAD)
+            {
+                setMapping(0, SOURCE_GAMEPAD);
+
+                if (getMapping(1) == SOURCE_GAMEPAD)
+                {
+                    setMapping(1, SOURCE_KEYBOARD);
+                }
+
+                RecalculateSettings();
+            }
+            else if (command == ID_CONTROLLER1_ZAPPER)
+            {
+                setMapping(0, SOURCE_ZAPPER);
+
+                if (getMapping(1) == SOURCE_ZAPPER)
+                {
+                    setMapping(1, SOURCE_KEYBOARD);
+                }
+
+                RecalculateSettings();
+            }
+            else if (command == ID_CONTROLLER2_KEYBOARD)
+            {
+                setMapping(1, SOURCE_KEYBOARD);
+
+                if (getMapping(0) == SOURCE_KEYBOARD)
+                {
+                    setMapping(0, SOURCE_GAMEPAD);
+                }
+
+                RecalculateSettings();
+            }
+            else if (command == ID_CONTROLLER2_GAMEPAD)
+            {
+                setMapping(1, SOURCE_GAMEPAD);
+
+                if (getMapping(0) == SOURCE_GAMEPAD)
+                {
+                    setMapping(0, SOURCE_KEYBOARD);
+                }
+
+                RecalculateSettings();
+            }
+            else if (command == ID_CONTROLLER2_ZAPPER)
+            {
+                setMapping(1, SOURCE_ZAPPER);
+
+                if (getMapping(0) == SOURCE_ZAPPER)
+                {
+                    setMapping(0, SOURCE_KEYBOARD);
+                }
+
+                RecalculateSettings();
+            }
         }
         break;
 
@@ -318,6 +410,8 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
     int16* samples = (int16*)VirtualAlloc(0, audio.bufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
     InitDirectSound(window, audio.samplesPerSecond, audio.bufferSize);
+
+    RecalculateSettings();
 
     LARGE_INTEGER frameTime = getClockTime();
     LARGE_INTEGER displayTime = getClockTime();

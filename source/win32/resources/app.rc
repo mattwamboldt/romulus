@@ -77,6 +77,21 @@ BEGIN
         MENUITEM "Hide Menu\tEscape",           MENU_VIDEO_HIDEMENU
         MENUITEM "Fullscreen\tAlt+Enter",       MENU_CONSOLE_RESET
     END
+    POPUP "Input"
+    BEGIN
+        POPUP "Controller 1"
+        BEGIN
+            MENUITEM "Keyboard",                    ID_CONTROLLER1_KEYBOARD
+            MENUITEM "Gamepad",                     ID_CONTROLLER1_GAMEPAD
+            MENUITEM "Zapper",                      ID_CONTROLLER1_ZAPPER
+        END
+        POPUP "Controller 2"
+        BEGIN
+            MENUITEM "Keyboard",                    ID_CONTROLLER2_KEYBOARD
+            MENUITEM "Gamepad",                     ID_CONTROLLER2_GAMEPAD
+            MENUITEM "Zapper",                      ID_CONTROLLER2_ZAPPER
+        END
+    END
 END
 
 

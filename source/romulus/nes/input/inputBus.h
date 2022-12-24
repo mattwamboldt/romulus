@@ -32,6 +32,4 @@ public:
 
 private:
     PPU* ppu;
-
-    GamePad keyboardVirtualGamepad;
 };

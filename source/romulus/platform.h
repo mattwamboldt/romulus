@@ -156,3 +156,14 @@ void consoleReset();
 
 // Shuts down the running console and does any last minute battery saves
 void consoleShutdown();
+
+// TODO: clean this up. I'm not a fan of it 
+enum InputType
+{
+    SOURCE_KEYBOARD,
+    SOURCE_GAMEPAD,
+    SOURCE_ZAPPER
+};
+
+InputType getMapping(int port);
+void setMapping(int port, InputType type);
