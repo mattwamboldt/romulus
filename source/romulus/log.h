@@ -32,4 +32,3 @@ void logInfo(const char* message, ...);
 void logWarn(const char* message, ...);
 void logError(const char* message, ...);
 void logFatal(const char* message, ...);
-

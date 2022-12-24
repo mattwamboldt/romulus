@@ -44,6 +44,18 @@ typedef double real64;
 #define gigabytes(value) (megabytes(value) * 1024)
 #define terabytes(value) (gigabytes(value) * 1024)
 
+#include "log.h"
+
+// Putting debug timing stuff in here for now, since its global and kinda falls into the debugging camp
+struct TimerBlock
+{
+    uint64 cycleCount;
+    const char* name;
+};
+
+void beginTimer(const char* blockName);
+void endTimer();
+
 // Platform agnostic data structures
 
 struct ScreenBuffer

@@ -55,7 +55,7 @@ void logl(LogLevel level, const char* message, va_list args)
 
     static char logLine[MAX_LOG_LINE] = {};
     char* cursor = formatLevelName(level, logLine);
-    int remainingLength = MAX_LOG_LINE - (cursor - logLine);
+    int remainingLength = MAX_LOG_LINE - (int)(cursor - logLine);
     int bytesWritten = vsnprintf(cursor, remainingLength, message, args);
     // TODO: Considering validating this printed the full amount and pronting an error
     OutputDebugStringA(logLine);

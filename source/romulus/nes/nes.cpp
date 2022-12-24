@@ -507,7 +507,6 @@ void NES::renderNametable(ScreenBuffer buffer, uint32 top, uint32 left)
 
 void NES::render(ScreenBuffer buffer)
 {
-    // TODO: A bunch of this should be in platform agnostic place and copied out
     uint8* nesBuffer = ppu.frontBuffer;
     uint8* row = (uint8*)buffer.memory;
 

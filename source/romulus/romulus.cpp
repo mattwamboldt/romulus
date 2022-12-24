@@ -49,7 +49,6 @@ void DEBUG_renderMouse(InputState* input, ScreenBuffer screen)
 void updateAndRender(InputState* input, ScreenBuffer screen)
 {
     // TODO: Handle Mouse for any custom UI that might be useful later
-
     nes.processInput(input);
     nes.update(input->elapsedMs);
     nes.render(screen);
@@ -121,4 +120,30 @@ void setMapping(int port, InputType type)
             nes.inputBus.ports[port].index = 0;
         }
     }
+}
+
+// Evrything here is debug so definitely some platform specifics that should get pulled out
+#include <intrin.h>
+
+// Only go 64 layers deep on timers, avoid recursion
+// TODO: Make this system more robust, Can use aggregation for repeat runs through blocks and the like
+// The perf monitoring in visual studio leaves a lot to be desired. only gives some rough "relative" metrics
+// so I want something specific. Probably make this more of a tree than a stack. works for general use for now
+static TimerBlock timerStack[64];
+static uint32 timerCount = 0;
+
+// NOTE: Timers are an area where you can use object constructor destructor pairs with scopes to
+// get possible wins, but begin end function pairs feels a bit better because its explicit
+void beginTimer(const char* blockName)
+{
+    timerStack[timerCount].name = blockName;
+    timerStack[timerCount].cycleCount = __rdtsc();
+    ++timerCount;
+}
+
+void endTimer()
+{
+    --timerCount;
+    uint64 cycleCount = __rdtsc() - timerStack[timerCount].cycleCount;
+    logInfo("[DBG] %s took %I64u\n", timerStack[timerCount].name, cycleCount);
 }

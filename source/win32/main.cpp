@@ -537,6 +537,9 @@ int WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showC
         paintToWindow(deviceContext, globalBackBuffer, size.width, size.height);
         ReleaseDC(window, deviceContext);
 
+        // Timing info. Uncomment when doing perf to make sure I don't cause regressions
+        // frameElapsed = getSecondsElapsed(displayTime, getClockTime());
+        // logInfo("ms = %fms fps ~= %ffps\n", frameElapsed, 1.0f / frameElapsed);
         displayTime = getClockTime();
     }
 
