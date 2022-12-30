@@ -168,6 +168,8 @@ bool Cartridge::loadINES(const char* filepath, uint8* buffer, uint32 length)
         logError("Load Failed: Unhandled Mapper (%d)\n", mapperNumber);
     }
 
+    logInfo("PRG Size: %d x 16kb = %dkb, CHR Size %d x 8kb = %dkb\n", prgRomSize, prgRomSize * 16, chrRomSize, chrRomSize * 8);
+
     prgRom = (uint8*)buffer;
 
     buffer += header->prgRomSize * kilobytes(16);
@@ -776,7 +778,8 @@ void Cartridge::mmc3PrgWrite(uint16 address, uint8 value)
         // Bank Data
         else if (mmc3BankSelect == 7)
         {
-            mmc3PrgRomBanks[1] = prgRom + (kilobytes(8) * (value & ((prgRomSize * 2) - 1)));
+            uint8* newBank = prgRom + (kilobytes(8) * (value & ((prgRomSize * 2) - 1)));
+            mmc3PrgRomBanks[1] = newBank;
         }
         else if (mmc3BankSelect == 6)
         {
@@ -791,7 +794,7 @@ void Cartridge::mmc3PrgWrite(uint16 address, uint8 value)
                 value &= 0xFE;
             }
 
-            mmc3ChrRomBanks[mmc3BankSelect] = chrBase + (kilobytes(1) * value);
+            mmc3ChrRomBanks[mmc3BankSelect] = chrBase + kilobytes(value);
         }
     }
     // 0xA000-0xBFFF
