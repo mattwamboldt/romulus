@@ -177,11 +177,13 @@ bool Cartridge::loadINES(const char* filepath, uint8* buffer, uint32 length)
     {
         chrRom = (uint8*)buffer;
         chrBase = chrRom;
+        mmc3ChrBankMask = (chrRomSize * 8) - 1;
     }
     else
     {
         // means we have no chr space on the cart and should use the system ram
         chrBase = chrRam;
+        mmc3ChrBankMask = 7;
     }
 
     if (hasPerisitantMemory)
@@ -756,7 +758,7 @@ void Cartridge::mmc3PrgWrite(uint16 address, uint8 value)
     uint16 registerSelect = (address & 0x6000) >> 13;
     bool isEven = (address & BIT_0) == 0;
 
-    // 0x8000-0x9FFF
+    // 0x8000-0x9FFF Bank Switching registers
     if (registerSelect == 0)
     {
         // Bank Select
@@ -772,32 +774,24 @@ void Cartridge::mmc3PrgWrite(uint16 address, uint8 value)
             }
         }
         // Bank Data
+        else if (mmc3BankSelect == 7)
+        {
+            mmc3PrgRomBanks[1] = prgRom + (kilobytes(8) * (value & ((prgRomSize * 2) - 1)));
+        }
+        else if (mmc3BankSelect == 6)
+        {
+            mmc3PrgRomLowBank = value & ((prgRomSize * 2) - 1);
+            mmc3RemapPrg();
+        }
         else
         {
-            switch (mmc3BankSelect)
+            value &= mmc3ChrBankMask;
+            if (mmc3BankSelect < 2)
             {
-                case 0:
-                case 1:
-                    mmc3ChrRomBanks[mmc3BankSelect] = chrBase + (kilobytes(1) * (value & 0xFE));
-                    break;
-
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                    mmc3ChrRomBanks[mmc3BankSelect] = chrBase + (kilobytes(1) * value);
-                    break;
-
-                case 6:
-                    mmc3PrgRomLowBank = value & ((prgRomSize * 2) - 1);
-                    mmc3RemapPrg();
-                    break;
-
-                case 7:
-                    mmc3PrgRomBanks[1] = prgRom + (kilobytes(8) * (value & ((prgRomSize * 2) - 1)));
-                    break;
-
+                value &= 0xFE;
             }
+
+            mmc3ChrRomBanks[mmc3BankSelect] = chrBase + (kilobytes(1) * value);
         }
     }
     // 0xA000-0xBFFF

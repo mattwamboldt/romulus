@@ -137,6 +137,9 @@ private:
 
     uint8 mmc3PrgRomBankMode;
 
+    // Determines whether the ram region returns open bus or the contents of ram
+    // This also maps to two different bits in different registers on mmc3 and mmc6 and both are mapper 4, so...
+    // TODO: Implement
     bool mmc3PrgRamEnabled;
 
     uint8 mmc3IrqEnabled;
@@ -156,6 +159,10 @@ private:
 
     // a temp variable used for the bank that isn't fixed second to last
     uint8 mmc3PrgRomLowBank;
+
+    // Masks out bits from any bank select so we can't overflow. This is in 1k chunks.
+    // Don't ask why but some roms rely on this even though they know they only have x amount
+    uint16 mmc3ChrBankMask;
 
     void mmc3Reset();
     void mmc3RemapPrg();
