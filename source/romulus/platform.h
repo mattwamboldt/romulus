@@ -1,6 +1,7 @@
 #pragma once
 
 // TODO: controls for various things that will become settings later
+// TODO: Debug view causes jitter in some mmc3 roms (Assumedly due a bug in readonly and when it runs)
 #define SHOW_DEBUG_VIEWS 0
 
 // This header defines the API that the application needs from the platform and

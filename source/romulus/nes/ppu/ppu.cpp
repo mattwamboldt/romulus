@@ -49,6 +49,7 @@ void PPU::reset()
     isOddFrame = false;
     isBackgroundEnabled = false;
     areSpritesEnabled = false;
+    isRenderingEnabled = false;
 }
 
 // The key to understanding what hapens on a ppu update was a combo of these pages
@@ -106,43 +107,54 @@ void PPU::tick()
     // Render
     if (scanline != PRERENDER_LINE && cycle <= NES_SCREEN_WIDTH)
     {
-        // TODO: Handle rendering disabled (background pallette hack)
-
-        uint8 backgroundPixel = calculateBackgroundPixel();
-        uint8 spritePixel = calculateSpritePixel();
-
-        bool backgroundVisible = backgroundPixel & 0x03;
-        bool spriteVisible = spritePixel & 0x03;
-
-        uint8 pixel = 0;
-        if (backgroundVisible && spriteVisible)
+        if (!isRenderingEnabled)
         {
-            if (spriteRenderers[renderedSpriteIndex].oamIndex == 0
-                && spriteRenderers[renderedSpriteIndex].getX() != 0xFF
-                && cycle != NES_SCREEN_WIDTH)
+            uint16 paletteAddress = 0x3F00;
+            if (vramAddress >= 0x3F00)
             {
-                isSpriteZeroHit = true;
+                paletteAddress = vramAddress;
             }
 
-            if (spriteRenderers[renderedSpriteIndex].getPriority())
+            backbuffer[outputOffset++] = bus->read(paletteAddress);
+        }
+        else
+        {
+            uint8 backgroundPixel = calculateBackgroundPixel();
+            uint8 spritePixel = calculateSpritePixel();
+
+            bool backgroundVisible = backgroundPixel & 0x03;
+            bool spriteVisible = spritePixel & 0x03;
+
+            uint8 pixel = 0;
+            if (backgroundVisible && spriteVisible)
             {
-                pixel = backgroundPixel;
+                if (spriteRenderers[renderedSpriteIndex].oamIndex == 0
+                    && spriteRenderers[renderedSpriteIndex].getX() != 0xFF
+                    && cycle != NES_SCREEN_WIDTH)
+                {
+                    isSpriteZeroHit = true;
+                }
+
+                if (spriteRenderers[renderedSpriteIndex].getPriority())
+                {
+                    pixel = backgroundPixel;
+                }
+                else
+                {
+                    pixel = spritePixel;
+                }
             }
-            else
+            else if (spriteVisible)
             {
                 pixel = spritePixel;
             }
-        }
-        else if (spriteVisible)
-        {
-            pixel = spritePixel;
-        }
-        else if (backgroundVisible)
-        {
-            pixel = backgroundPixel;
-        }
+            else if (backgroundVisible)
+            {
+                pixel = backgroundPixel;
+            }
 
-        backbuffer[outputOffset++] = bus->read(0x3F00 + pixel);
+            backbuffer[outputOffset++] = bus->read(0x3F00 + pixel);
+        }
 
         // Clock sprite counters and shift registers
         for (int i = 0; i < 8; ++i)
@@ -181,7 +193,7 @@ void PPU::tick()
             numSpritesChecked = 0;
             numSpritesFound = 0;
         }
-        else if (cycle > 64)
+        else if (isRenderingEnabled && cycle > 64)
         {
             uint8 oamValue = oam[oamAddress];
             if (isCopyingSprite)
@@ -207,7 +219,7 @@ void PPU::tick()
                     uint32 spriteTop = oamValue;
                     uint32 spriteBottom = spriteTop + spriteHeight;
 
-                    if (spriteTop < (NES_SCREEN_HEIGHT - 1) && scanline >= spriteTop && scanline < spriteBottom)
+                    if (spriteTop < NES_SCREEN_HEIGHT && scanline >= spriteTop && scanline < spriteBottom)
                     {
                         selectedSpriteIndices[numSpritesFound] = numSpritesChecked;
 
@@ -237,7 +249,7 @@ void PPU::tick()
 
                     uint32 spriteTop = oamValue;
                     uint32 spriteBottom = spriteTop + spriteHeight;
-                    if (spriteTop < (NES_SCREEN_HEIGHT - 1) && scanline >= spriteTop && scanline < spriteBottom)
+                    if (spriteTop < NES_SCREEN_HEIGHT && scanline >= spriteTop && scanline < spriteBottom)
                     {
                         isSpriteOverflowFlagSet = true;
                     }
@@ -258,172 +270,179 @@ void PPU::tick()
         // NOTE: Avoid the temptation to do this in the middle of the visible frame
         numSpritesToRender = numSpritesFound;
         numSpritesFetched = 0;
-        oamAddress = 0;
 
-        for (int i = 0; i < 8; ++i)
+        if (isRenderingEnabled)
         {
-            spriteRenderers[i].reset();
-            if (i < numSpritesToRender)
+            oamAddress = 0;
+
+            for (int i = 0; i < 8; ++i)
             {
-                spriteRenderers[i].isEnabled = true;
-                spriteRenderers[i].oamIndex = selectedSpriteIndices[i];
-            }
-
-            uint8 yPosition = oamSecondary[i * 4];
-            uint16 tileIndex = oamSecondary[(i * 4) + 1];
-            spriteRenderers[i].setAttribute(oamSecondary[(i * 4) + 2]);
-            spriteRenderers[i].setX(oamSecondary[(i * 4) + 3]);
-
-            uint16 fineY = scanline - yPosition;
-            if (spriteRenderers[i].isVerticallyFlipped())
-            {
-                fineY = (spriteHeight - 1) - fineY;
-            }
-
-            uint16 spriteBank = spritePatternBaseAddress;
-
-            if (useTallSprites)
-            {
-                // On tall sprites the last bit is the bank select and the rest is the tile index
-                spriteBank = (tileIndex & BIT_0) << 12;
-                tileIndex &= 0xFFFE;
-
-                // The bottom half the tile is to the right (BIT 0 of the normal style index)
-                if (fineY >= 8)
+                spriteRenderers[i].reset();
+                if (i < numSpritesToRender)
                 {
-                    fineY -= 8;
-                    ++tileIndex;
+                    spriteRenderers[i].isEnabled = true;
+                    spriteRenderers[i].oamIndex = selectedSpriteIndices[i];
                 }
-            }
 
-            uint16 tileOffset = tileIndex << 4;
-            spriteRenderers[i].patternTableAddress = fineY | tileOffset | spriteBank;
+                uint8 yPosition = oamSecondary[i * 4];
+                uint16 tileIndex = oamSecondary[(i * 4) + 1];
+                spriteRenderers[i].setAttribute(oamSecondary[(i * 4) + 2]);
+                spriteRenderers[i].setX(oamSecondary[(i * 4) + 3]);
+
+                uint16 fineY = scanline - yPosition;
+                if (spriteRenderers[i].isVerticallyFlipped())
+                {
+                    fineY = (spriteHeight - 1) - fineY;
+                }
+
+                uint16 spriteBank = spritePatternBaseAddress;
+
+                if (useTallSprites)
+                {
+                    // On tall sprites the last bit is the bank select and the rest is the tile index
+                    spriteBank = (tileIndex & BIT_0) << 12;
+                    tileIndex &= 0xFFFE;
+
+                    // The bottom half the tile is to the right (BIT 0 of the normal style index)
+                    if (fineY >= 8)
+                    {
+                        fineY -= 8;
+                        ++tileIndex;
+                    }
+                }
+
+                uint16 tileOffset = tileIndex << 4;
+                spriteRenderers[i].patternTableAddress = fineY | tileOffset | spriteBank;
+            }
         }
     }
 
-    // Fetch data into a set of "latches" based on the current cycle
-    // These will fill the shift registers every 8 shifts
-    // > Start of scanline is Idle
-    // ---| NT| AT|BGL|BGH|.... (Repeat for the whole scanline)
-    // > 0|1 2|3 4|5 6|7 0|....
-    switch (cycle % 8)
+    if (isRenderingEnabled)
     {
-        case 2: // Name Table https://www.nesdev.org/wiki/PPU_nametables
+        // Fetch data into a set of "latches" based on the current cycle
+        // These will fill the shift registers every 8 shifts
+        // > Start of scanline is Idle
+        // ---| NT| AT|BGL|BGH|.... (Repeat for the whole scanline)
+        // > 0|1 2|3 4|5 6|7 0|....
+        switch (cycle % 8)
         {
-            // TODO: Potentially repeat on the sprite Attribute stage for mapper timing stuff
-            uint16 nameTableAddress = 0x2000 | (vramAddress & 0x0FFF);
-            nameTableLatch = bus->read(nameTableAddress);
-            break;
-        }
-        case 4: // Attribute table https://www.nesdev.org/wiki/PPU_attribute_tables
-        {
-            if (!isSpritePhase)
+            case 2: // Name Table https://www.nesdev.org/wiki/PPU_nametables
             {
-                // From the Wiki this is the address we want
-                // NN 1111 YYY XXX
-                // || |||| ||| +++--- high 3 bits of coarse X(x / 4)
-                // || |||| +++------- high 3 bits of coarse Y(y / 4)
-                // || ++++----------- attribute offset(960 bytes)
-                // ++---------------- nametable select
-                uint16 coarseX = (vramAddress & COARSE_X_MASK) >> 2;
-                uint16 coarseY = (vramAddress & 0x0380) >> 4;
-                uint16 nameTableSelect = vramAddress & 0x0C00;
-                uint16 attributeAddress = 0x23C0 | nameTableSelect | coarseY | coarseX;
-                attributeLatch = bus->read(attributeAddress);
+                // TODO: Potentially repeat on the sprite Attribute stage for mapper timing stuff
+                uint16 nameTableAddress = 0x2000 | (vramAddress & 0x0FFF);
+                nameTableLatch = bus->read(nameTableAddress);
+                break;
             }
-        }
-        break;
-        case 6: // Pattern Table Lo https://www.nesdev.org/wiki/PPU_pattern_tables
-        {
-            if (isSpritePhase)
+            case 4: // Attribute table https://www.nesdev.org/wiki/PPU_attribute_tables
             {
-                uint16 addressLo = spriteRenderers[numSpritesFetched].patternTableAddress;
-                spriteRenderers[numSpritesFetched].patternLoShift = bus->read(addressLo);
-            }
-            else
-            {
-                // Pattern table address Scheme
-                // 0H RRRR CCCC PTTT
-                // || |||| |||| |+++--- T : Fine Y offset, the row number within a tile
-                // || |||| |||| +------ P : Bit plane (0: "lower"; 1: "upper")
-                // || |||| ++++-------- C : Tile column
-                // || ++++------------- R : Tile row
-                // |+------------------ H : Half of pattern table (0: "left"; 1: "right")
-                // +------------------- 0 : Pattern table is at $0000 - $1FFF
-                uint16 fineY = (vramAddress & FINE_Y_MASK) >> 12;
-                uint16 tileOffset = ((uint16)nameTableLatch) << 4;
-                uint16 bitPlane = 0;
-                uint16 patternTableAddress = fineY | bitPlane | tileOffset | backgroundPatternBaseAddress;
-                patternLoLatch = bus->read(patternTableAddress);
-            }
-        }
-        break;
-        case 0: // Pattern Table Hi
-        {
-            if (isSpritePhase)
-            {
-                uint16 addressHi = spriteRenderers[numSpritesFetched].patternTableAddress | BIT_3;
-                spriteRenderers[numSpritesFetched].patternHiShift = bus->read(addressHi);
-                ++numSpritesFetched;
-            }
-            else
-            {
-                uint16 fineY = (vramAddress & FINE_Y_MASK) >> 12;
-                uint16 tileOffset = ((uint16)nameTableLatch) << 4;
-                uint16 bitPlane = BIT_3;
-                uint16 patternTableAddress = fineY | bitPlane | tileOffset | backgroundPatternBaseAddress;
-                patternHiLatch = bus->read(patternTableAddress);
-
-                // Fill the shift registers
-                // TODO: This may need to occur separately/in the pixel render so it can be started at
-                // a certain cycle offset, for sprite overwrite or something (Shift registers require a
-                // clock, where the reads would be available immediately, so assuming after the render for now)
-
-                // TODO: Yeah the more I fill out the attribute stuff the more realize this is wasting a lot of cycles
-                // and making it more complicated will definitely refactor
-
-                // In theory the bottom 8 bits are already clear from the shift operations, so OR is fine
-                patternLoShift |= patternLoLatch;
-                patternHiShift |= patternHiLatch;
-
-                // attribute table covers a 4 x 4 tile area so bit 0 doesn't matter
-                // and the next 3 bits after this got us this attribute in the first place
-                bool isRightAttribute = vramAddress & BIT_1;
-                bool isBottomAttribute = vramAddress & BIT_6;
-                if (isRightAttribute)
+                if (!isSpritePhase)
                 {
-                    if (isBottomAttribute)
-                    {
-                        // Bottom Right
-                        attributeBit0 = (attributeLatch >> 6) & BIT_0;
-                        attributeBit1 = attributeLatch >> 7;
-                    }
-                    else
-                    {
-                        // Top Right
-                        attributeBit0 = (attributeLatch >> 2) & BIT_0;
-                        attributeBit1 = (attributeLatch >> 3) & BIT_0;
-                    }
+                    // From the Wiki this is the address we want
+                    // NN 1111 YYY XXX
+                    // || |||| ||| +++--- high 3 bits of coarse X(x / 4)
+                    // || |||| +++------- high 3 bits of coarse Y(y / 4)
+                    // || ++++----------- attribute offset(960 bytes)
+                    // ++---------------- nametable select
+                    uint16 coarseX = (vramAddress & COARSE_X_MASK) >> 2;
+                    uint16 coarseY = (vramAddress & 0x0380) >> 4;
+                    uint16 nameTableSelect = vramAddress & 0x0C00;
+                    uint16 attributeAddress = 0x23C0 | nameTableSelect | coarseY | coarseX;
+                    attributeLatch = bus->read(attributeAddress);
+                }
+            }
+            break;
+            case 6: // Pattern Table Lo https://www.nesdev.org/wiki/PPU_pattern_tables
+            {
+                if (isSpritePhase)
+                {
+                    uint16 addressLo = spriteRenderers[numSpritesFetched].patternTableAddress;
+                    spriteRenderers[numSpritesFetched].patternLoShift = bus->read(addressLo);
                 }
                 else
                 {
-                    if (isBottomAttribute)
+                    // Pattern table address Scheme
+                    // 0H RRRR CCCC PTTT
+                    // || |||| |||| |+++--- T : Fine Y offset, the row number within a tile
+                    // || |||| |||| +------ P : Bit plane (0: "lower"; 1: "upper")
+                    // || |||| ++++-------- C : Tile column
+                    // || ++++------------- R : Tile row
+                    // |+------------------ H : Half of pattern table (0: "left"; 1: "right")
+                    // +------------------- 0 : Pattern table is at $0000 - $1FFF
+                    uint16 fineY = (vramAddress & FINE_Y_MASK) >> 12;
+                    uint16 tileOffset = ((uint16)nameTableLatch) << 4;
+                    uint16 bitPlane = 0;
+                    uint16 patternTableAddress = fineY | bitPlane | tileOffset | backgroundPatternBaseAddress;
+                    patternLoLatch = bus->read(patternTableAddress);
+                }
+            }
+            break;
+            case 0: // Pattern Table Hi
+            {
+                if (isSpritePhase)
+                {
+                    uint16 addressHi = spriteRenderers[numSpritesFetched].patternTableAddress | BIT_3;
+                    spriteRenderers[numSpritesFetched].patternHiShift = bus->read(addressHi);
+                    ++numSpritesFetched;
+                }
+                else
+                {
+                    uint16 fineY = (vramAddress & FINE_Y_MASK) >> 12;
+                    uint16 tileOffset = ((uint16)nameTableLatch) << 4;
+                    uint16 bitPlane = BIT_3;
+                    uint16 patternTableAddress = fineY | bitPlane | tileOffset | backgroundPatternBaseAddress;
+                    patternHiLatch = bus->read(patternTableAddress);
+
+                    // Fill the shift registers
+                    // TODO: This may need to occur separately/in the pixel render so it can be started at
+                    // a certain cycle offset, for sprite overwrite or something (Shift registers require a
+                    // clock, where the reads would be available immediately, so assuming after the render for now)
+
+                    // TODO: Yeah the more I fill out the attribute stuff the more realize this is wasting a lot of cycles
+                    // and making it more complicated will definitely refactor
+
+                    // In theory the bottom 8 bits are already clear from the shift operations, so OR is fine
+                    patternLoShift |= patternLoLatch;
+                    patternHiShift |= patternHiLatch;
+
+                    // attribute table covers a 4 x 4 tile area so bit 0 doesn't matter
+                    // and the next 3 bits after this got us this attribute in the first place
+                    bool isRightAttribute = vramAddress & BIT_1;
+                    bool isBottomAttribute = vramAddress & BIT_6;
+                    if (isRightAttribute)
                     {
-                        // Bottom Left
-                        attributeBit0 = (attributeLatch >> 4) & BIT_0;
-                        attributeBit1 = (attributeLatch >> 5) & BIT_0;
+                        if (isBottomAttribute)
+                        {
+                            // Bottom Right
+                            attributeBit0 = (attributeLatch >> 6) & BIT_0;
+                            attributeBit1 = attributeLatch >> 7;
+                        }
+                        else
+                        {
+                            // Top Right
+                            attributeBit0 = (attributeLatch >> 2) & BIT_0;
+                            attributeBit1 = (attributeLatch >> 3) & BIT_0;
+                        }
                     }
                     else
                     {
-                        // Top Left
-                        attributeBit0 = attributeLatch & BIT_0;
-                        attributeBit1 = (attributeLatch >> 1) & BIT_0;
+                        if (isBottomAttribute)
+                        {
+                            // Bottom Left
+                            attributeBit0 = (attributeLatch >> 4) & BIT_0;
+                            attributeBit1 = (attributeLatch >> 5) & BIT_0;
+                        }
+                        else
+                        {
+                            // Top Left
+                            attributeBit0 = attributeLatch & BIT_0;
+                            attributeBit1 = (attributeLatch >> 1) & BIT_0;
+                        }
                     }
                 }
-            }
 
+            }
+            break;
         }
-        break;
     }
 
     // Handle Updating of the vram address, but only if rendering is enabled
@@ -562,6 +581,8 @@ void PPU::setMask(uint8 mask)
     shouldEmphasizeRed =        (mask & BIT_5) > 0;
     shouldEmphasizeGreen =      (mask & BIT_6) > 0;
     shouldEmphasizeBlue =       (mask & BIT_7) > 0;
+
+    isRenderingEnabled = isBackgroundEnabled || areSpritesEnabled;
 }
 
 uint8 PPU::getStatus(bool readOnly)
@@ -617,7 +638,7 @@ uint8 PPU::getOamData()
     // Part of the Secondary OAM initialization
     bool inSpriteEvaluation = scanline > 0 && scanline < NES_SCREEN_HEIGHT&& cycle > 0 && cycle <= 64;
 
-    if (inSpriteEvaluation)
+    if (isRenderingEnabled && inSpriteEvaluation)
     {
         return 0xFF;
     }

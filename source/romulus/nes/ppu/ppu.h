@@ -110,6 +110,7 @@ private:
     bool shouldEmphasizeGreen; // TODO: Implement
     bool shouldEmphasizeBlue; // TODO: Implement
 
+    bool isRenderingEnabled;
 
     // =======================
     // Internal storage for background render
