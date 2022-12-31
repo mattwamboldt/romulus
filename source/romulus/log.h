@@ -16,7 +16,11 @@ enum LogLevel
 
 // Logs will only process/output above this level
 // TODO: Have some general way to control this 
+#if DEBUG
+static LogLevel minimumLogLevel = LOG_DEBUG;
+#else
 static LogLevel minimumLogLevel = LOG_INFO;
+#endif
 
 // Writes the message directly out to the log streams with just level appended
 void logRaw(LogLevel level, const char* message);

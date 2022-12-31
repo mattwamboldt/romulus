@@ -19,6 +19,8 @@ public:
 
     bool isNMIFlagSet();
     bool isNMISuppressed() { return suppressNmi; }
+    bool isNMIEnabled() { return nmiEnabled; }
+    bool isVBlankCycle();
 
     // CPU <=> PPU Bus functions
 

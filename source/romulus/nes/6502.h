@@ -552,6 +552,9 @@ public:
     // See: https://www.nesdev.org/wiki/IRQ
     void setIRQ(bool active);
 
+    bool isNMIStarting() { return interruptPending && nmiPending && stage == 0; }
+    bool isNMIRunning() { return sequence == HANDLE_INTERRUPT && nmiPending; }
+
 private:
     bool isHalted;
 

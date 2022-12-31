@@ -128,6 +128,15 @@ void NES::update(real32 secondsPerFrame)
             }
             else if (!cartridge.isNSF || cpu.stack != nsfSentinal)
             {
+                if (cpu.isNMIStarting())
+                {
+                    logDebug("[CPU] nmi start, PPU CYC %u SL %u, CPU CYC %u stage %u status %02X\n", ppu.cycle, ppu.scanline, currentCpuCycle, cpu.stage, cpu.status);
+                }
+                else if (cpu.isNMIRunning())
+                {
+                    logDebug("[CPU] nmi run, PPU CYC %u SL %u, CPU CYC %u stage %u status %02X\n", ppu.cycle, ppu.scanline, currentCpuCycle, cpu.stage, cpu.status);
+                }
+
                 cpuStep();
             }
             
@@ -144,33 +153,6 @@ void NES::update(real32 secondsPerFrame)
             ++currentCpuCycle;
         }
 
-        // TODO: Over sample the audio and manually downsample to reduce aliasing artifacts
-        // TODO: Find a way to center the audio around 0 so it's not as quiet (High Pass Filter?)
-        // TODO: Add a master volume and per channel volume controls
-        ++audioOutputCounter;
-        if (audioOutputCounter >= cyclesPerSample)
-        {
-            real32 output = apu.getOutput();
-            apuBuffer[writeHead++] = (int16)(output * 32768);
-            if (writeHead >= 48000)
-            {
-                writeHead = 0;
-            }
-            
-            audioOutputCounter -= cyclesPerSample;
-        }
-
-        if (clockDivider % 4 == 0)
-        {
-            ppu.tick();
-        }
-
-        ++clockDivider;
-        if (clockDivider >= 12)
-        {
-            clockDivider = 0;
-        }
-
         if (cartridge.isNSF)
         {
             if (cpu.stack == nsfSentinal && cyclesToNextPlay <= 0)
@@ -184,12 +166,19 @@ void NES::update(real32 secondsPerFrame)
             }
         }
         // NSF is supposed to be designed to not use interrupts
-        else
+        else if (clockDivider % 4 == 0)
         {
+            ppu.tick();
+
             // Gather up all the potenial interrupt sources to assert the right status in the cpu
             cpu.setIRQ(apu.isFrameInteruptFlagSet
                 || apu.dmc.isInterruptFlagSet
                 || cartridge.isIrqPending());
+
+            if (ppu.isVBlankCycle() && ppu.isNMIFlagSet())
+            {
+                logDebug("[PPU] nmi trigger, PPU CYC %u SL %u, CPU CYC %u stage %u\n", ppu.cycle, ppu.scanline, currentCpuCycle, cpu.stage);
+            }
 
             if (ppu.isNMISuppressed())
             {
@@ -199,6 +188,28 @@ void NES::update(real32 secondsPerFrame)
             {
                 cpu.setNMI(ppu.isNMIFlagSet());
             }
+        }
+
+        // TODO: Over sample the audio and manually downsample to reduce aliasing artifacts
+        // TODO: Find a way to center the audio around 0 so it's not as quiet (High Pass Filter?)
+        // TODO: Add a master volume and per channel volume controls
+        ++audioOutputCounter;
+        if (audioOutputCounter >= cyclesPerSample)
+        {
+            real32 output = apu.getOutput();
+            apuBuffer[writeHead++] = (int16)(output * 32768);
+            if (writeHead >= 48000)
+            {
+                writeHead = 0;
+            }
+
+            audioOutputCounter -= cyclesPerSample;
+        }
+
+        ++clockDivider;
+        if (clockDivider >= 12)
+        {
+            clockDivider = 0;
         }
     }
 }
