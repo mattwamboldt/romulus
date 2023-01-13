@@ -57,7 +57,21 @@ void NES::powerOn()
     apu.reset();
     ppu.reset();
     apu.noise.shiftRegister = 1;
+
+    clockDivider = 0;
+    currentCpuCycle = 0;
     isRunning = true;
+
+    // This runs the reset process without the ppu active, doing this to line up with nintendulator
+    // TODO: I know it was more "correct" before, but I'm trying to track down a timing issue and diffing logs is all I got...
+    while (cpu.isExecuting())
+    {
+        cpu.tick();
+        apu.tick(currentCpuCycle);
+        cartridge.tickCPU();
+
+        ++currentCpuCycle;
+    }
 }
 
 void NES::reset()
@@ -73,6 +87,17 @@ void NES::reset()
     isRunning = true;
     clockDivider = 0;
     currentCpuCycle = 0;
+
+    // This runs the reset process without the ppu active, doing this to line up with nintendulator
+    // TODO: I know it was more "correct" before, but I'm trying to track down a timing issue and diffing logs is all I got...
+    while (cpu.isExecuting())
+    {
+        cpu.tick();
+        apu.tick(currentCpuCycle);
+        cartridge.tickCPU();
+
+        ++currentCpuCycle;
+    }
 }
 
 void NES::powerOff()
@@ -128,15 +153,6 @@ void NES::update(real32 secondsPerFrame)
             }
             else if (!cartridge.isNSF || cpu.stack != nsfSentinal)
             {
-                if (cpu.isNMIStarting())
-                {
-                    logDebug("[CPU] nmi start, PPU CYC %u SL %u, CPU CYC %u stage %u status %02X\n", ppu.cycle, ppu.scanline, currentCpuCycle, cpu.stage, cpu.status);
-                }
-                else if (cpu.isNMIRunning())
-                {
-                    logDebug("[CPU] nmi run, PPU CYC %u SL %u, CPU CYC %u stage %u status %02X\n", ppu.cycle, ppu.scanline, currentCpuCycle, cpu.stage, cpu.status);
-                }
-
                 cpuStep();
             }
             
@@ -174,11 +190,6 @@ void NES::update(real32 secondsPerFrame)
             cpu.setIRQ(apu.isFrameInteruptFlagSet
                 || apu.dmc.isInterruptFlagSet
                 || cartridge.isIrqPending());
-
-            if (ppu.isVBlankCycle() && ppu.isNMIFlagSet())
-            {
-                logDebug("[PPU] nmi trigger, PPU CYC %u SL %u, CPU CYC %u stage %u\n", ppu.cycle, ppu.scanline, currentCpuCycle, cpu.stage);
-            }
 
             if (ppu.isNMISuppressed())
             {

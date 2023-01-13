@@ -261,9 +261,21 @@ void formatRegistersNesTest(char* dest, MOS6502* cpu, PPU* ppu, uint32 cpuCycle)
     formatByte(dest + 17, (cpu->status | 0b00100000));
     formatByte(dest + 23, cpu->stack);
 
-    // Write scanline
+    // Write dot
     {
         char* numDest = dest + 32;
+        uint32 dot = ppu->cycle;
+
+        do
+        {
+            *numDest-- = (char)((dot % 10) + 48);
+            dot /= 10;
+        } while (dot > 0);
+    }
+
+    // Write scanline
+    {
+        char* numDest = dest + 36;
         uint32 scanline = ppu->scanline;
 
         do
@@ -272,19 +284,6 @@ void formatRegistersNesTest(char* dest, MOS6502* cpu, PPU* ppu, uint32 cpuCycle)
             scanline /= 10;
         }
         while (scanline > 0);
-    }
-
-    // Write dot
-    {
-        char* numDest = dest + 36;
-        uint32 dot = ppu->cycle;
-
-        do
-        {
-            *numDest-- = (char)((dot % 10) + 48);
-            dot /= 10;
-        }
-        while (dot > 0);
     }
 
     dest += 42;

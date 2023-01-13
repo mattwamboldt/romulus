@@ -599,7 +599,10 @@ uint8 PPU::getStatus(bool readOnly)
         status |= BIT_6;
     }
 
-    if (nmiRequested)
+    // TODO: I need to verify this but several other emus set this on dot zero but don't trigger the nmi itself
+    // until dot 1. Can't find any reference for this, but I'm trying to track down an issue and need to match
+    // a log to do so. may be safe to switch this back after
+    if (nmiRequested || (scanline == 241 && cycle == 0))
     {
         status |= BIT_7;
     }

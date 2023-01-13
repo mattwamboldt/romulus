@@ -17,6 +17,11 @@ uint8 CPUBus::read(uint16 address)
 {
     if (address < 0x2000)
     {
+        if (readOnly)
+        {
+            return ram[address & 0x07FF];
+        }
+
         // map to the internal 2kb ram
         cpuOpenBusValue = ram[address & 0x07FF];
         return cpuOpenBusValue;
@@ -27,8 +32,13 @@ uint8 CPUBus::read(uint16 address)
     // See: https://www.nesdev.org/wiki/PPU_registers
     if (address < 0x4000)
     {
-        uint8 result = ppuOpenBusValue;
+        if (readOnly)
+        {
+            return 0xFF;
+        }
+
         uint16 decodedAddress = address & 0x0007;
+        uint8 result = ppuOpenBusValue;
         if (decodedAddress == 0x02)
         {
             result &= 0x1F;
@@ -43,11 +53,7 @@ uint8 CPUBus::read(uint16 address)
             result = ppu->getData(readOnly);
         }
 
-        if (!readOnly)
-        {
-            ppuOpenBusValue = result;
-        }
-
+        ppuOpenBusValue = result;
         return result;
     }
 
