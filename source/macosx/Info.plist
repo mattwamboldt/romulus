@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist>
+<dict>
+  <key>CFBundleName</key>
+  <string>romulus</string>
+  <key>CFBundleDisplayName</key>
+  <string>ROMulus</string>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en-US</string>
+  <key>CFBundleExecutable</key>
+  <string>romulus</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.heroless.romulus</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersion</key>
+  <string>1.0.0</string>
+  <key>CFBundleVersion</key>
+  <string>1.0.0</string>
+  <key>CFBundleIconFile</key>
+  <string>logo</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Romlus © 2024, Matt Wamboldt</string>
+</dict>
+</plist>
